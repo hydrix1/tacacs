@@ -2,7 +2,7 @@
 
 # Find out where we are
 script_name=$0
-username=`whoami
+username=`whoami`
 offset=`dirname $script_name`
 called_from=`pwd`
 base=$called_from/$offset
