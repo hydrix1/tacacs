@@ -22,7 +22,7 @@ echo "***"
 echo "***"
 
 # Connect to remote system to test this system
-cd PROJECTS
+cd testing
 
 echo "***"
 echo "***"
@@ -32,7 +32,9 @@ echo "***"
 task_list=""
 for config in configs/*.server
 do
+    echo "+++ starting $config"
     $config &
+    echo "+++ ---- task ID is $!"
     task_list="$! $task_list"
 done
 
@@ -42,7 +44,7 @@ echo "***"
 echo "*** Connecting to remote host $test_server as $test_username..."
 echo "***"
 echo "***"
-sshpass -p $test_password ssh $test_username@$test_server
+sshpass -p $test_password ssh -t -t $test_username@$test_server <<EOF
 
 echo "***"
 echo "***"
@@ -50,16 +52,18 @@ echo "*** Running tests remotely..."
 echo "***"
 echo "***"
 echo "***"
-tacacs/run_tests.sh
+tacacs/testing/run_test.sh
 exit
+EOF
 
 echo "***"
 echo "***"
 echo "*** Stopping test servers on local machine..."
 echo "***"
 echo "***"
-for task in task_list
+for task in $task_list
 do
+    echo "+++ killing $task"
     kill -9 $task
 done
 
