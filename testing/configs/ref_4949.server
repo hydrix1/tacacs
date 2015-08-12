@@ -12,8 +12,8 @@ id = spawnd {
 id = tac_plus {
 	debug = PACKET AUTHEN AUTHOR
 
-	access log = /tmp/access.log
-	accounting log = /tmp/acct.log
+	access log = output/access_4949.log
+	accounting log = output/acct_4949.log
 
 	host = world {
 		address = ::/0
