@@ -19,13 +19,37 @@ unity_start()
     test_total=0
     test_fails=0
     test_skips=0
+    test_max_length=0
 }
 
 unity_end()
 {
+    filler="----"
+    while [ ${#filler} -lt $test_max_length ]; do
+        filler="$filler-"
+    done
+    padded="Test"
+    while [ ${#padded} -lt $test_max_length ]; do
+        padded="$padded "
+    done
     echo "### UNITY FINISHED ###"
     echo "$test_total Tests $test_fails Failures $test_skips Ignored"
     echo "OK"
+    echo ""
+    echo "Test result summary"
+    echo "   |--------|-$filler-|"
+    echo "   | Result | $padded |"
+    echo "   |--------|-$filler-|"
+    for (( idx=0; idx<$test_total; idx++ )); do
+        padded="${test_names[$idx]}"
+        while [ ${#padded} -lt $test_max_length ]; do
+            padded="$padded "
+        done
+        echo "   |  ${test_results[$idx]}  | $padded |"
+    done
+    echo "   |--------|-$filler-|"
+    echo "End of summary"
+    echo ""
 }
 
 unity_skip()
@@ -40,8 +64,8 @@ unity_fail()
 
 unity_start_group()
 {
-    test_context="${test_context}$1:"
     test_group[$test_depth]="$test_context"
+    test_context="${test_context}$1/"
     test_depth=$(($test_depth + 1))
 }
 
@@ -64,6 +88,13 @@ unity_start_test()
 
 unity_end_test()
 {
+    test_title="$test_context$test_name"
+    test_title_length=${#test_title}
+
+    if [ $test_title_length -gt $test_max_length ]; then
+        test_max_length=$test_title_length 
+    fi
+
     if [ "$skip_test" == "1" ]; then
         test_result="IGNORED"
         test_skips=$(($test_skips + 1))
@@ -74,8 +105,10 @@ unity_end_test()
         test_result="PASS"
     fi
 
+    test_names[$test_total]="$test_title"
+    test_results[$test_total]="$test_result"
     test_total=$(($test_total + 1))
-    echo ":::$test_context$test_name::: $test_result"
+    echo ":::$test_title::: $test_result"
 }
 
 
