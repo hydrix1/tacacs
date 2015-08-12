@@ -69,7 +69,7 @@ unity_end_test()
         test_skips=$(($test_skips + 1))
     elif [ "$fail_test" == "1" ]; then
         test_result="FAIL"
-        test_skips=$(($test_skips + 1))
+        test_fails=$(($test_fails + 1))
     else
         test_result="PASS"
     fi
