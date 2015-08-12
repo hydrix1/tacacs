@@ -5,6 +5,19 @@ test_server=192.168.0.161
 test_username=robot.build
 test_password=Marvin
 
+
+
+expect_file()
+{
+    file_name="$1"
+    if [ ! -f "${file_name}" ]; then
+       echo "*** ERROR: file ${file_name} NOT created!"
+    fi
+} 
+
+
+
+
 # Find out where we are
 script_name=$0
 username=`whoami`
@@ -26,15 +39,26 @@ cd testing
 
 echo "***"
 echo "***"
+echo "*** Empty any previous logs..."
+echo "***"
+echo "***"
+rm -fr output
+mkdir output
+
+echo "***"
+echo "***"
 echo "*** Starting test servers on local machine..."
 echo "***"
 echo "***"
+server_list=""
 task_list=""
 for config in configs/*.server
 do
     echo "+++ starting $config"
     $config &
     echo "+++ ---- task ID is $!"
+    server=`basename $config .server`
+    server_list="$server_list ${server##*_}"
     task_list="$! $task_list"
 done
 
@@ -67,6 +91,20 @@ do
     kill -9 $task
 done
 
+
+echo "***"
+echo "***"
+echo "*** Check the logs..."
+echo "***"
+echo "***"
+for server in $server_list
+do
+    echo "+++ checking logs for server $server"
+    expect_file "output/access_${server}.log"
+    expect_file "output/acct_${server}.log"
+done
+rm -fr output
+mkdir output
 
 echo "***"
 echo "***"
