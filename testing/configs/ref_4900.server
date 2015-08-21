@@ -1,0 +1,31 @@
+#!/usr/local/sbin/tac_plus
+
+id = spawnd {
+	listen = { port = 4900 }
+	spawn = {
+		instances min = 1
+		instances max = 10
+	}
+	background = no
+}
+
+id = tac_plus {
+	debug = PACKET AUTHEN AUTHOR
+
+	access log = output/access_4900.log
+	accounting log = output/acct_4900.log
+
+        key = cisco
+
+	user = test_4900_a {
+		password = clear A4900
+	}
+
+	user = test_4900_b {
+		password = permit
+	}
+
+	user = test_4900_c {
+		password = deny
+	}
+}
