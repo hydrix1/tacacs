@@ -380,6 +380,7 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
     {
         if (argc != optind && argc != optind+1)
         {
+            printf("argc=%d optind=%d\n", argc, optind);
             common_usage();
         }
         cfg_buffer_config(common_data.alt_config, spawnd_parse_decls, id ? id : (argv[optind + 1] ? argv[optind + 1] : common_data.progname));
@@ -388,7 +389,7 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
     {
         if (argc != optind + 1 && argc != optind + 2)
         {
-                common_usage();
+            common_usage();
         }
         common_data.conffile = Xstrdup(argv[optind]);
         cfg_read_config(argv[optind], spawnd_parse_decls, id ? id : (argv[optind + 1] ? argv[optind + 1] : common_data.progname));
@@ -567,7 +568,7 @@ void scm_main(int argc, char **argv, char **envp)
 	exit(0);
     }
 
-    while ((c = getopt(argc, argv, "vPd:")) != EOF)
+    while ((c = getopt(argc, argv, "vPd:c:")) != EOF)
 	switch (c) {
 	case 'v':
 	    fprintf(stderr, "%s version %s\n", common_data.progname, common_data.version);
@@ -581,6 +582,6 @@ void scm_main(int argc, char **argv, char **envp)
 	default:
 	    common_usage();
 	}
-    if (argc != optind + 1 && argc != optind + 2)
-	common_usage();
+        if (argc != optind && argc != optind + 1 && argc != optind + 2)
+	        common_usage();
 }
