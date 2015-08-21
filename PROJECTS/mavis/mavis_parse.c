@@ -894,6 +894,96 @@ int cfg_close(char *url, char *buf, int buflen)
 
 static void clear_alias(void);
 
+int cfg_parse_config(struct sym *sym, void (*parsefunction) (struct sym *), char *id)
+{
+    int found = 0;
+    sym_init(sym);
+    while (sym->code != S_eof) {
+	switch (sym->code) {
+	case S_id:
+	    sym_get(sym);
+	    parse(sym, S_equal);
+	    if (strcmp(sym->buf, id)) {
+		int bc = 1;
+		sym_get(sym);
+		parse(sym, S_openbra);
+		while (bc) {
+		    switch (sym->code) {
+		    case S_openbra:
+			bc++;
+			break;
+		    case S_closebra:
+			bc--;
+			break;
+		    case S_eof:
+			parse_error(sym, "EOF unexpected");
+		    default:
+			;
+		    }
+		    sym_get(sym);
+		}
+	    } else {
+		found = 1;
+		sym_get(sym);
+		parse(sym, S_openbra);
+		parsefunction(sym);
+		parse(sym, S_closebra);
+	    }
+	    break;
+	case S_eof:
+	    break;
+	case S_alias:
+	case S_trace:
+	case S_debug:
+	case S_syslog:
+	case S_proctitle:
+	case S_coredump:
+	case S_gcore:
+	case S_debug_cmd:
+	case S_setenv:
+	    parse_common(sym);
+	    break;
+	default:
+	    parse_error_expect(sym, S_alias, S_id, S_debug, S_trace, S_syslog, S_proctitle, S_gcore, S_debug_cmd, S_unknown);
+
+	}
+    }
+    
+    return found;
+
+}
+
+void cfg_buffer_config(char *strconfig, void (*parsefunction) (struct sym *), char *id)
+{
+    struct sym sym;
+    int buflen;
+    char *buf;
+
+    clear_alias();
+    memset(&sym, 0, sizeof(sym));
+    sym.filename = "from command line";
+    sym.line = 1;
+
+    if (setjmp(sym.env)) {
+	struct scm_data sd;
+	memset(&sd, 0, sizeof(sd));
+	sd.type = SCM_BAD_CFG;
+	common_data.scm_send_msg(0, &sd, -1);
+	report_cfg_error(LOG_ERR, ~0, "Detected fatal configuration error. Exiting.");
+	exit(EX_CONFIG);
+    }
+
+    /* Replace */
+    buf = Xstrdup(strconfig);
+    buflen = strlen(buf);
+
+    sym.tlen = sym.len = buflen;
+    sym.tin = sym.in = buf;
+
+    cfg_parse_config(&sym,  parsefunction, id);
+    free(buf);
+}
+
 void cfg_read_config(char *url, void (*parsefunction) (struct sym *), char *id)
 {
     struct sym sym;
@@ -914,8 +1004,6 @@ void cfg_read_config(char *url, void (*parsefunction) (struct sym *), char *id)
 	exit(EX_CONFIG);
     }
 
-    found = 0;
-
     if (cfg_open_and_read(url, &buf, &buflen)) {
 	report_cfg_error(LOG_ERR, ~0, "Couldn't open %s: %s", url, strerror(errno));
 	report_cfg_error(LOG_ERR, ~0, "Exiting.");
@@ -925,57 +1013,7 @@ void cfg_read_config(char *url, void (*parsefunction) (struct sym *), char *id)
     sym.tlen = sym.len = buflen;
     sym.tin = sym.in = buf;
 
-    sym_init(&sym);
-    while (sym.code != S_eof) {
-	switch (sym.code) {
-	case S_id:
-	    sym_get(&sym);
-	    parse(&sym, S_equal);
-	    if (strcmp(sym.buf, id)) {
-		int bc = 1;
-		sym_get(&sym);
-		parse(&sym, S_openbra);
-		while (bc) {
-		    switch (sym.code) {
-		    case S_openbra:
-			bc++;
-			break;
-		    case S_closebra:
-			bc--;
-			break;
-		    case S_eof:
-			parse_error(&sym, "EOF unexpected");
-		    default:
-			;
-		    }
-		    sym_get(&sym);
-		}
-	    } else {
-		found = 1;
-		sym_get(&sym);
-		parse(&sym, S_openbra);
-		parsefunction(&sym);
-		parse(&sym, S_closebra);
-	    }
-	    break;
-	case S_eof:
-	    break;
-	case S_alias:
-	case S_trace:
-	case S_debug:
-	case S_syslog:
-	case S_proctitle:
-	case S_coredump:
-	case S_gcore:
-	case S_debug_cmd:
-	case S_setenv:
-	    parse_common(&sym);
-	    break;
-	default:
-	    parse_error_expect(&sym, S_alias, S_id, S_debug, S_trace, S_syslog, S_proctitle, S_gcore, S_debug_cmd, S_unknown);
-
-	}
-    }
+    found = cfg_parse_config(&sym, parsefunction, id);
 
     cfg_close(url, buf, buflen);
 
@@ -1646,13 +1684,14 @@ void parse_common(struct sym *sym)
 void common_usage(void)
 {
     fprintf(stderr,
-	    "%sUsage:%s %s%s%s [ <%sOptions%s> ] <%sconfiguration file%s> [ <%sid%s> ]\n"
+	    "%sUsage:%s %s%s%s [ <%sOptions%s> ] [ <%sconfiguration file%s> ] [ <%sid%s> ]\n"
 	    "\n"
 	    "%sOptions:%s\n"
 	    "-P                parse configuration file, then quit\n"
 	    "-1                enable single-process (\"degraded\") mode\n"
 	    "-v                show version, then quit\n"
 	    "-b                force going to background\n"
+	    "-c <config>       supply configuration as a command line parameter\n"
 	    "-f                force staying in foreground\n"
 	    "-i <child-id>     select child configuration id\n"
 	    "-p <pid-file>     write master process ID to the file specified\n"

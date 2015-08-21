@@ -70,7 +70,7 @@ endif
 
 ifeq ($(CC_GCC),1)
 	ifeq ($(findstring "4.8.2",$CCV),)
-			CFLAGS		?= -Wall -W -Wno-strict-prototypes
+			CFLAGS		?= -Wall -W -Wno-strict-prototypes -static
 	else
 			CFLAGS		?= -O -Wall -W -Wno-strict-prototypes
 	endif
@@ -280,8 +280,8 @@ ifeq ($(WITH_SSL),1)
 		LIB_SSL_CRYPTO	= -L$(LIBDIR_SSL) $(LDOPT_R)$(LIBDIR_SSL)
 	endif
 	DEF += -DWITH_SSL
-	LIB_SSL	+= -lssl -lcrypto
-	LIB_SSL_CRYPTO	+= -lcrypto
+	LIB_SSL	+= -lssl -lcrypto 
+	LIB_SSL_CRYPTO	+= -lcrypto 
 endif
 
 # Check for PCRE library:
