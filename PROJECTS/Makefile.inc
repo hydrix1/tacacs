@@ -70,7 +70,7 @@ endif
 
 ifeq ($(CC_GCC),1)
 	ifeq ($(findstring "4.8.2",$CCV),)
-			CFLAGS		?= -Wall -W -Wno-strict-prototypes -static
+			CFLAGS		?= -Wall -W -Wno-strict-prototypes
 	else
 			CFLAGS		?= -O -Wall -W -Wno-strict-prototypes
 	endif
