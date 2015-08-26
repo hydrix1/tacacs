@@ -31,8 +31,7 @@ function print_suite()
 		printf "      <error"
 		printf       " message=\"%s\"", test_err_msgs[test_idx]
 		printf       " type=\"%s\"", test_err_type[test_idx]
-		printf       ">\n"
-		printf "      </error>\n"
+		printf       "/>\n"
 	    }
 	    printf "      <system-out>\n"
 	    print test_output[test_idx]
@@ -82,8 +81,8 @@ BEGIN {
 	    print_suite()
 	    n_suite = parts[1]
 	}
-        class = parts[2]
-	for (c = 3; c < n_parts; c++)
+        class = parts[1]
+	for (c = 2; c < n_parts; c++)
 	{
 	    class = class "." parts[c]
 	}
