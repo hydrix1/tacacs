@@ -7,6 +7,11 @@ BEGIN {
         n_title = "test_suite"
       }
 
+{
+	gsub (/\n/, "")
+	gsub (/\r/, "")
+}
+
 /^@@@/ {
 	time_last = $2
 	if (time_start == 0)
@@ -26,20 +31,19 @@ BEGIN {
 /^:::/ {
 	name = substr($1, 4, length($1) - 6)
         result = $2
-        switch (result)
+        if (result == "PASS")
 	{
-            case "PASS":
-		status = "Passed"
-		break
-            case "IGNORED":
-		n_skips++
-		status = "Skipped"
-		break
-	    default:
-            case "FAIL":
-		n_fails++
-		status = "Failed"
-		break
+	    status = "Passed"
+	}
+        else if (result == "IGNORED")
+	{
+	    n_skips++
+	    status = "Skipped"
+	}
+	else
+	{
+	    n_fails++
+	    status = "Failed"
 	}
         test_results[n_tests] = status
         test_classes[n_tests] = name
@@ -49,9 +53,10 @@ BEGIN {
 	n_tests++
 	next
        }
+
 {
-	line = gsub (/\\n/, "", $0)
-	output = output line "\n"
+	line = $0
+	output = output "      " line "\n"
 }
 
 END   {
@@ -81,10 +86,10 @@ END   {
 	    if (test_results[test_idx] == "Failed")
 	    {
 		printf "    <error"
-		printf     " message=\"%s\"", test_err_msgs[test_id]
-		printf     " type=\"%s\"", test_err_type[test_id]
+		printf     " message=\"%s\"", test_err_msgs[test_idx]
+		printf     " type=\"%s\"", test_err_type[test_idx]
 		printf     ">\n"
-		print test_output[test_id]
+		print test_output[test_idx]
 		printf "    </error>\n"
 	    }
 	    printf "  </testcase>\n"
