@@ -56,43 +56,45 @@ BEGIN {
 
 {
 	line = $0
-	output = output "      " line "\n"
+	output = output "        " line "\n"
 }
 
 END   {
         n_duration = time_last - time_start
-	printf "<testsuite"
-	printf " tests=\"%d\"", n_tests
-	printf " skipped=\"%d\"", n_skips
-	printf " errors=\"%d\"", n_errors
-	printf " failures=\"%d\"", n_fails
-	printf " name=\"%s\"", n_title
-	printf " time=\"%5.3f\"", n_duration
-	printf ">\n  <properties/>\n"
-	printf "  <system-out>\n"
-	printf "    -- There is no system-out\n"
-	printf "  </system-out>\n"
-	printf "  <system-err>\n"
-	printf "    -- There is no system-err\n"
-	printf "  </system-err>\n"
+	printf "<testsuites>`"
+	printf "  <testsuite"
+	printf   " tests=\"%d\"", n_tests
+	printf   " skipped=\"%d\"", n_skips
+	printf   " errors=\"%d\"", n_errors
+	printf   " failures=\"%d\"", n_fails
+	printf   " name=\"%s\"", n_title
+	printf   " time=\"%5.3f\"", n_duration
+	printf ">\n    <properties/>\n"
+	printf "    <system-out>\n"
+	printf "      -- There is no system-out\n"
+	printf "    </system-out>\n"
+	printf "    <system-err>\n"
+	printf "      -- There is no system-err\n"
+	printf "    </system-err>\n"
 	for (test_idx = 0; test_idx < n_tests; test_idx++)
 	{
-	    printf "  <testcase"
-	    printf   " classname=\"%s\"", test_classes[test_idx]
-	    printf   " name=\"%s\"", test_names[test_idx]
-	    printf   " status=\"%s\"", test_results[test_idx]
-	    printf   " time=\"%5.3f\"", test_durations[test_idx]
-	    printf   ">\n"
+	    printf "    <testcase"
+	    printf     " classname=\"%s\"", test_classes[test_idx]
+	    printf     " name=\"%s\"", test_names[test_idx]
+	    printf     " status=\"%s\"", test_results[test_idx]
+	    printf     " time=\"%5.3f\"", test_durations[test_idx]
+	    printf     ">\n"
 	    if (test_results[test_idx] == "Failed")
 	    {
-		printf "    <error"
-		printf     " message=\"%s\"", test_err_msgs[test_idx]
-		printf     " type=\"%s\"", test_err_type[test_idx]
-		printf     ">\n"
+		printf "      <error"
+		printf       " message=\"%s\"", test_err_msgs[test_idx]
+		printf       " type=\"%s\"", test_err_type[test_idx]
+		printf       ">\n"
 		print test_output[test_idx]
-		printf "    </error>\n"
+		printf "      </error>\n"
 	    }
-	    printf "  </testcase>\n"
+	    printf "    </testcase>\n"
 	}
-	printf "</testsuite>\n"
+	printf "  </testsuite>\n"
+	printf "</testsuites>\n"
       }
