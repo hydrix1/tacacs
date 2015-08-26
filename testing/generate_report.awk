@@ -61,7 +61,7 @@ BEGIN {
 
 END   {
         n_duration = time_last - time_start
-	printf "<testsuites>`"
+	printf "<testsuites>\n"
 	printf "  <testsuite"
 	printf   " tests=\"%d\"", n_tests
 	printf   " skipped=\"%d\"", n_skips
