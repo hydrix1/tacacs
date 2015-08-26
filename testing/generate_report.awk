@@ -15,15 +15,9 @@ function print_suite()
 	printf   " skipped=\"%d\"", n_skips
 	printf   " errors=\"%d\"", n_errors
 	printf   " failures=\"%d\"", n_fails
-	printf   " name=\"%s\"", n_suite
+	printf   " package=\"%s\"", n_suite
 	printf   " time=\"%5.3f\"", n_duration
 	printf ">\n    <properties/>\n"
-	printf "    <system-out>\n"
-	printf "      -- There is no system-out\n"
-	printf "    </system-out>\n"
-	printf "    <system-err>\n"
-	printf "      -- There is no system-err\n"
-	printf "    </system-err>\n"
 	for (test_idx = 0; test_idx < n_tests; test_idx++)
 	{
 	    printf "    <testcase"
@@ -38,9 +32,11 @@ function print_suite()
 		printf       " message=\"%s\"", test_err_msgs[test_idx]
 		printf       " type=\"%s\"", test_err_type[test_idx]
 		printf       ">\n"
-		print test_output[test_idx]
 		printf "      </error>\n"
 	    }
+	    printf "      <system-out>\n"
+	    print test_output[test_idx]
+	    printf "      </system-out>\n"
 	    printf "    </testcase>\n"
 	}
 	printf "  </testsuite>\n"
