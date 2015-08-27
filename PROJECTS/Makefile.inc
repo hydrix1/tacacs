@@ -280,8 +280,8 @@ ifeq ($(WITH_SSL),1)
 		LIB_SSL_CRYPTO	= -L$(LIBDIR_SSL) $(LDOPT_R)$(LIBDIR_SSL)
 	endif
 	DEF += -DWITH_SSL
-	LIB_SSL	+= -lssl -lcrypto
-	LIB_SSL_CRYPTO	+= -lcrypto
+	LIB_SSL	+= -lssl -lcrypto 
+	LIB_SSL_CRYPTO	+= -lcrypto 
 endif
 
 # Check for PCRE library:

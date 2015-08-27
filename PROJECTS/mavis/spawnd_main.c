@@ -333,8 +333,11 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
 	    spawnd_data.inetd = 1;
 	}
 
-    while ((c = getopt(argc, argv, "vPd:i:p:bf1")) != EOF)
+    while ((c = getopt(argc, argv, "vPd:i:p:c:bf1")) != EOF)
 	switch (c) {
+	case 'c':
+        common_data.alt_config = Xstrdup(optarg);
+	    break;
 	case 'v':
 	    common_data.version_only = 1;
 	    break;
@@ -373,12 +376,27 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
 	exit(WEXITSTATUS(status));
     }
 
-    if (argc != optind + 1 && argc != optind + 2)
-	common_usage();
+    if (common_data.alt_config)
+    {
+        if (argc != optind && argc != optind+1)
+        {
+            printf("argc=%d optind=%d\n", argc, optind);
+            common_usage();
+        }
+        cfg_buffer_config(common_data.alt_config, spawnd_parse_decls, id ? id : (argv[optind + 1] ? argv[optind + 1] : common_data.progname));
+    }
+    else
+    {
+        if (argc != optind + 1 && argc != optind + 2)
+        {
+            common_usage();
+        }
+        common_data.conffile = Xstrdup(argv[optind]);
+        cfg_read_config(argv[optind], spawnd_parse_decls, id ? id : (argv[optind + 1] ? argv[optind + 1] : common_data.progname));
+    }
 
     strset(&spawnd_data.child_config, argv[optind]);
 
-    common_data.conffile = Xstrdup(argv[optind]);
     if (argv[optind + 1])
 	common_data.id = Xstrdup(argv[optind + 1]);
 
@@ -407,11 +425,12 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
 
     spawnd_data.retry_delay = 0;
 
+#if 0
     common_data.conffile = strdup(argv[optind]);
     if (argv[optind + 1])
 	common_data.id = strdup(argv[optind + 1]);
+#endif
 
-    cfg_read_config(argv[optind], spawnd_parse_decls, id ? id : (argv[optind + 1] ? argv[optind + 1] : common_data.progname));
 
     common_data.users_max_total = common_data.users_max * common_data.servers_max;
 
@@ -549,7 +568,7 @@ void scm_main(int argc, char **argv, char **envp)
 	exit(0);
     }
 
-    while ((c = getopt(argc, argv, "vPd:")) != EOF)
+    while ((c = getopt(argc, argv, "vPd:c:")) != EOF)
 	switch (c) {
 	case 'v':
 	    fprintf(stderr, "%s version %s\n", common_data.progname, common_data.version);
@@ -563,6 +582,6 @@ void scm_main(int argc, char **argv, char **envp)
 	default:
 	    common_usage();
 	}
-    if (argc != optind + 1 && argc != optind + 2)
-	common_usage();
+        if (argc != optind && argc != optind + 1 && argc != optind + 2)
+	        common_usage();
 }

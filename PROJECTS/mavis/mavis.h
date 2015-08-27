@@ -307,6 +307,7 @@ void getsym(struct sym *);
 void buf_add(struct sym *, char);
 void sym_get(struct sym *);
 enum token sym_peek(struct sym *);
+void cfg_buffer_config(char *, void (*)(struct sym *), char *);
 void cfg_read_config(char *, void (*)(struct sym *), char *);
 enum token keycode(char *);
 int parse_int(struct sym *);
@@ -329,6 +330,7 @@ struct common_data {
     char *progname;
     char *progpath;
     char *version;
+    char *alt_config;
     u_int version_only;
     u_int parse_only;
     u_int debug;

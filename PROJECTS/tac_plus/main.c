@@ -218,11 +218,17 @@ int main(int argc, char **argv, char **envp)
 
     dns_tree_ptr_static = radix_new(NULL /* never freed */ , NULL);
 
-    if (!common_data.conffile) {
-	common_data.conffile = argv[optind];
-	common_data.id = argv[optind + 1];
+    if (common_data.alt_config) {
+        cfg_buffer_config(common_data.alt_config, parse_decls, common_data.id ? common_data.id : common_data.progname);
     }
-    cfg_read_config(common_data.conffile, parse_decls, common_data.id ? common_data.id : common_data.progname);
+    else
+    {
+        if (!common_data.conffile) {
+	    common_data.conffile = argv[optind];
+	    common_data.id = argv[optind + 1];
+        }
+        cfg_read_config(common_data.conffile, parse_decls, common_data.id ? common_data.id : common_data.progname);
+    }
 
     if (common_data.parse_only)
 	tac_exit(EX_OK);

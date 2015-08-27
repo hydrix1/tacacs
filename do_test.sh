@@ -26,6 +26,10 @@ called_from=`pwd`
 base=$called_from/$offset
 cd $base
 
+# Local definition
+raw_test_output=raw_test_output.txt
+xml_test_output=junit_test_output.xml
+
 echo "***"
 echo "***"
 echo "*** This is $username running $script_name"
@@ -68,7 +72,7 @@ echo "***"
 echo "*** Connecting to remote host $test_server as $test_username..."
 echo "***"
 echo "***"
-sshpass -p $test_password ssh -t -t $test_username@$test_server <<EOF
+sshpass -p $test_password ssh -t -t $test_username@$test_server <<EOF | tee $raw_test_output
 
 echo "***"
 echo "***"
@@ -91,7 +95,6 @@ do
     kill -9 $task
 done
 
-
 echo "***"
 echo "***"
 echo "*** Check the logs..."
@@ -103,6 +106,19 @@ do
     expect_file "output/access_${server}.log"
     expect_file "output/acct_${server}.log"
 done
+
+echo "***"
+echo "***"
+echo "*** Generate the report"
+echo "***"
+echo "***"
+awk -f generate_report.awk $raw_test_output > $xml_test_output
+
+echo "***"
+echo "***"
+echo "*** Tidy up..."
+echo "***"
+echo "***"
 rm -fr output
 mkdir output
 
