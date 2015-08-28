@@ -19,6 +19,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <stdarg.h>
 
 #ifdef __APPLE__
 #  include <mach-o/dyld.h>
@@ -323,6 +324,13 @@ struct listen_config
     char*                   port;
 };
 
+struct user_config
+{
+    struct user_config*     next_user;
+    char*                   username;
+    char*                   password;
+};
+
 struct spawnd_config
 {
     struct listen_config*   listen_list;
@@ -331,6 +339,8 @@ struct spawnd_config
 
 struct tacplus_config
 {
+    struct user_config*     user_list;
+    struct user_config*     user_last;
 };
 
 struct cli_config
@@ -348,19 +358,24 @@ static char** opts_argv;
 static const char* short_opts = ":hvPd:i:p:c:bf1";
 static int opts_index;
 
-static char* get_argument(const char* prompt)
+static char* get_argument(const char* prompt, ...)
 {
     char* result;
 
     if (optarg == 0)
     {
-	size_t space = 0;
+	va_list args;
+	size_t  space = 0;
 	ssize_t count = 0;
 	char*   buffer = 0;
 
+	va_start(args, prompt);
+
 	do
 	{
-	    fprintf (stdout, "%s\n> ", prompt);
+	    fprintf (stdout, "Missing ");
+	    vfprintf (stdout, prompt, args);
+	    fprintf (stdout, "\n>> ");
             count = getline(&buffer, &space, stdin);
             result = buffer;
 	    while ((count > 0) && (result[count-1] <= ' '))
@@ -375,6 +390,7 @@ static char* get_argument(const char* prompt)
 
 	result = Xstrdup(result);
         free (buffer);
+	va_end(args);
     }
     else
     {
@@ -463,6 +479,67 @@ static int parse_cli_listen(struct cli_config* cli_cfg)
     return next_symbol;
 }
 
+static int parse_user_subopts(struct user_config* user)
+{
+    int c = EOF;
+
+    do
+    {
+	while (c != EOF)
+	{
+	    int opt = c;
+	    c = EOF;
+	    switch (opt)
+	    {
+		case lopt_password:
+		    if (user->password)
+		    {
+			fprintf (stderr, "Duplicate --password for --user %s!\n", user->username);
+			exit(1);
+		    }
+		    else
+		    {
+			user->password = get_argument("Password for user %s", user->username);
+		    }
+		    break;
+		default:
+		    return opt;
+	    }
+	}
+        c = get_next_option();
+    } while (c != EOF);
+
+    return c;
+}
+
+static int parse_cli_user(struct cli_config* cli_cfg)
+{
+    int next_symbol;
+    struct user_config* user = Xcalloc(1, sizeof(struct user_config));
+
+    if (cli_cfg->tacplus.user_last == 0)
+    {
+	cli_cfg->tacplus.user_list = user;
+    }
+    else
+    {
+	cli_cfg->tacplus.user_last->next_user = user;
+    }
+    cli_cfg->tacplus.user_last = user;
+    cli_cfg->used = 1;
+
+    user->username = get_argument("Name for the user");
+    next_symbol = parse_user_subopts(user);
+
+    // Check this user is complete
+    if (user->password == 0)
+    {
+	user->password = get_argument("Password for user %s", user->username);
+    }
+
+    return next_symbol;
+}
+
 static char* generate_more(char* existing, char* extra)
 {
     if (existing)
@@ -511,11 +588,33 @@ static char* generate_spawnd_config(char* so_far, struct spawnd_config* spawnd_c
     return so_far;
 }
 
+static char* generate_user_config(char* so_far, struct user_config* user)
+{
+    so_far = generate_more (so_far, "\tuser = ");
+    so_far = generate_more (so_far, user->username);
+    so_far = generate_more (so_far, " {\n");
+
+    if (user->password)
+    {
+	so_far = generate_more (so_far, "\t\tpassword = clear ");
+	so_far = generate_more (so_far, user->password);
+	so_far = generate_more (so_far, "\n");
+    }
+
+    so_far = generate_more (so_far, "\t}\n");
+    return so_far;
+}
+
 static char* generate_tacplus_config(char* so_far, struct tacplus_config* tacplus_cfg)
 {
+    struct user_config* user;
+
     so_far = generate_more (so_far, "\nid = tacplus {\n");
 
-    //so_far = generate_more (so_far, "\nid = tacplus {\n");
+    for (user = tacplus_cfg->user_list; user; user = user->next_user)
+    {
+	so_far = generate_user_config (so_far, user);
+    }
 
     so_far = generate_more (so_far, "}\n");
     return so_far;
@@ -632,6 +731,9 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
 		    break;
 		case lopt_listen:
 		    c = parse_cli_listen (&cli_conf);
+		    break;
+		case lopt_user:
+		    c = parse_cli_user (&cli_conf);
 		    break;
 		default:
 		    common_usage();
