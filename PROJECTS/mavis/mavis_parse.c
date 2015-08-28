@@ -961,7 +961,7 @@ void cfg_buffer_config(char *strconfig, void (*parsefunction) (struct sym *), ch
 
     clear_alias();
     memset(&sym, 0, sizeof(sym));
-    sym.filename = "from command line";
+    sym.filename = Xstrdup("from command line");
     sym.line = 1;
 
     if (setjmp(sym.env)) {
@@ -982,6 +982,7 @@ void cfg_buffer_config(char *strconfig, void (*parsefunction) (struct sym *), ch
 
     cfg_parse_config(&sym,  parsefunction, id);
     free(buf);
+    free(sym.filename);
 }
 
 void cfg_read_config(char *url, void (*parsefunction) (struct sym *), char *id)

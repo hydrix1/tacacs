@@ -1,3 +1,61 @@
 #!/bin/bash
 
-/usr/local/sbin/tac_plus -1 -c "id = spawnd { listen = { port = 4950 } spawn = { instances min = 1 instances max = 10 } background = no } id = tac_plus { debug = PACKET AUTHEN AUTHOR access log = output/access_4950.log accounting log = output/acct_4950.log host = world { address = ::/0 prompt=\"Welcome\" enable 15 = clear secret key = cisco } group = admin { default service = permit service = shell { default command = permit default attribute = permit set priv-lvl = 15 } } group = guest { default service = permit enable = deny service = shell { default command = permit default attribute = permit set priv-lvl = 1 } } user = cisco { password = clear cisco member = admin service = shell { default command = permit default attribute = permit set priv-lvl = 15 } } user = readonly { password = clear readonly member = guest } }"
+exec /usr/local/sbin/tac_plus -c "\
+\
+id = spawnd {\
+	listen = { port = 4950 }\
+	spawn = {\
+		instances min = 1\
+		instances max = 10\
+	}\
+	background = no\
+}\
+\
+id = tac_plus {\
+	debug = PACKET AUTHEN AUTHOR\
+\
+	access log = output/access_4950\
+	accounting log = output/acct_4950\
+\
+	host = world {\
+		address = ::/0\
+		prompt = \"Welcome\\n\"\
+		enable 15 = clear secret\
+		key = cisco\
+	}\
+\
+	group = admin {\
+		default service = permit\
+		service = shell {\
+			default command = permit\
+			default attribute = permit\
+			set priv-lvl = 15\
+		}\
+	}\
+\
+	group = guest {\
+		default service = permit\
+		enable = deny\
+		service = shell {\
+			default command = permit\
+			default attribute = permit\
+			set priv-lvl = 1\
+		}\
+	}\
+\
+	user = cisco {\
+		password = clear cisco\
+		member = admin\
+		service = shell {\
+			default command = permit\
+			default attribute = permit\
+			set priv-lvl = 15\
+		}\
+	}\
+\
+	user = readonly {\
+		password = clear readonly\
+		member = guest\
+	}\
+}"
+

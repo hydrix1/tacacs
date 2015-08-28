@@ -336,7 +336,7 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
     while ((c = getopt(argc, argv, "vPd:i:p:c:bf1")) != EOF)
 	switch (c) {
 	case 'c':
-        common_data.alt_config = Xstrdup(optarg);
+	    common_data.alt_config = Xstrdup(optarg);
 	    break;
 	case 'v':
 	    common_data.version_only = 1;
@@ -383,7 +383,24 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
             printf("argc=%d optind=%d\n", argc, optind);
             common_usage();
         }
-        cfg_buffer_config(common_data.alt_config, spawnd_parse_decls, id ? id : (argv[optind + 1] ? argv[optind + 1] : common_data.progname));
+	if (common_data.ipc_key == 0)
+	{
+	    common_data.ipc_key = 456;
+	}
+	if (id == 0)
+	{
+	     id = common_data.progname;
+	}
+	if (ipc_create (common_data.alt_config, strlen(common_data.alt_config) + 1) != 0)
+	{
+	    fprintf (stderr, "ipc_create() failed!\n");
+	    exit(1);
+	}
+	else
+	{
+	    common_data.conffile = optarg, common_data.ipc_url;
+	    cfg_read_config(common_data.ipc_url, spawnd_parse_decls, id);
+	}    
     }
     else
     {
