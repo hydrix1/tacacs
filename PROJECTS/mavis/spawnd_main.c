@@ -289,7 +289,9 @@ typedef enum {
     lopt_print,
     lopt_listen,
     lopt_port,
+    lopt_host,
     lopt_key,
+    lopt_address,
     lopt_user,
     lopt_password,
 } lopts_e;
@@ -311,7 +313,9 @@ static struct option long_opts[] =
     { "print",       no_argument,       0, lopt_print },
     { "listen",      no_argument,       0, lopt_listen },
     { "port",        required_argument, 0, lopt_port },
+    { "host",        optional_argument, 0, lopt_host },
     { "key",         required_argument, 0, lopt_key },
+    { "address",     required_argument, 0, lopt_address },
     { "user",        required_argument, 0, lopt_user },
     { "password",    required_argument, 0, lopt_password },
     /* end marker */
@@ -322,6 +326,14 @@ struct listen_config
 {
     struct listen_config*   next_listen;
     char*                   port;
+};
+
+struct host_config
+{
+    struct host_config*     next_host;
+    char*                   host_name;
+    char*                   secret_key;
+    char*                   address;
 };
 
 struct user_config
@@ -339,6 +351,8 @@ struct spawnd_config
 
 struct tacplus_config
 {
+    struct host_config*     host_list;
+    struct host_config*     host_last;
     struct user_config*     user_list;
     struct user_config*     user_last;
 };
@@ -358,7 +372,7 @@ static char** opts_argv;
 static const char* short_opts = ":hvPd:i:p:c:bf1";
 static int opts_index;
 
-static char* get_argument(const char* prompt, ...)
+static char* get_required_argument(const char* prompt, ...)
 {
     char* result;
 
@@ -391,6 +405,23 @@ static char* get_argument(const char* prompt, ...)
 	result = Xstrdup(result);
         free (buffer);
 	va_end(args);
+    }
+    else
+    {
+        result = Xstrdup(optarg);
+	optarg = 0;
+    }
+
+    return result;
+}
+
+static char* get_optional_argument(const char* default_value)
+{
+    char* result;
+
+    if (optarg == 0)
+    {
+        result = Xstrdup(default_value);
     }
     else
     {
@@ -439,7 +470,7 @@ static int parse_listen_subopts(struct listen_config* listen)
 		    }
 		    else
 		    {
-			listen->port = get_argument("TCP port number for the listen");
+			listen->port = get_required_argument("TCP port number for the listen");
 		    }
 		    break;
 		default:
@@ -473,7 +504,83 @@ static int parse_cli_listen(struct cli_config* cli_cfg)
     // Check this listen is complete
     if (listen->port == 0)
     {
-	listen->port = get_argument("TCP port number for the listen");
+	listen->port = get_required_argument("TCP port number for the listen");
+    }
+
+    return next_symbol;
+}
+
+static int parse_host_subopts(struct host_config* host)
+{
+    int c = EOF;
+
+    do
+    {
+	while (c != EOF)
+	{
+	    int opt = c;
+	    c = EOF;
+	    switch (opt)
+	    {
+		case lopt_address:
+		    if (host->address)
+		    {
+			fprintf (stderr, "Duplicate --address for --host %s!\n", host->host_name);
+			exit(1);
+		    }
+		    else
+		    {
+			host->address = get_required_argument("address for host %s", host->host_name);
+		    }
+		    break;
+		case lopt_key:
+		    if (host->secret_key)
+		    {
+			fprintf (stderr, "Duplicate --key for --host %s!\n", host->host_name);
+			exit(1);
+		    }
+		    else
+		    {
+			host->secret_key = get_required_argument("key for host %s", host->host_name);
+		    }
+		    break;
+		default:
+		    return opt;
+	    }
+	}
+        c = get_next_option();
+    } while (c != EOF);
+
+    return c;
+}
+
+static int parse_cli_host(struct cli_config* cli_cfg)
+{
+    int next_symbol;
+    struct host_config* host = Xcalloc(1, sizeof(struct host_config));
+
+    if (cli_cfg->tacplus.host_last == 0)
+    {
+	cli_cfg->tacplus.host_list = host;
+    }
+    else
+    {
+	cli_cfg->tacplus.host_last->next_host = host;
+    }
+    cli_cfg->tacplus.host_last = host;
+    cli_cfg->used = 1;
+
+    host->host_name = get_optional_argument("any");
+    next_symbol = parse_host_subopts(host);
+
+    // Check this host is complete
+    if (host->address == 0)
+    {
+	host->address = get_required_argument("IP address/mask for host %s", host->host_name);
+    }
+    if (host->secret_key == 0)
+    {
+	host->secret_key = get_required_argument("key for host %s", host->host_name);
     }
 
     return next_symbol;
@@ -499,7 +606,7 @@ static int parse_user_subopts(struct user_config* user)
 		    }
 		    else
 		    {
-			user->password = get_argument("Password for user %s", user->username);
+			user->password = get_required_argument("password for user %s", user->username);
 		    }
 		    break;
 		default:
@@ -528,13 +635,13 @@ static int parse_cli_user(struct cli_config* cli_cfg)
     cli_cfg->tacplus.user_last = user;
     cli_cfg->used = 1;
 
-    user->username = get_argument("Name for the user");
+    user->username = get_required_argument("name for the user");
     next_symbol = parse_user_subopts(user);
 
     // Check this user is complete
     if (user->password == 0)
     {
-	user->password = get_argument("Password for user %s", user->username);
+	user->password = get_required_argument("password for user %s", user->username);
     }
 
     return next_symbol;
@@ -584,7 +691,43 @@ static char* generate_spawnd_config(char* so_far, struct spawnd_config* spawnd_c
 	so_far = generate_listen_config (so_far, listen);
     }
 
+    // Static items that are candidates for parameterising...
+    so_far = generate_more (so_far, "\tspawn = {\n");
+    so_far = generate_more (so_far, "\t        instances min = 1\n");
+    so_far = generate_more (so_far, "\t        instances max = 10\n");
+    so_far = generate_more (so_far, "\t}\n");
+    so_far = generate_more (so_far, "\tbackground = no\n");
+
+
     so_far = generate_more (so_far, "}\n");
+    return so_far;
+}
+
+static char* generate_host_config(char* so_far, struct host_config* host)
+{
+    so_far = generate_more (so_far, "\thost = ");
+    so_far = generate_more (so_far, host->host_name);
+    so_far = generate_more (so_far, " {\n");
+
+    if (host->address)
+    {
+	so_far = generate_more (so_far, "\t\taddress = ");
+	so_far = generate_more (so_far, host->address);
+	so_far = generate_more (so_far, "\n");
+    }
+
+    if (host->secret_key)
+    {
+	so_far = generate_more (so_far, "\t\tkey = ");
+	so_far = generate_more (so_far, host->secret_key);
+	so_far = generate_more (so_far, "\n");
+    }
+
+    // Static items that are candidates for parameterising...
+    so_far = generate_more (so_far, "\t\tprompt = \"Welcome\\n\"\n");
+    so_far = generate_more (so_far, "\t\tenable 15 = clear secret\n");
+
+    so_far = generate_more (so_far, "\t}\n");
     return so_far;
 }
 
@@ -601,15 +744,41 @@ static char* generate_user_config(char* so_far, struct user_config* user)
 	so_far = generate_more (so_far, "\n");
     }
 
+    // Static items that are candidates for parameterising...
+    so_far = generate_more (so_far, "\t\tmember = guest\n");
+
     so_far = generate_more (so_far, "\t}\n");
     return so_far;
 }
 
 static char* generate_tacplus_config(char* so_far, struct tacplus_config* tacplus_cfg)
 {
+    struct host_config* host;
     struct user_config* user;
 
-    so_far = generate_more (so_far, "\nid = tacplus {\n");
+    so_far = generate_more (so_far, "\nid = tac_plus {\n");
+
+    // Static items that are candidates for parameterising...
+    so_far = generate_more (so_far, "\tdebug = PACKET AUTHEN AUTHOR\n");
+    so_far = generate_more (so_far, "\taccess log = output/access_4950\n");
+    so_far = generate_more (so_far, "\taccounting log = output/acct_4950\n");
+
+    for (host = tacplus_cfg->host_list; host; host = host->next_host)
+    {
+	so_far = generate_host_config (so_far, host);
+    }
+
+    // Static items that are candidates for parameterising...
+    so_far = generate_more (so_far, "\tgroup = guest {\n");
+    so_far = generate_more (so_far, "\t\tdefault service = permit\n");
+    so_far = generate_more (so_far, "\t\tenable = deny\n");
+    so_far = generate_more (so_far, "\t\tservice = shell {\n");
+    so_far = generate_more (so_far, "\t\t\tdefault command = permit\n");
+    so_far = generate_more (so_far, "\t\t\tdefault attribute = permit\n");
+    so_far = generate_more (so_far, "\t\t\tset priv-lvl = 1\n");
+    so_far = generate_more (so_far, "\t\t}\n");
+    so_far = generate_more (so_far, "\t}\n");
+
 
     for (user = tacplus_cfg->user_list; user; user = user->next_user)
     {
@@ -731,6 +900,9 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
 		    break;
 		case lopt_listen:
 		    c = parse_cli_listen (&cli_conf);
+		    break;
+		case lopt_host:
+		    c = parse_cli_host (&cli_conf);
 		    break;
 		case lopt_user:
 		    c = parse_cli_user (&cli_conf);
