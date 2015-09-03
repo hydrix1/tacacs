@@ -3,7 +3,6 @@
 # define the test server and access
 test_server=192.168.0.161
 test_username=robot.build
-test_password=Marvin
 
 
 
@@ -72,7 +71,7 @@ echo "***"
 echo "*** Connecting to remote host $test_server as $test_username..."
 echo "***"
 echo "***"
-sshpass -p $test_password ssh -t -t $test_username@$test_server <<EOF | tee $raw_test_output
+ssh -t -t $test_username@$test_server <<EOF | tee $raw_test_output
 
 echo "***"
 echo "***"
