@@ -429,7 +429,8 @@ void spawnd_parse_decls(struct sym *sym)
 		    setegid(spawnd_data.gid);
 		if (spawnd_data.uid)
 		    seteuid(spawnd_data.uid);
-		if (strcmp(spawnd_data.conffile, spawnd_data.child_config)) {
+		if (spawnd_data.conffile && spawnd_data.child_config &&
+		    strcmp(spawnd_data.conffile, spawnd_data.child_config)) {
 		    char *buf;
 		    int buflen;
 		    if (!cfg_open_and_read(spawnd_data.conffile, &buf, &buflen)) {

@@ -961,7 +961,7 @@ void cfg_buffer_config(char *strconfig, void (*parsefunction) (struct sym *), ch
 
     clear_alias();
     memset(&sym, 0, sizeof(sym));
-    sym.filename = "from command line";
+    sym.filename = Xstrdup("from command line");
     sym.line = 1;
 
     if (setjmp(sym.env)) {
@@ -982,6 +982,7 @@ void cfg_buffer_config(char *strconfig, void (*parsefunction) (struct sym *), ch
 
     cfg_parse_config(&sym,  parsefunction, id);
     free(buf);
+    free(sym.filename);
 }
 
 void cfg_read_config(char *url, void (*parsefunction) (struct sym *), char *id)
@@ -1687,15 +1688,23 @@ void common_usage(void)
 	    "%sUsage:%s %s%s%s [ <%sOptions%s> ] [ <%sconfiguration file%s> ] [ <%sid%s> ]\n"
 	    "\n"
 	    "%sOptions:%s\n"
-	    "-P                parse configuration file, then quit\n"
-	    "-1                enable single-process (\"degraded\") mode\n"
-	    "-v                show version, then quit\n"
-	    "-b                force going to background\n"
-	    "-c <config>       supply configuration as a command line parameter\n"
-	    "-f                force staying in foreground\n"
-	    "-i <child-id>     select child configuration id\n"
-	    "-p <pid-file>     write master process ID to the file specified\n"
-	    "-d <debug-level>  set debugging level\n"
+	    "  -P, --check                      parse configuration file, then quit\n"
+	    "  -l, --degraded                   enable single-process (\"degraded\") mode\n"
+	    "  -v, --version                    show version, then quit\n"
+	    "  -b, --background                 force going to background\n"
+	    "  -f, --foreground                 force staying in foreground\n"
+	    "  -i, --child-id    <child-id>     select child configuration id\n"
+	    "  -p, --pid-file    <pid-file>     write master process ID to the file specified\n"
+	    "  -d, --debug-level <debug-level>  set debugging level\n"
+	    "  -c                <config>       supply configuration as a command line parameter\n"
+	    "  --print                          print generated configuration to stdout\n"
+	    "  --listen                         listen for clients...\n"
+	    "     --port        <nnn>               use specified TCP port number\n"
+	    "  --host[=<name>]                  recognise a host\n"
+	    "     --address     <cwaddr>[/<mask>]   IP address with optional net mask\n"
+	    "     --key         <secret_key>        clear-text secret key\n"
+	    "  --user           <name>          recognise a username\n"
+	    "     --password    <pass>              clear-text password\n"
 	    "\n"
 	    "%sVersion:%s %s%s%s\n"
 	    "\n"

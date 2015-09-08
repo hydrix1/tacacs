@@ -18,6 +18,8 @@
 #include <grp.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <getopt.h>
+#include <stdarg.h>
 
 #ifdef __APPLE__
 #  include <mach-o/dyld.h>
@@ -282,15 +284,533 @@ void spawnd_bind_listener(struct spawnd_context *ctx, int cur)
     DebugOut(DEBUG_NET);
 }
 
+typedef enum {
+    lopt_end = 300,
+    lopt_print,
+    lopt_listen,
+    lopt_port,
+    lopt_host,
+    lopt_key,
+    lopt_address,
+    lopt_user,
+    lopt_password,
+} lopts_e;
+
+static struct option long_opts[] =
+{
+    /* Long version of standard short options */
+    /* "vPd:i:p:c:bf1" */
+    { "help",        no_argument,       0, 'h' },
+    { "version",     no_argument,       0, 'v' },
+    { "check",       no_argument,       0, 'P' },
+    { "degraded",    no_argument,       0, 'l' },
+    { "child-id",    required_argument, 0, 'i' },
+    { "debug-levek", required_argument, 0, 'd' },
+    { "pid-file",    required_argument, 0, 'p' },
+    { "foreground",  no_argument,       0, 'f' },
+    { "background",  no_argument,       0, 'b' },
+    /* CLI configuration options */
+    { "print",       no_argument,       0, lopt_print },
+    { "listen",      no_argument,       0, lopt_listen },
+    { "port",        required_argument, 0, lopt_port },
+    { "host",        optional_argument, 0, lopt_host },
+    { "key",         required_argument, 0, lopt_key },
+    { "address",     required_argument, 0, lopt_address },
+    { "user",        required_argument, 0, lopt_user },
+    { "password",    required_argument, 0, lopt_password },
+    /* end marker */
+    { 0, 0, 0, 0}
+};
+
+struct listen_config
+{
+    struct listen_config*   next_listen;
+    char*                   port;
+};
+
+struct host_config
+{
+    struct host_config*     next_host;
+    char*                   host_name;
+    char*                   secret_key;
+    char*                   address;
+};
+
+struct user_config
+{
+    struct user_config*     next_user;
+    char*                   username;
+    char*                   password;
+};
+
+struct spawnd_config
+{
+    struct listen_config*   listen_list;
+    struct listen_config*   listen_last;
+};
+
+struct tacplus_config
+{
+    struct host_config*     host_list;
+    struct host_config*     host_last;
+    struct user_config*     user_list;
+    struct user_config*     user_last;
+};
+
+struct cli_config
+{
+    int                    used;
+    int                    print;
+    struct spawnd_config   spawnd;
+    struct tacplus_config  tacplus;
+};
+
+extern char* optarg;
+extern int optind;
+static int opts_argc;
+static char** opts_argv;
+static const char* short_opts = ":hvPd:i:p:c:bf1";
+static int opts_index;
+
+static char* get_required_argument(const char* prompt, ...)
+{
+    char* result;
+
+    if (optarg == 0)
+    {
+	va_list args;
+	size_t  space = 0;
+	ssize_t count = 0;
+	char*   buffer = 0;
+
+	va_start(args, prompt);
+
+	do
+	{
+	    fprintf (stdout, "Missing ");
+	    vfprintf (stdout, prompt, args);
+	    fprintf (stdout, "\n>> ");
+            count = getline(&buffer, &space, stdin);
+            result = buffer;
+	    while ((count > 0) && (result[count-1] <= ' '))
+	    {
+		result[--count] = '\0';
+	    }
+	    while (*result && *result <= ' ')
+	    {
+		++result;
+	    }
+	} while (*result == '\0');
+
+	result = Xstrdup(result);
+        free (buffer);
+	va_end(args);
+    }
+    else
+    {
+        result = Xstrdup(optarg);
+	optarg = 0;
+    }
+
+    return result;
+}
+
+static char* get_optional_argument(const char* default_value)
+{
+    char* result;
+
+    if (optarg == 0)
+    {
+        result = Xstrdup(default_value);
+    }
+    else
+    {
+        result = Xstrdup(optarg);
+	optarg = 0;
+    }
+
+    return result;
+}
+
+static int get_next_option()
+{
+    int next_opt;
+
+    opts_index = -1;
+    next_opt = getopt_long(opts_argc, opts_argv, short_opts, long_opts, &opts_index);
+
+    if (next_opt == ':')
+    {
+	// Missing parameter value
+	//fprintf(stderr, "Missing value! opts_index=%d, optarg=%p, optopt=%d\n", opts_index, optarg, optopt);
+	next_opt = optopt;
+        optarg = 0;
+    }
+
+    return next_opt;
+}
+
+static int parse_listen_subopts(struct listen_config* listen)
+{
+    int c = EOF;
+
+    do
+    {
+	while (c != EOF)
+	{
+	    int opt = c;
+	    c = EOF;
+	    switch (opt)
+	    {
+		case lopt_port:
+		    if (listen->port)
+		    {
+			fprintf (stderr, "Duplicate --port for --listen!\n");
+			exit(1);
+		    }
+		    else
+		    {
+			listen->port = get_required_argument("TCP port number for the listen");
+		    }
+		    break;
+		default:
+		    return opt;
+	    }
+	}
+        c = get_next_option();
+    } while (c != EOF);
+
+    return c;
+}
+
+static int parse_cli_listen(struct cli_config* cli_cfg)
+{
+    int next_symbol;
+    struct listen_config* listen = Xcalloc(1, sizeof(struct listen_config));
+
+    if (cli_cfg->spawnd.listen_last == 0)
+    {
+	cli_cfg->spawnd.listen_list = listen;
+    }
+    else
+    {
+	cli_cfg->spawnd.listen_last->next_listen = listen;
+    }
+    cli_cfg->spawnd.listen_last = listen;
+    cli_cfg->used = 1;
+
+    next_symbol = parse_listen_subopts(listen);
+
+    // Check this listen is complete
+    if (listen->port == 0)
+    {
+	listen->port = get_required_argument("TCP port number for the listen");
+    }
+
+    return next_symbol;
+}
+
+static int parse_host_subopts(struct host_config* host)
+{
+    int c = EOF;
+
+    do
+    {
+	while (c != EOF)
+	{
+	    int opt = c;
+	    c = EOF;
+	    switch (opt)
+	    {
+		case lopt_address:
+		    if (host->address)
+		    {
+			fprintf (stderr, "Duplicate --address for --host %s!\n", host->host_name);
+			exit(1);
+		    }
+		    else
+		    {
+			host->address = get_required_argument("address for host %s", host->host_name);
+		    }
+		    break;
+		case lopt_key:
+		    if (host->secret_key)
+		    {
+			fprintf (stderr, "Duplicate --key for --host %s!\n", host->host_name);
+			exit(1);
+		    }
+		    else
+		    {
+			host->secret_key = get_required_argument("key for host %s", host->host_name);
+		    }
+		    break;
+		default:
+		    return opt;
+	    }
+	}
+        c = get_next_option();
+    } while (c != EOF);
+
+    return c;
+}
+
+static int parse_cli_host(struct cli_config* cli_cfg)
+{
+    int next_symbol;
+    struct host_config* host = Xcalloc(1, sizeof(struct host_config));
+
+    if (cli_cfg->tacplus.host_last == 0)
+    {
+	cli_cfg->tacplus.host_list = host;
+    }
+    else
+    {
+	cli_cfg->tacplus.host_last->next_host = host;
+    }
+    cli_cfg->tacplus.host_last = host;
+    cli_cfg->used = 1;
+
+    host->host_name = get_optional_argument("any");
+    next_symbol = parse_host_subopts(host);
+
+    // Check this host is complete
+    if (host->address == 0)
+    {
+	host->address = get_required_argument("IP address/mask for host %s", host->host_name);
+    }
+    if (host->secret_key == 0)
+    {
+	host->secret_key = get_required_argument("key for host %s", host->host_name);
+    }
+
+    return next_symbol;
+}
+
+static int parse_user_subopts(struct user_config* user)
+{
+    int c = EOF;
+
+    do
+    {
+	while (c != EOF)
+	{
+	    int opt = c;
+	    c = EOF;
+	    switch (opt)
+	    {
+		case lopt_password:
+		    if (user->password)
+		    {
+			fprintf (stderr, "Duplicate --password for --user %s!\n", user->username);
+			exit(1);
+		    }
+		    else
+		    {
+			user->password = get_required_argument("password for user %s", user->username);
+		    }
+		    break;
+		default:
+		    return opt;
+	    }
+	}
+        c = get_next_option();
+    } while (c != EOF);
+
+    return c;
+}
+
+static int parse_cli_user(struct cli_config* cli_cfg)
+{
+    int next_symbol;
+    struct user_config* user = Xcalloc(1, sizeof(struct user_config));
+
+    if (cli_cfg->tacplus.user_last == 0)
+    {
+	cli_cfg->tacplus.user_list = user;
+    }
+    else
+    {
+	cli_cfg->tacplus.user_last->next_user = user;
+    }
+    cli_cfg->tacplus.user_last = user;
+    cli_cfg->used = 1;
+
+    user->username = get_required_argument("name for the user");
+    next_symbol = parse_user_subopts(user);
+
+    // Check this user is complete
+    if (user->password == 0)
+    {
+	user->password = get_required_argument("password for user %s", user->username);
+    }
+
+    return next_symbol;
+}
+
+static char* generate_more(char* existing, char* extra)
+{
+    if (existing)
+    {
+	existing = realloc (existing, strlen(existing) + strlen(extra) + 1);
+	if (existing)
+	{
+	    strcat (existing, extra);
+	}
+    }
+    else
+    {
+        existing = Xstrdup(extra);
+    }
+
+    return existing;
+}
+
+static char* generate_listen_config(char* so_far, struct listen_config* listen)
+{
+    so_far = generate_more (so_far, "\tlisten = {\n");
+
+    if (listen->port)
+    {
+	so_far = generate_more (so_far, "\t\tport = ");
+	so_far = generate_more (so_far, listen->port);
+	so_far = generate_more (so_far, "\n");
+    }
+
+    so_far = generate_more (so_far, "\t}\n");
+    return so_far;
+}
+
+static char* generate_spawnd_config(char* so_far, struct spawnd_config* spawnd_cfg)
+{
+    struct listen_config* listen;
+
+    so_far = generate_more (so_far, "id = spawnd {\n");
+
+    for (listen = spawnd_cfg->listen_list; listen; listen = listen->next_listen)
+    {
+	so_far = generate_listen_config (so_far, listen);
+    }
+
+    // Static items that are candidates for parameterising...
+    so_far = generate_more (so_far, "\tspawn = {\n");
+    so_far = generate_more (so_far, "\t        instances min = 1\n");
+    so_far = generate_more (so_far, "\t        instances max = 10\n");
+    so_far = generate_more (so_far, "\t}\n");
+    so_far = generate_more (so_far, "\tbackground = no\n");
+
+
+    so_far = generate_more (so_far, "}\n");
+    return so_far;
+}
+
+static char* generate_host_config(char* so_far, struct host_config* host)
+{
+    so_far = generate_more (so_far, "\thost = ");
+    so_far = generate_more (so_far, host->host_name);
+    so_far = generate_more (so_far, " {\n");
+
+    if (host->address)
+    {
+	so_far = generate_more (so_far, "\t\taddress = ");
+	so_far = generate_more (so_far, host->address);
+	so_far = generate_more (so_far, "\n");
+    }
+
+    if (host->secret_key)
+    {
+	so_far = generate_more (so_far, "\t\tkey = ");
+	so_far = generate_more (so_far, host->secret_key);
+	so_far = generate_more (so_far, "\n");
+    }
+
+    // Static items that are candidates for parameterising...
+    so_far = generate_more (so_far, "\t\tprompt = \"Welcome\\n\"\n");
+    so_far = generate_more (so_far, "\t\tenable 15 = clear secret\n");
+
+    so_far = generate_more (so_far, "\t}\n");
+    return so_far;
+}
+
+static char* generate_user_config(char* so_far, struct user_config* user)
+{
+    so_far = generate_more (so_far, "\tuser = ");
+    so_far = generate_more (so_far, user->username);
+    so_far = generate_more (so_far, " {\n");
+
+    if (user->password)
+    {
+	so_far = generate_more (so_far, "\t\tpassword = clear ");
+	so_far = generate_more (so_far, user->password);
+	so_far = generate_more (so_far, "\n");
+    }
+
+    // Static items that are candidates for parameterising...
+    so_far = generate_more (so_far, "\t\tmember = guest\n");
+
+    so_far = generate_more (so_far, "\t}\n");
+    return so_far;
+}
+
+static char* generate_tacplus_config(char* so_far, struct tacplus_config* tacplus_cfg)
+{
+    struct host_config* host;
+    struct user_config* user;
+
+    so_far = generate_more (so_far, "\nid = tac_plus {\n");
+
+    // Static items that are candidates for parameterising...
+    so_far = generate_more (so_far, "\tdebug = PACKET AUTHEN AUTHOR\n");
+    so_far = generate_more (so_far, "\taccess log = output/access_4950\n");
+    so_far = generate_more (so_far, "\taccounting log = output/acct_4950\n");
+
+    for (host = tacplus_cfg->host_list; host; host = host->next_host)
+    {
+	so_far = generate_host_config (so_far, host);
+    }
+
+    // Static items that are candidates for parameterising...
+    so_far = generate_more (so_far, "\tgroup = guest {\n");
+    so_far = generate_more (so_far, "\t\tdefault service = permit\n");
+    so_far = generate_more (so_far, "\t\tenable = deny\n");
+    so_far = generate_more (so_far, "\t\tservice = shell {\n");
+    so_far = generate_more (so_far, "\t\t\tdefault command = permit\n");
+    so_far = generate_more (so_far, "\t\t\tdefault attribute = permit\n");
+    so_far = generate_more (so_far, "\t\t\tset priv-lvl = 1\n");
+    so_far = generate_more (so_far, "\t\t}\n");
+    so_far = generate_more (so_far, "\t}\n");
+
+
+    for (user = tacplus_cfg->user_list; user; user = user->next_user)
+    {
+	so_far = generate_user_config (so_far, user);
+    }
+
+    so_far = generate_more (so_far, "}\n");
+    return so_far;
+}
+
+static char* generate_cli_config(struct cli_config* cli_cfg)
+{
+    char* generated = 0;
+
+    generated = generate_spawnd_config(generated, &cli_cfg->spawnd);
+    generated = generate_tacplus_config(generated, &cli_cfg->tacplus);
+
+    return generated;
+}
+
 int spawnd_main(int argc, char **argv, char **envp, char *id)
 {
-    extern char *optarg;
-    extern int optind;
     pid_t pid;
     int c, devnull, i;
     struct spawnd_context *ctx = NULL;
     int socktype = 0;
     socklen_t socktypelen = sizeof(socktype);
+    struct cli_config cli_conf;
+
+    opts_argc = argc;
+    opts_argv = argv;
+    opts_index = 0;
 
     init_common_data();
     common_data.argv = dup_array(argv);
@@ -300,7 +820,7 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
     common_data.servers_min = 2;
     common_data.servers_max = 8;
     common_data.progname = Xstrdup(basename(argv[0]));
-    common_data.version = VERSION
+    common_data.version = VERSION "/Hydrix_0.2"
 #ifdef WITH_PCRE
 	"/PCRE"
 #endif
@@ -315,6 +835,8 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
 #endif
 	;
     logopen();
+
+    memset(&cli_conf, 0, sizeof(cli_conf));
 
     memset(&spawnd_data, 0, sizeof(spawnd_data));
     get_exec_path(&spawnd_data.child_path, argv[0]);
@@ -333,41 +855,64 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
 	    spawnd_data.inetd = 1;
 	}
 
-    while ((c = getopt(argc, argv, "vPd:i:p:c:bf1")) != EOF)
-	switch (c) {
-	case 'c':
-        common_data.alt_config = Xstrdup(optarg);
-	    break;
-	case 'v':
-	    common_data.version_only = 1;
-	    break;
-	case 'P':
-	    common_data.parse_only = 1;
-	    break;
-	case 'd':
-	    common_data.debug = atoi(optarg) & DEBUG_ALL_FLAG;
-	    break;
-	case 'b':
-	    spawnd_data.background = 1;
-	    spawnd_data.background_lock = 1;
-	    break;
-	case 'f':
-	    spawnd_data.background = 0;
-	    spawnd_data.background_lock = 1;
-	    break;
-	case 'i':
-	    strset(&spawnd_data.child_id, optarg);
-	    break;
-	case 'p':
-	    strset(&spawnd_data.pidfile, optarg);
-	    spawnd_data.pidfile_lock = 1;
-	    break;
-	case '1':
-	    common_data.singleprocess = 1;
-	    break;
-	default:
-	    common_usage();
+    //while ((c = getopt(argc, argv, "vPd:i:p:c:bf1")) != EOF)
+    c = EOF;
+    do
+    {
+	while (c != EOF)
+	{
+	    int opt = c;
+	    c = EOF;
+	    switch (opt)
+	    {
+		case 'c':
+		    common_data.alt_config = Xstrdup(optarg);
+		    break;
+		case 'v':
+		    common_data.version_only = 1;
+		    break;
+		case 'P':
+		    common_data.parse_only = 1;
+		    break;
+		case 'd':
+		    common_data.debug = atoi(optarg) & DEBUG_ALL_FLAG;
+		    break;
+		case 'b':
+		    spawnd_data.background = 1;
+		    spawnd_data.background_lock = 1;
+		    break;
+		case 'f':
+		    spawnd_data.background = 0;
+		    spawnd_data.background_lock = 1;
+		    break;
+		case 'i':
+		    strset(&spawnd_data.child_id, optarg);
+		    break;
+		case 'p':
+		    strset(&spawnd_data.pidfile, optarg);
+		    spawnd_data.pidfile_lock = 1;
+		    break;
+		case '1':
+		    common_data.singleprocess = 1;
+		    break;
+		case lopt_print:
+		    cli_conf.print = 1;
+		    break;
+		case lopt_listen:
+		    c = parse_cli_listen (&cli_conf);
+		    break;
+		case lopt_host:
+		    c = parse_cli_host (&cli_conf);
+		    break;
+		case lopt_user:
+		    c = parse_cli_user (&cli_conf);
+		    break;
+		default:
+		    common_usage();
+	    }
 	}
+        c = get_next_option();
+    } while (c != EOF);
 
     if (argc == optind && common_data.version_only) {
 	int status;
@@ -376,14 +921,40 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
 	exit(WEXITSTATUS(status));
     }
 
+    if (cli_conf.used)
+    {
+	common_data.alt_config = generate_cli_config(&cli_conf);
+    }
+
     if (common_data.alt_config)
     {
+        if (cli_conf.print)
+        {
+            printf("generated configuration is:\n%s\n======\n", common_data.alt_config);
+        }
         if (argc != optind && argc != optind+1)
         {
             printf("argc=%d optind=%d\n", argc, optind);
             common_usage();
         }
-        cfg_buffer_config(common_data.alt_config, spawnd_parse_decls, id ? id : (argv[optind + 1] ? argv[optind + 1] : common_data.progname));
+	if (common_data.ipc_key == 0)
+	{
+	    common_data.ipc_key = 456;
+	}
+	if (id == 0)
+	{
+	     id = common_data.progname;
+	}
+	if (ipc_create (common_data.alt_config, strlen(common_data.alt_config) + 1) != 0)
+	{
+	    fprintf (stderr, "ipc_create() failed!\n");
+	    exit(1);
+	}
+	else
+	{
+	    common_data.conffile = common_data.ipc_url;
+	    cfg_read_config(common_data.ipc_url, spawnd_parse_decls, id);
+	}    
     }
     else
     {
