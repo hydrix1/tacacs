@@ -16,26 +16,54 @@ echo "***   -- working in  $base"
 echo "***"
 echo "***"
 
-# Configure, build and install
-cd PROJECTS
+# Configure, build and install the original version
+cd original
 
 echo "***"
 echo "***"
-echo "*** Running 'configure'..."
+echo "*** Running 'configure' for original..."
 echo "***"
 echo "***"
-./configure
+./configure --prefix=/tmp/tacacs
 
 echo "***"
 echo "***"
-echo "*** Running 'make'..."
+echo "*** Running 'make' for original..."
 echo "***"
 echo "***"
 make
 
 echo "***"
 echo "***"
-echo "*** Running 'make install'..."
+echo "*** Running 'make install' for original..."
+echo "***"
+echo "***"
+echo "*** If this fails, add $username to /etc/sudoers:"
+echo "***          Defaults:$username   !requiretty"
+echo "***          $username            ALL=(ALL) NOPASSWD:ALL"
+echo "***"
+sudo make install
+
+# Configure, build and install the modified version
+cd ../modified
+
+echo "***"
+echo "***"
+echo "*** Running 'configure' for modified..."
+echo "***"
+echo "***"
+./configure
+
+echo "***"
+echo "***"
+echo "*** Running 'make' for modified..."
+echo "***"
+echo "***"
+make
+
+echo "***"
+echo "***"
+echo "*** Running 'make install' for modified..."
 echo "***"
 echo "***"
 echo "*** If this fails, add $username to /etc/sudoers:"

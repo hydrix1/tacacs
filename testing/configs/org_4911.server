@@ -1,4 +1,4 @@
-#!/usr/original/sbin/tac_plus
+#!/tmp/tacacs/sbin/tac_plus
 
 # Section 8.2 of the TACACS+ manual gives a sample configuration file:
 

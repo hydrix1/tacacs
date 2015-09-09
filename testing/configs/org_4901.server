@@ -1,4 +1,4 @@
-#!/usr/original/sbin/tac_plus
+#!/tmp/tacacs/sbin/tac_plus
 
 id = spawnd {
 	listen = { port = 4901 }
