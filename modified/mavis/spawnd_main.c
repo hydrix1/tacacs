@@ -405,6 +405,52 @@ static char** opts_argv;
 static const char* short_opts = ":hvPd:i:p:c:bf1";
 static int opts_index;
 
+static char* get_missing_argument(const char* prompt, va_list args)
+{
+    char*   result;
+    size_t  space = 0;
+    ssize_t count = 0;
+    char*   buffer = 0;
+
+    do
+    {
+	fprintf (stdout, "Missing ");
+	vfprintf (stdout, prompt, args);
+	fprintf (stdout, "\n>> ");
+	count = getline(&buffer, &space, stdin);
+	if (count < 0)
+	{
+	    fprintf (stderr, "EOF on stdin while reading mandatory parameter!\n");
+	    exit(1);
+	}
+	result = buffer;
+	while ((count > 0) && (result[count-1] <= ' '))
+	{
+	    result[--count] = '\0';
+	}
+	while (*result && *result <= ' ')
+	{
+	    ++result;
+	}
+    } while (*result == '\0');
+
+    result = Xstrdup(result);
+    free (buffer);
+
+    return result;
+}
+static char* get_omitted_argument(const char* prompt, ...)
+{
+    char*   result;
+    va_list args;
+
+    va_start(args, prompt);
+    result = get_missing_argument(prompt, args);
+    va_end(args);
+
+    return result;
+}
+
 static char* get_required_argument(const char* prompt, ...)
 {
     char* result;
@@ -412,36 +458,14 @@ static char* get_required_argument(const char* prompt, ...)
     if (optarg == 0)
     {
 	va_list args;
-	size_t  space = 0;
-	ssize_t count = 0;
-	char*   buffer = 0;
 
 	va_start(args, prompt);
-
-	do
-	{
-	    fprintf (stdout, "Missing ");
-	    vfprintf (stdout, prompt, args);
-	    fprintf (stdout, "\n>> ");
-            count = getline(&buffer, &space, stdin);
-            result = buffer;
-	    while ((count > 0) && (result[count-1] <= ' '))
-	    {
-		result[--count] = '\0';
-	    }
-	    while (*result && *result <= ' ')
-	    {
-		++result;
-	    }
-	} while (*result == '\0');
-
-	result = Xstrdup(result);
-        free (buffer);
+	result = get_missing_argument(prompt, args);
 	va_end(args);
     }
     else
     {
-        result = Xstrdup(optarg);
+	result = Xstrdup(optarg);
 	optarg = 0;
     }
 
@@ -454,11 +478,11 @@ static char* get_optional_argument(const char* default_value)
 
     if (optarg == 0)
     {
-        result = Xstrdup(default_value);
+	result = Xstrdup(default_value);
     }
     else
     {
-        result = Xstrdup(optarg);
+	result = Xstrdup(optarg);
 	optarg = 0;
     }
 
@@ -477,7 +501,7 @@ static int get_next_option()
 	// Missing parameter value
 	//fprintf(stderr, "Missing value! opts_index=%d, optarg=%p, optopt=%d\n", opts_index, optarg, optopt);
 	next_opt = optopt;
-        optarg = 0;
+	optarg = 0;
     }
 
     return next_opt;
@@ -510,7 +534,7 @@ static int parse_listen_subopts(struct listen_config* listen)
 		    return opt;
 	    }
 	}
-        c = get_next_option();
+	c = get_next_option();
     } while (c != EOF);
 
     return c;
@@ -537,7 +561,7 @@ static int parse_cli_listen(struct cli_config* cli_cfg)
     // Check this listen is complete
     if (listen->port == 0)
     {
-	listen->port = get_required_argument("TCP port number for the listen");
+	listen->port = get_omitted_argument("TCP port number for the listen");
     }
 
     return next_symbol;
@@ -581,7 +605,7 @@ static int parse_host_subopts(struct host_config* host)
 		    return opt;
 	    }
 	}
-        c = get_next_option();
+	c = get_next_option();
     } while (c != EOF);
 
     return c;
@@ -609,11 +633,11 @@ static int parse_cli_host(struct cli_config* cli_cfg)
     // Check this host is complete
     if (host->address == 0)
     {
-	host->address = get_required_argument("IP address/mask for host %s", host->host_name);
+	host->address = "0.0.0.0/0";
     }
     if (host->secret_key == 0)
     {
-	host->secret_key = get_required_argument("key for host %s", host->host_name);
+	host->secret_key = get_omitted_argument("key for host %s", host->host_name);
     }
 
     return next_symbol;
@@ -653,7 +677,7 @@ static int parse_cmd_subopts(struct cmd_config* cmd)
 		    return opt;
 	    }
 	}
-        c = get_next_option();
+	c = get_next_option();
     } while (c != EOF);
 
     return c;
@@ -708,7 +732,7 @@ static int parse_user_subopts(struct user_config* user)
 		    return opt;
 	    }
 	}
-        c = get_next_option();
+	c = get_next_option();
     } while (c != EOF);
 
     return c;
@@ -736,7 +760,7 @@ static int parse_cli_user(struct cli_config* cli_cfg)
     // Check this user is complete
     if (user->password == 0)
     {
-	user->password = get_required_argument("password for user %s", user->username);
+	user->password = get_omitted_argument("password for user %s", user->username);
     }
 
     return next_symbol;
@@ -754,7 +778,7 @@ static char* generate_more(char* existing, char* extra)
     }
     else
     {
-        existing = Xstrdup(extra);
+	existing = Xstrdup(extra);
     }
 
     return existing;
@@ -1060,7 +1084,7 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
 		    common_usage();
 	    }
 	}
-        c = get_next_option();
+	c = get_next_option();
     } while (c != EOF);
 
     if (argc == optind && common_data.version_only) {
@@ -1077,15 +1101,15 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
 
     if (common_data.alt_config)
     {
-        if (cli_conf.print)
-        {
-            printf("generated configuration is:\n%s\n======\n", common_data.alt_config);
-        }
-        if (argc != optind && argc != optind+1)
-        {
-            printf("argc=%d optind=%d\n", argc, optind);
-            common_usage();
-        }
+	if (cli_conf.print)
+	{
+	    printf("generated configuration is:\n%s\n======\n", common_data.alt_config);
+	}
+	if (argc != optind && argc != optind+1)
+	{
+	    printf("argc=%d optind=%d\n", argc, optind);
+	    common_usage();
+	}
 	if (common_data.ipc_key == 0)
 	{
 	    common_data.ipc_key = 456;
@@ -1107,12 +1131,12 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
     }
     else
     {
-        if (argc != optind + 1 && argc != optind + 2)
-        {
-            common_usage();
-        }
-        common_data.conffile = Xstrdup(argv[optind]);
-        cfg_read_config(argv[optind], spawnd_parse_decls, id ? id : (argv[optind + 1] ? argv[optind + 1] : common_data.progname));
+	if (argc != optind + 1 && argc != optind + 2)
+	{
+	    common_usage();
+	}
+	common_data.conffile = Xstrdup(argv[optind]);
+	cfg_read_config(argv[optind], spawnd_parse_decls, id ? id : (argv[optind + 1] ? argv[optind + 1] : common_data.progname));
     }
 
     strset(&spawnd_data.child_config, argv[optind]);
@@ -1302,6 +1326,6 @@ void scm_main(int argc, char **argv, char **envp)
 	default:
 	    common_usage();
 	}
-        if (argc != optind && argc != optind + 1 && argc != optind + 2)
+	if (argc != optind && argc != optind + 1 && argc != optind + 2)
 	        common_usage();
 }
