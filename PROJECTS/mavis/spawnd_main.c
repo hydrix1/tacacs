@@ -294,6 +294,10 @@ typedef enum {
     lopt_address,
     lopt_user,
     lopt_password,
+    lopt_debug,
+    lopt_cmd,
+    lopt_deny,
+    lopt_permit,
 } lopts_e;
 
 static struct option long_opts[] =
@@ -318,6 +322,10 @@ static struct option long_opts[] =
     { "address",     required_argument, 0, lopt_address },
     { "user",        required_argument, 0, lopt_user },
     { "password",    required_argument, 0, lopt_password },
+    { "debug",       required_argument, 0, lopt_debug },
+    { "cmd",         required_argument, 0, lopt_cmd },
+    { "deny",        optional_argument, 0, lopt_deny },
+    { "permit",      optional_argument, 0, lopt_permit },
     /* end marker */
     { 0, 0, 0, 0}
 };
@@ -336,11 +344,36 @@ struct host_config
     char*                   address;
 };
 
+struct access_config
+{
+    struct access_config*   next_access;
+    char*                   access_type;
+    char*                   access_regex;
+};
+
+struct cmd_config
+{
+    struct cmd_config*      next_cmd;
+    char*                   cmd_name;
+    struct access_config*   access_list;
+    struct access_config*   access_last;
+};
+
+struct service_config
+{
+    struct service_config*  next_service;
+    char*                   svc_name;
+    struct cmd_config*      cmd_list;
+    struct cmd_config*      cmd_last;
+};
+
 struct user_config
 {
     struct user_config*     next_user;
     char*                   username;
     char*                   password;
+    struct service_config*  service_list;
+    struct service_config*  service_last;
 };
 
 struct spawnd_config
@@ -586,6 +619,46 @@ static int parse_cli_host(struct cli_config* cli_cfg)
     return next_symbol;
 }
 
+static int parse_cmd_subopts(struct cmd_config* cmd)
+{
+    int c = EOF;
+
+    do
+    {
+	while (c != EOF)
+	{
+	    const char* mode = "permit";
+	    struct access_config* access;
+	    int opt = c;
+	    c = EOF;
+	    switch (opt)
+	    {
+		case lopt_deny:
+		    mode = "deny";
+		    /* fall through */
+		case lopt_permit:
+		    access = Xcalloc(1, sizeof(struct access_config));
+		    if (cmd->access_last == 0)
+		    {
+			cmd->access_list = access;
+		    }
+		    else
+		    {
+			cmd->access_last->next_access = access;
+		    }
+		    access->access_type = Xstrdup(mode);
+		    access->access_regex = get_optional_argument(".*");
+		    break;
+		default:
+		    return opt;
+	    }
+	}
+        c = get_next_option();
+    } while (c != EOF);
+
+    return c;
+}
+
 static int parse_user_subopts(struct user_config* user)
 {
     int c = EOF;
@@ -608,6 +681,28 @@ static int parse_user_subopts(struct user_config* user)
 		    {
 			user->password = get_required_argument("password for user %s", user->username);
 		    }
+		    break;
+		case lopt_cmd:
+		    if (user->service_list == 0)
+		    {
+			struct service_config* shell = Xcalloc(1, sizeof(struct service_config));
+		    	shell->svc_name = "shell";
+			user->service_list = shell;
+			user->service_last = shell;
+		    }
+		    struct service_config* shell = user->service_list;
+		    struct cmd_config* cmd = Xcalloc(1, sizeof(struct cmd_config));
+		    if (shell->cmd_last == 0)
+		    {
+			shell->cmd_list = cmd;
+		    }
+		    else
+		    {
+			shell->cmd_last->next_cmd = cmd;
+		    }
+		    shell->cmd_last = cmd;
+		    cmd->cmd_name = get_required_argument("command name for --cmd");
+		    c = parse_cmd_subopts(cmd);
 		    break;
 		default:
 		    return opt;
@@ -724,15 +819,64 @@ static char* generate_host_config(char* so_far, struct host_config* host)
     }
 
     // Static items that are candidates for parameterising...
-    so_far = generate_more (so_far, "\t\tprompt = \"Welcome\\n\"\n");
-    so_far = generate_more (so_far, "\t\tenable 15 = clear secret\n");
+    // so_far = generate_more (so_far, "\t\tprompt = \"Welcome\\n\"\n");
+    // so_far = generate_more (so_far, "\t\tenable 15 = clear secret\n");
 
     so_far = generate_more (so_far, "\t}\n");
     return so_far;
 }
 
+static char* generate_access_config(char* so_far, struct access_config* access)
+{
+    so_far = generate_more (so_far, "\t\t\t\t");
+    so_far = generate_more (so_far, access->access_type);
+    so_far = generate_more (so_far, " ");
+    so_far = generate_more (so_far, access->access_regex);
+    so_far = generate_more (so_far, "\n");
+
+    return so_far;
+}
+
+static char* generate_cmd_config(char* so_far, struct cmd_config* cmd)
+{
+    struct access_config* access;
+
+    so_far = generate_more (so_far, "\t\t\tcmd = ");
+    so_far = generate_more (so_far, cmd->cmd_name);
+    so_far = generate_more (so_far, " {\n");
+
+    for (access = cmd->access_list; access; access = access->next_access)
+    {
+	so_far = generate_access_config (so_far, access);
+    }
+
+    so_far = generate_more (so_far, "\t\t\t}\n");
+
+    return so_far;
+}
+
+static char* generate_service_config(char* so_far, struct service_config* svc)
+{
+    struct cmd_config* cmd;
+
+    so_far = generate_more (so_far, "\t\tservice = ");
+    so_far = generate_more (so_far, svc->svc_name);
+    so_far = generate_more (so_far, " {\n");
+
+    for (cmd = svc->cmd_list; cmd; cmd = cmd->next_cmd)
+    {
+	so_far = generate_cmd_config (so_far, cmd);
+    }
+
+    so_far = generate_more (so_far, "\t\t}\n");
+
+    return so_far;
+}
+
 static char* generate_user_config(char* so_far, struct user_config* user)
 {
+    struct service_config* svc;
+
     so_far = generate_more (so_far, "\tuser = ");
     so_far = generate_more (so_far, user->username);
     so_far = generate_more (so_far, " {\n");
@@ -745,7 +889,12 @@ static char* generate_user_config(char* so_far, struct user_config* user)
     }
 
     // Static items that are candidates for parameterising...
-    so_far = generate_more (so_far, "\t\tmember = guest\n");
+    // so_far = generate_more (so_far, "\t\tmember = guest\n");
+
+    for (svc = user->service_list; svc; svc = svc->next_service)
+    {
+	so_far = generate_service_config (so_far, svc);
+    }
 
     so_far = generate_more (so_far, "\t}\n");
     return so_far;
@@ -769,15 +918,15 @@ static char* generate_tacplus_config(char* so_far, struct tacplus_config* tacplu
     }
 
     // Static items that are candidates for parameterising...
-    so_far = generate_more (so_far, "\tgroup = guest {\n");
-    so_far = generate_more (so_far, "\t\tdefault service = permit\n");
-    so_far = generate_more (so_far, "\t\tenable = deny\n");
-    so_far = generate_more (so_far, "\t\tservice = shell {\n");
-    so_far = generate_more (so_far, "\t\t\tdefault command = permit\n");
-    so_far = generate_more (so_far, "\t\t\tdefault attribute = permit\n");
-    so_far = generate_more (so_far, "\t\t\tset priv-lvl = 1\n");
-    so_far = generate_more (so_far, "\t\t}\n");
-    so_far = generate_more (so_far, "\t}\n");
+    // so_far = generate_more (so_far, "\tgroup = guest {\n");
+    // so_far = generate_more (so_far, "\t\tdefault service = permit\n");
+    // so_far = generate_more (so_far, "\t\tenable = deny\n");
+    // so_far = generate_more (so_far, "\t\tservice = shell {\n");
+    // so_far = generate_more (so_far, "\t\t\tdefault command = permit\n");
+    // so_far = generate_more (so_far, "\t\t\tdefault attribute = permit\n");
+    // so_far = generate_more (so_far, "\t\t\tset priv-lvl = 1\n");
+    // so_far = generate_more (so_far, "\t\t}\n");
+    // so_far = generate_more (so_far, "\t}\n");
 
 
     for (user = tacplus_cfg->user_list; user; user = user->next_user)

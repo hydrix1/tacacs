@@ -1,0 +1,19 @@
+#!/usr/original/sbin/tac_plus
+
+# Section 8.2 of the TACACS+ manual gives a sample configuration file:
+
+id = spawnd {
+    listen = { port = 4911 }
+}
+id = tac_plus {
+    host = any { key = "some key" address = 0.0.0.0/0 }
+
+    # repeat as necessary for each user
+    user = fred {
+        login = clear abcdef
+        service = shell {
+            cmd = write  { permit terminal }
+            cmd = configure { permit .* }
+        }
+    }
+}

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Section 8.2 of the TACACS+ manual gives a sample configuration file:
+
+exec /usr/local/sbin/tac_plus --print \
+	--listen --port=4913 \
+	--host --key="some key" --address=0.0.0.0/0 \
+	--user=fred --password=abcdef \
+	--cmd=write --permit=terminal \
+	--cmd=configure --permit
