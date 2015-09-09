@@ -13,7 +13,7 @@ class Unity:
         self.test_context=''
 
     def mark_time(self):
-        print "@@@ 123.456"
+        print '@@@ {0:.3f}'.format(time.time())
 
     def start(self):
         self.test_depth=0
@@ -90,11 +90,19 @@ class Unity:
     def skip(self):
         self.skip_test = True
 
-    def fail(self):
+    def fail(self, text=None):
         self.fail_test = True
-
+        if text is not None:
+            print ' -- ' + text
 
     def assert_equal(self, wanted, got):
         if wanted != got:
-            self.fail()
-            print ' -- Wanted "' + wanted + '", got "' + got + '"!\n'
+            self.fail('Wanted "' + wanted + '", got "' + got + '"!')
+
+    def expect_text(self, output, wanted):
+        if wanted not in output:
+            self.fail('didn\'t get ' + wanted)
+
+    def dont_expect_text(self, output, not_wanted):
+        if not_wanted in output:
+            self.fail('got unwanted ' + not_wanted)
