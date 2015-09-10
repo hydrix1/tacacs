@@ -380,11 +380,25 @@ struct service_config
     struct set_config*      set_tail;
 };
 
+struct group_config
+{
+    struct group_config*    next_group;
+    char*                   group_name;
+};
+
+struct member_config
+{
+    struct member_config*   next_member;
+    char*                   member_name;
+};
+
 struct user_config
 {
     struct user_config*     next_user;
     char*                   username;
     char*                   password;
+    struct member_config*   member_head;
+    struct member_config*   member_tail;
     struct service_config*  service_head;
     struct service_config*  service_tail;
     struct service_config*  shell_service;
@@ -402,6 +416,8 @@ struct tacplus_config
     char*                   secret_key;
     struct host_config*     host_head;
     struct host_config*     host_tail;
+    struct group_config*    group_head;
+    struct group_config*    group_tail;
     struct user_config*     user_head;
     struct user_config*     user_tail;
 };
@@ -788,6 +804,21 @@ static int parse_user_subopts(struct user_config* user)
 		    set_password (&user->password, "clear", 1, "--user", user->username);
 		    if (user->password)
 		    break;
+		case lopt_group:
+		    {
+			struct member_config* member = Xcalloc(1, sizeof(struct member_config));
+		    	member->member_name = get_required_argument("group name for --group");
+			if (user->member_tail == 0)
+			{
+			    user->member_head = member;
+			}
+			else
+			{
+			    user->member_tail->next_member = member;
+			}
+			user->member_tail = member;
+		    }
+		    break;
 		case lopt_cmd:
 		    if (user->shell_service == 0)
 		    {
@@ -850,10 +881,31 @@ static int parse_user_subopts(struct user_config* user)
     return c;
 }
 
+static int parse_cli_group(struct cli_config* cli_cfg)
+{
+    int next_symbol = EOF;
+    struct group_config* group = Xcalloc(1, sizeof(struct group_config));
+
+    if (cli_cfg->tacplus.group_tail == 0)
+    {
+	cli_cfg->tacplus.group_head = group;
+    }
+    else
+    {
+	cli_cfg->tacplus.group_tail->next_group = group;
+    }
+    cli_cfg->tacplus.group_tail = group;
+    cli_cfg->used = 1;
+
+    group->group_name = get_required_argument("name for the group");
+    // next_symbol = parse_group_subopts(group);
+
+    return next_symbol;
+}
+
 static int parse_cli_user(struct cli_config* cli_cfg)
 {
     int next_symbol;
-    char* colon;
     struct user_config* user = Xcalloc(1, sizeof(struct user_config));
 
     if (cli_cfg->tacplus.user_tail == 0)
@@ -873,15 +925,17 @@ static int parse_cli_user(struct cli_config* cli_cfg)
     // Check this user is complete
     if (user->password == 0)
     {
-	user->password = get_omitted_argument("password for user %s", user->username);
-    }
+	char* colon;
 
-    // Fix-up password formatting: if the string is of the format
-    // "clear:text", replace the first colon with a space
-    colon = strchr(user->password, ':');
-    if (colon)
-    {
-	*colon = ' ';
+	user->password = get_omitted_argument("password for user %s", user->username);
+
+	// Fix-up password formatting: if the string is of the format
+	// "clear:text", replace the first colon with a space
+	colon = strchr(user->password, ':');
+	if (colon)
+	{
+	    *colon = ' ';
+	}
     }
 
     return next_symbol;
@@ -1028,8 +1082,31 @@ static char* generate_service_config(char* so_far, struct service_config* svc)
     return so_far;
 }
 
+static char* generate_group_config(char* so_far, struct group_config* group)
+{
+    struct member_config*  member;
+    struct service_config* svc;
+
+    so_far = generate_more (so_far, "\tgroup = ");
+    so_far = generate_more (so_far, group->group_name);
+    so_far = generate_more (so_far, " {\n");
+
+    // Static items that are candidates for parameterising...
+    // so_far = generate_more (so_far, "\t\tdefault service = permit\n");
+    // so_far = generate_more (so_far, "\t\tenable = deny\n");
+    // so_far = generate_more (so_far, "\t\tservice = shell {\n");
+    // so_far = generate_more (so_far, "\t\t\tdefault command = permit\n");
+    // so_far = generate_more (so_far, "\t\t\tdefault attribute = permit\n");
+    // so_far = generate_more (so_far, "\t\t\tset priv-lvl = 1\n");
+    // so_far = generate_more (so_far, "\t\t}\n");
+
+    so_far = generate_more (so_far, "\t}\n");
+    return so_far;
+}
+
 static char* generate_user_config(char* so_far, struct user_config* user)
 {
+    struct member_config*  member;
     struct service_config* svc;
 
     so_far = generate_more (so_far, "\tuser = ");
@@ -1046,6 +1123,13 @@ static char* generate_user_config(char* so_far, struct user_config* user)
     // Static items that are candidates for parameterising...
     // so_far = generate_more (so_far, "\t\tmember = guest\n");
 
+    for (member = user->member_head; member; member = member->next_member)
+    {
+	so_far = generate_more (so_far, "\t\tmember = ");
+	so_far = generate_more (so_far, member->member_name);
+	so_far = generate_more (so_far, "\n");
+    }
+
     for (svc = user->service_head; svc; svc = svc->next_service)
     {
 	so_far = generate_service_config (so_far, svc);
@@ -1058,8 +1142,9 @@ static char* generate_user_config(char* so_far, struct user_config* user)
 static char* generate_tacplus_config(char* so_far, struct tacplus_config* tacplus_cfg)
 {
     char* text;
-    struct host_config* host;
-    struct user_config* user;
+    struct host_config*  host;
+    struct group_config* group;
+    struct user_config*  user;
 
     so_far = generate_more (so_far, "\nid = tac_plus {\n");
 
@@ -1088,17 +1173,10 @@ static char* generate_tacplus_config(char* so_far, struct tacplus_config* tacplu
 	so_far = generate_host_config (so_far, host);
     }
 
-    // Static items that are candidates for parameterising...
-    // so_far = generate_more (so_far, "\tgroup = guest {\n");
-    // so_far = generate_more (so_far, "\t\tdefault service = permit\n");
-    // so_far = generate_more (so_far, "\t\tenable = deny\n");
-    // so_far = generate_more (so_far, "\t\tservice = shell {\n");
-    // so_far = generate_more (so_far, "\t\t\tdefault command = permit\n");
-    // so_far = generate_more (so_far, "\t\t\tdefault attribute = permit\n");
-    // so_far = generate_more (so_far, "\t\t\tset priv-lvl = 1\n");
-    // so_far = generate_more (so_far, "\t\t}\n");
-    // so_far = generate_more (so_far, "\t}\n");
-
+    for (group = tacplus_cfg->group_head; group; group = group->next_group)
+    {
+	so_far = generate_group_config (so_far, group);
+    }
 
     for (user = tacplus_cfg->user_head; user; user = user->next_user)
     {
@@ -1237,6 +1315,9 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
 		    break;
 		case lopt_host:
 		    c = parse_cli_host (&cli_conf);
+		    break;
+		case lopt_group:
+		    c = parse_cli_group (&cli_conf);
 		    break;
 		case lopt_user:
 		    c = parse_cli_user (&cli_conf);
