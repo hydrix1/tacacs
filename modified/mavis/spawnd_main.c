@@ -1282,7 +1282,7 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
 	}
 	if (common_data.ipc_key == 0)
 	{
-	    common_data.ipc_key = 456;
+	    common_data.ipc_key = getpid() * 1000 + 456;
 	}
 	if (id == 0)
 	{
