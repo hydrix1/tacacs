@@ -35,7 +35,7 @@ unity_start
 
 
 # Test 1: the reference server
-#tacacs_test_direct
+tacacs_test_direct
 tacacs_test_junos
 
 
