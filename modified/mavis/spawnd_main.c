@@ -357,8 +357,8 @@ struct cmd_config
 {
     struct cmd_config*      next_cmd;
     char*                   cmd_name;
-    struct access_config*   access_list;
-    struct access_config*   access_last;
+    struct access_config*   access_head;
+    struct access_config*   access_tail;
 };
 
 struct set_config
@@ -372,10 +372,10 @@ struct service_config
 {
     struct service_config*  next_service;
     char*                   svc_name;
-    struct cmd_config*      cmd_list;
-    struct cmd_config*      cmd_last;
-    struct set_config*      set_list;
-    struct set_config*      set_last;
+    struct cmd_config*      cmd_head;
+    struct cmd_config*      cmd_tail;
+    struct set_config*      set_head;
+    struct set_config*      set_tail;
 };
 
 struct user_config
@@ -383,25 +383,25 @@ struct user_config
     struct user_config*     next_user;
     char*                   username;
     char*                   password;
-    struct service_config*  service_list;
-    struct service_config*  service_last;
+    struct service_config*  service_head;
+    struct service_config*  service_tail;
     struct service_config*  shell_service;
 };
 
 struct spawnd_config
 {
-    struct listen_config*   listen_list;
-    struct listen_config*   listen_last;
+    struct listen_config*   listen_head;
+    struct listen_config*   listen_tail;
 };
 
 struct tacplus_config
 {
     char*                   debug_opts;
     char*                   secret_key;
-    struct host_config*     host_list;
-    struct host_config*     host_last;
-    struct user_config*     user_list;
-    struct user_config*     user_last;
+    struct host_config*     host_head;
+    struct host_config*     host_tail;
+    struct user_config*     user_head;
+    struct user_config*     user_tail;
 };
 
 struct cli_config
@@ -559,15 +559,15 @@ static int parse_cli_listen(struct cli_config* cli_cfg)
     int next_symbol;
     struct listen_config* listen = Xcalloc(1, sizeof(struct listen_config));
 
-    if (cli_cfg->spawnd.listen_last == 0)
+    if (cli_cfg->spawnd.listen_tail == 0)
     {
-	cli_cfg->spawnd.listen_list = listen;
+	cli_cfg->spawnd.listen_head = listen;
     }
     else
     {
-	cli_cfg->spawnd.listen_last->next_listen = listen;
+	cli_cfg->spawnd.listen_tail->next_listen = listen;
     }
-    cli_cfg->spawnd.listen_last = listen;
+    cli_cfg->spawnd.listen_tail = listen;
     cli_cfg->used = 1;
 
     next_symbol = parse_listen_subopts(listen);
@@ -657,15 +657,15 @@ static int parse_cli_host(struct cli_config* cli_cfg)
     int next_symbol;
     struct host_config* host = Xcalloc(1, sizeof(struct host_config));
 
-    if (cli_cfg->tacplus.host_last == 0)
+    if (cli_cfg->tacplus.host_tail == 0)
     {
-	cli_cfg->tacplus.host_list = host;
+	cli_cfg->tacplus.host_head = host;
     }
     else
     {
-	cli_cfg->tacplus.host_last->next_host = host;
+	cli_cfg->tacplus.host_tail->next_host = host;
     }
-    cli_cfg->tacplus.host_last = host;
+    cli_cfg->tacplus.host_tail = host;
     cli_cfg->used = 1;
 
     host->host_name = get_optional_argument("any");
@@ -703,13 +703,13 @@ static int parse_cmd_subopts(struct cmd_config* cmd)
 		    /* fall through */
 		case lopt_permit:
 		    access = Xcalloc(1, sizeof(struct access_config));
-		    if (cmd->access_last == 0)
+		    if (cmd->access_tail == 0)
 		    {
-			cmd->access_list = access;
+			cmd->access_head = access;
 		    }
 		    else
 		    {
-			cmd->access_last->next_access = access;
+			cmd->access_tail->next_access = access;
 		    }
 		    access->access_type = Xstrdup(mode);
 		    access->access_regex = get_optional_argument(".*");
@@ -752,29 +752,29 @@ static int parse_user_subopts(struct user_config* user)
 		    {
 			struct service_config* shell = Xcalloc(1, sizeof(struct service_config));
 		    	shell->svc_name = "shell";
-			shell->next_service = user->service_last;
-			if (user->service_last == 0)
+			shell->next_service = user->service_tail;
+			if (user->service_tail == 0)
 			{
-			    user->service_list = shell;
+			    user->service_head = shell;
 			}
 			else
 			{
-			    user->service_last->next_service = shell;
+			    user->service_tail->next_service = shell;
 			}
 			user->shell_service = shell;
-			user->service_last = shell;
+			user->service_tail = shell;
 		    }
 		    struct service_config* shell = user->shell_service;
 		    struct cmd_config* cmd = Xcalloc(1, sizeof(struct cmd_config));
-		    if (shell->cmd_last == 0)
+		    if (shell->cmd_tail == 0)
 		    {
-			shell->cmd_list = cmd;
+			shell->cmd_head = cmd;
 		    }
 		    else
 		    {
-			shell->cmd_last->next_cmd = cmd;
+			shell->cmd_tail->next_cmd = cmd;
 		    }
-		    shell->cmd_last = cmd;
+		    shell->cmd_tail = cmd;
 		    cmd->cmd_name = get_required_argument("command name for --cmd");
 		    c = parse_cmd_subopts(cmd);
 		    break;
@@ -783,18 +783,18 @@ static int parse_user_subopts(struct user_config* user)
 			struct service_config* junos = Xcalloc(1, sizeof(struct service_config));
 			struct set_config* set = Xcalloc(1, sizeof(struct set_config));
 		    	junos->svc_name = "junos-exec";
-			junos->next_service = user->service_last;
-			if (user->service_last == 0)
+			junos->next_service = user->service_tail;
+			if (user->service_tail == 0)
 			{
-			    user->service_list = junos;
+			    user->service_head = junos;
 			}
 			else
 			{
-			    user->service_last->next_service = junos;
+			    user->service_tail->next_service = junos;
 			}
-			user->service_last = junos;
-			junos->set_list = set;
-			junos->set_last = set;
+			user->service_tail = junos;
+			junos->set_head = set;
+			junos->set_tail = set;
 			set->set_name = "local-user-name";
 			set->set_value = "let_me_in";
 		    }
@@ -815,15 +815,15 @@ static int parse_cli_user(struct cli_config* cli_cfg)
     char* colon;
     struct user_config* user = Xcalloc(1, sizeof(struct user_config));
 
-    if (cli_cfg->tacplus.user_last == 0)
+    if (cli_cfg->tacplus.user_tail == 0)
     {
-	cli_cfg->tacplus.user_list = user;
+	cli_cfg->tacplus.user_head = user;
     }
     else
     {
-	cli_cfg->tacplus.user_last->next_user = user;
+	cli_cfg->tacplus.user_tail->next_user = user;
     }
-    cli_cfg->tacplus.user_last = user;
+    cli_cfg->tacplus.user_tail = user;
     cli_cfg->used = 1;
 
     user->username = get_required_argument("name for the user");
@@ -885,7 +885,7 @@ static char* generate_spawnd_config(char* so_far, struct spawnd_config* spawnd_c
 
     so_far = generate_more (so_far, "id = spawnd {\n");
 
-    for (listen = spawnd_cfg->listen_list; listen; listen = listen->next_listen)
+    for (listen = spawnd_cfg->listen_head; listen; listen = listen->next_listen)
     {
 	so_far = generate_listen_config (so_far, listen);
     }
@@ -949,7 +949,7 @@ static char* generate_cmd_config(char* so_far, struct cmd_config* cmd)
     so_far = generate_more (so_far, cmd->cmd_name);
     so_far = generate_more (so_far, " {\n");
 
-    for (access = cmd->access_list; access; access = access->next_access)
+    for (access = cmd->access_head; access; access = access->next_access)
     {
 	so_far = generate_access_config (so_far, access);
     }
@@ -968,12 +968,12 @@ static char* generate_service_config(char* so_far, struct service_config* svc)
     so_far = generate_more (so_far, svc->svc_name);
     so_far = generate_more (so_far, " {\n");
 
-    for (cmd = svc->cmd_list; cmd; cmd = cmd->next_cmd)
+    for (cmd = svc->cmd_head; cmd; cmd = cmd->next_cmd)
     {
 	so_far = generate_cmd_config (so_far, cmd);
     }
 
-    for (set = svc->set_list; set; set = set->next_set)
+    for (set = svc->set_head; set; set = set->next_set)
     {
 	so_far = generate_more (so_far, "\t\t\tset ");
 	so_far = generate_more (so_far, set->set_name);
@@ -1005,7 +1005,7 @@ static char* generate_user_config(char* so_far, struct user_config* user)
     // Static items that are candidates for parameterising...
     // so_far = generate_more (so_far, "\t\tmember = guest\n");
 
-    for (svc = user->service_list; svc; svc = svc->next_service)
+    for (svc = user->service_head; svc; svc = svc->next_service)
     {
 	so_far = generate_service_config (so_far, svc);
     }
@@ -1042,7 +1042,7 @@ static char* generate_tacplus_config(char* so_far, struct tacplus_config* tacplu
     // so_far = generate_more (so_far, "\taccess log = output/access_4950\n");
     // so_far = generate_more (so_far, "\taccounting log = output/acct_4950\n");
 
-    for (host = tacplus_cfg->host_list; host; host = host->next_host)
+    for (host = tacplus_cfg->host_head; host; host = host->next_host)
     {
 	so_far = generate_host_config (so_far, host);
     }
@@ -1059,7 +1059,7 @@ static char* generate_tacplus_config(char* so_far, struct tacplus_config* tacplu
     // so_far = generate_more (so_far, "\t}\n");
 
 
-    for (user = tacplus_cfg->user_list; user; user = user->next_user)
+    for (user = tacplus_cfg->user_head; user; user = user->next_user)
     {
 	so_far = generate_user_config (so_far, user);
     }
