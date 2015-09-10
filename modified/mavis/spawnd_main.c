@@ -1092,7 +1092,7 @@ static char* generate_group_config(char* so_far, struct group_config* group)
     so_far = generate_more (so_far, " {\n");
 
     // Static items that are candidates for parameterising...
-    // so_far = generate_more (so_far, "\t\tdefault service = permit\n");
+    so_far = generate_more (so_far, "\t\tdefault service = permit\n");
     // so_far = generate_more (so_far, "\t\tenable = deny\n");
     // so_far = generate_more (so_far, "\t\tservice = shell {\n");
     // so_far = generate_more (so_far, "\t\t\tdefault command = permit\n");
