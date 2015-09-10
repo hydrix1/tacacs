@@ -6,7 +6,7 @@ exec /usr/local/sbin/tac_plus --print \
 	`#--access_log=output/access_4903.log` \
 	`#--accounting_log=output/acct_4903.log` \
 	--key=cisco \
-	--user=test_4903_a --password=clear:A4903 --junos \
-	--user=test_4903_b --password=permit --junos \
-	--user=test_4903_c --password=deny \
+	--user=test_4903_a --password=A4903 --junos \
+	--user=test_4903_b --permit --junos \
+	--user=test_4903_c --deny \
 
