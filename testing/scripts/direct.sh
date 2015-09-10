@@ -111,7 +111,7 @@ tacacs_test_authorisation()
 tacacs_test_simple_authenicate_good()
 {
     unity_start_test "good"
-        "$tactest" -s $machine -port $tacacs_port -u test_4900_a -p A4900 -k cisco -authen 2>&1 | tee $test_log
+        "$tactest" -s $machine -port $tacacs_port -u test_${tacacs_port}_a -p A${tacacs_port} -k cisco -authen 2>&1 | tee $test_log
         tacats_expect_true
     unity_end_test
 }
@@ -121,7 +121,7 @@ tacacs_test_simple_authenicate_good()
 tacacs_test_simple_authenicate_permit()
 {
     unity_start_test "permit"
-        "$tactest" -s $machine -port $tacacs_port -u test_4900_b -p any_old_rubbish -k cisco -authen 2>&1 | tee $test_log
+        "$tactest" -s $machine -port $tacacs_port -u test_${tacacs_port}_b -p any_old_rubbish -k cisco -authen 2>&1 | tee $test_log
         tacats_expect_true
     unity_end_test
 }
@@ -131,7 +131,7 @@ tacacs_test_simple_authenicate_permit()
 tacacs_test_simple_authenicate_deny()
 {
     unity_start_test "deny"
-        "$tactest" -s $machine -port $tacacs_port -u test_4900_c -p A4900 -k cisco -authen 2>&1 | tee $test_log
+        "$tactest" -s $machine -port $tacacs_port -u test_${tacacs_port}_c -p A${tacacs_port} -k cisco -authen 2>&1 | tee $test_log
         tacats_expect_false
     unity_end_test
 }
@@ -187,7 +187,11 @@ tacacs_test_server()
 
 tacacs_test_direct()
 {
-    tacacs_test_simple 4900 "Simple"
+    unity_start_group "Simple"
+        tacacs_test_simple 4901 "Original"
+        tacacs_test_simple 4902 "Modified"
+        tacacs_test_simple 4903 "CLI"
+    unity_end_group
     tacacs_test_server 4949 "Reference"
     tacacs_test_server 4950 "CLargs"
 }
