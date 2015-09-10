@@ -29,12 +29,12 @@ exec /usr/local/sbin/tac_plus --print \
 			`# default command = permit` \
 			`# default attribute = permit` \
 			`# set priv-lvl = 1` \
-    --user cisco --password clear:cisco \
+    --user cisco --password cisco \
 		`# member = admin` \
 		`# service = shell {` \
 			`# default command = permit` \
 			`# default attribute = permit` \
 			`# set priv-lvl = 15` \
-    --user readonly --password clear:readonly \
+    --user readonly --password readonly \
 		`# member = guest` \
 

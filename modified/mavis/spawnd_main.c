@@ -289,9 +289,10 @@ typedef enum {
     lopt_print,
     lopt_listen,
     lopt_port,
-    lopt_host,
+    lopt_group,
     lopt_key,
     lopt_address,
+    lopt_host,
     lopt_user,
     lopt_password,
     lopt_debug,
@@ -321,6 +322,7 @@ static struct option long_opts[] =
     { "host",        optional_argument, 0, lopt_host },
     { "key",         required_argument, 0, lopt_key },
     { "address",     required_argument, 0, lopt_address },
+    { "group",       required_argument, 0, lopt_group },
     { "user",        required_argument, 0, lopt_user },
     { "password",    required_argument, 0, lopt_password },
     { "debug",       required_argument, 0, lopt_debug },
@@ -418,6 +420,22 @@ static int opts_argc;
 static char** opts_argv;
 static const char* short_opts = ":hvPd:i:p:c:bf1";
 static int opts_index;
+
+static void string_append(char** existing, char* extra)
+{
+    if (*existing)
+    {
+	*existing = realloc (*existing, strlen(*existing) + strlen(extra) + 1);
+	if (*existing)
+	{
+	    strcat (*existing, extra);
+	}
+    }
+    else
+    {
+	*existing = Xstrdup(extra);
+    }
+}
 
 static char* get_missing_argument(const char* prompt, va_list args)
 {
@@ -724,6 +742,30 @@ static int parse_cmd_subopts(struct cmd_config* cmd)
     return c;
 }
 
+static void set_password(char** pass_ptr,
+                         char*  pass_type,
+                         int    has_value,
+                         char*  pass_name,
+                         char*  pass_context)
+{
+    if (*pass_ptr)
+    {
+	fprintf (stderr, "Duplicate password/permit/deny for %s %s!\n", pass_name, pass_context);
+	exit(1);
+    }
+    else if (has_value == 0)
+    {
+	*pass_ptr = pass_type;
+    }
+    else
+    {
+	char* password = get_required_argument("password for %s %s!\n", pass_name, pass_context);
+	*pass_ptr = Xstrdup(pass_type);
+	string_append (pass_ptr, " ");
+	string_append (pass_ptr, password);
+    }
+}
+
 static int parse_user_subopts(struct user_config* user)
 {
     int c = EOF;
@@ -736,16 +778,15 @@ static int parse_user_subopts(struct user_config* user)
 	    c = EOF;
 	    switch (opt)
 	    {
+		case lopt_deny:
+		    set_password (&user->password, "deny", 0, "--user", user->username);
+		    break;
+		case lopt_permit:
+		    set_password (&user->password, "permit", 0, "--user", user->username);
+		    break;
 		case lopt_password:
+		    set_password (&user->password, "clear", 1, "--user", user->username);
 		    if (user->password)
-		    {
-			fprintf (stderr, "Duplicate --password for --user %s!\n", user->username);
-			exit(1);
-		    }
-		    else
-		    {
-			user->password = get_required_argument("password for user %s", user->username);
-		    }
 		    break;
 		case lopt_cmd:
 		    if (user->shell_service == 0)
