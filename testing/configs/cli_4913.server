@@ -5,6 +5,6 @@
 exec /usr/local/sbin/tac_plus --print \
 	--listen --port=4913 \
 	--host --key="some key" --address=0.0.0.0/0 \
-	--user=fred --password=abcdef \
+	--user=fred --password=clear:abcdef \
 	--cmd=write --permit=terminal \
 	--cmd=configure --permit

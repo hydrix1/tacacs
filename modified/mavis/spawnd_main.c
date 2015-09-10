@@ -298,6 +298,7 @@ typedef enum {
     lopt_cmd,
     lopt_deny,
     lopt_permit,
+    lopt_junos,
 } lopts_e;
 
 static struct option long_opts[] =
@@ -326,6 +327,7 @@ static struct option long_opts[] =
     { "cmd",         required_argument, 0, lopt_cmd },
     { "deny",        optional_argument, 0, lopt_deny },
     { "permit",      optional_argument, 0, lopt_permit },
+    { "junos",       no_argument,       0, lopt_junos },
     /* end marker */
     { 0, 0, 0, 0}
 };
@@ -359,12 +361,21 @@ struct cmd_config
     struct access_config*   access_last;
 };
 
+struct set_config
+{
+    struct set_config*      next_set;
+    char*                   set_name;
+    char*                   set_value;
+};
+
 struct service_config
 {
     struct service_config*  next_service;
     char*                   svc_name;
     struct cmd_config*      cmd_list;
     struct cmd_config*      cmd_last;
+    struct set_config*      set_list;
+    struct set_config*      set_last;
 };
 
 struct user_config
@@ -374,6 +385,7 @@ struct user_config
     char*                   password;
     struct service_config*  service_list;
     struct service_config*  service_last;
+    struct service_config*  shell_service;
 };
 
 struct spawnd_config
@@ -384,6 +396,8 @@ struct spawnd_config
 
 struct tacplus_config
 {
+    char*                   debug_opts;
+    char*                   secret_key;
     struct host_config*     host_list;
     struct host_config*     host_last;
     struct user_config*     user_list;
@@ -611,6 +625,33 @@ static int parse_host_subopts(struct host_config* host)
     return c;
 }
 
+static int parse_cli_debug(struct cli_config* cli_cfg)
+{
+    char* new_opts = get_optional_argument("");
+
+    if (new_opts && *new_opts)
+    {
+        if (cli_cfg->tacplus.debug_opts == 0)
+	{
+            cli_cfg->tacplus.debug_opts = new_opts;
+	}
+	else
+	{
+            cli_cfg->tacplus.debug_opts = realloc (cli_cfg->tacplus.debug_opts,
+                                                   strlen(cli_cfg->tacplus.debug_opts)
+                                                           + 1 + strlen(new_opts) + 1);
+	    if (cli_cfg->tacplus.debug_opts)
+	    {
+		strcat (cli_cfg->tacplus.debug_opts, " ");
+		strcat (cli_cfg->tacplus.debug_opts, new_opts);
+		free (new_opts);
+	    }
+	}
+    }
+
+    return EOF;
+}
+
 static int parse_cli_host(struct cli_config* cli_cfg)
 {
     int next_symbol;
@@ -707,14 +748,23 @@ static int parse_user_subopts(struct user_config* user)
 		    }
 		    break;
 		case lopt_cmd:
-		    if (user->service_list == 0)
+		    if (user->shell_service == 0)
 		    {
 			struct service_config* shell = Xcalloc(1, sizeof(struct service_config));
 		    	shell->svc_name = "shell";
-			user->service_list = shell;
+			shell->next_service = user->service_last;
+			if (user->service_last == 0)
+			{
+			    user->service_list = shell;
+			}
+			else
+			{
+			    user->service_last->next_service = shell;
+			}
+			user->shell_service = shell;
 			user->service_last = shell;
 		    }
-		    struct service_config* shell = user->service_list;
+		    struct service_config* shell = user->shell_service;
 		    struct cmd_config* cmd = Xcalloc(1, sizeof(struct cmd_config));
 		    if (shell->cmd_last == 0)
 		    {
@@ -727,6 +777,27 @@ static int parse_user_subopts(struct user_config* user)
 		    shell->cmd_last = cmd;
 		    cmd->cmd_name = get_required_argument("command name for --cmd");
 		    c = parse_cmd_subopts(cmd);
+		    break;
+		case lopt_junos:
+		    {
+			struct service_config* junos = Xcalloc(1, sizeof(struct service_config));
+			struct set_config* set = Xcalloc(1, sizeof(struct set_config));
+		    	junos->svc_name = "junos-exec";
+			junos->next_service = user->service_last;
+			if (user->service_last == 0)
+			{
+			    user->service_list = junos;
+			}
+			else
+			{
+			    user->service_last->next_service = junos;
+			}
+			user->service_last = junos;
+			junos->set_list = set;
+			junos->set_last = set;
+			set->set_name = "local-user-name";
+			set->set_value = "let_me_in";
+		    }
 		    break;
 		default:
 		    return opt;
@@ -741,6 +812,7 @@ static int parse_user_subopts(struct user_config* user)
 static int parse_cli_user(struct cli_config* cli_cfg)
 {
     int next_symbol;
+    char* colon;
     struct user_config* user = Xcalloc(1, sizeof(struct user_config));
 
     if (cli_cfg->tacplus.user_last == 0)
@@ -761,6 +833,14 @@ static int parse_cli_user(struct cli_config* cli_cfg)
     if (user->password == 0)
     {
 	user->password = get_omitted_argument("password for user %s", user->username);
+    }
+
+    // Fix-up password formatting: if the string is of the format
+    // "clear:text", replace the first colon with a space
+    colon = strchr(user->password, ':');
+    if (colon)
+    {
+	*colon = ' ';
     }
 
     return next_symbol;
@@ -837,9 +917,9 @@ static char* generate_host_config(char* so_far, struct host_config* host)
 
     if (host->secret_key)
     {
-	so_far = generate_more (so_far, "\t\tkey = ");
+	so_far = generate_more (so_far, "\t\tkey = \"");
 	so_far = generate_more (so_far, host->secret_key);
-	so_far = generate_more (so_far, "\n");
+	so_far = generate_more (so_far, "\"\n");
     }
 
     // Static items that are candidates for parameterising...
@@ -882,6 +962,7 @@ static char* generate_cmd_config(char* so_far, struct cmd_config* cmd)
 static char* generate_service_config(char* so_far, struct service_config* svc)
 {
     struct cmd_config* cmd;
+    struct set_config* set;
 
     so_far = generate_more (so_far, "\t\tservice = ");
     so_far = generate_more (so_far, svc->svc_name);
@@ -890,6 +971,15 @@ static char* generate_service_config(char* so_far, struct service_config* svc)
     for (cmd = svc->cmd_list; cmd; cmd = cmd->next_cmd)
     {
 	so_far = generate_cmd_config (so_far, cmd);
+    }
+
+    for (set = svc->set_list; set; set = set->next_set)
+    {
+	so_far = generate_more (so_far, "\t\t\tset ");
+	so_far = generate_more (so_far, set->set_name);
+	so_far = generate_more (so_far, " = \"");
+	so_far = generate_more (so_far, set->set_value);
+	so_far = generate_more (so_far, "\"\n");
     }
 
     so_far = generate_more (so_far, "\t\t}\n");
@@ -907,7 +997,7 @@ static char* generate_user_config(char* so_far, struct user_config* user)
 
     if (user->password)
     {
-	so_far = generate_more (so_far, "\t\tpassword = clear ");
+	so_far = generate_more (so_far, "\t\tpassword = ");
 	so_far = generate_more (so_far, user->password);
 	so_far = generate_more (so_far, "\n");
     }
@@ -926,15 +1016,31 @@ static char* generate_user_config(char* so_far, struct user_config* user)
 
 static char* generate_tacplus_config(char* so_far, struct tacplus_config* tacplus_cfg)
 {
+    char* text;
     struct host_config* host;
     struct user_config* user;
 
     so_far = generate_more (so_far, "\nid = tac_plus {\n");
 
+    text = tacplus_cfg->debug_opts;
+    if (text && *text)
+    {
+	so_far = generate_more (so_far, "\tdebug = ");
+	so_far = generate_more (so_far, text);
+	so_far = generate_more (so_far, "\n");
+    }
+
+    text = tacplus_cfg->secret_key;
+    if (text && *text)
+    {
+	so_far = generate_more (so_far, "\tkey = \"");
+	so_far = generate_more (so_far, text);
+	so_far = generate_more (so_far, "\"\n");
+    }
+
     // Static items that are candidates for parameterising...
-    so_far = generate_more (so_far, "\tdebug = PACKET AUTHEN AUTHOR\n");
-    so_far = generate_more (so_far, "\taccess log = output/access_4950\n");
-    so_far = generate_more (so_far, "\taccounting log = output/acct_4950\n");
+    // so_far = generate_more (so_far, "\taccess log = output/access_4950\n");
+    // so_far = generate_more (so_far, "\taccounting log = output/acct_4950\n");
 
     for (host = tacplus_cfg->host_list; host; host = host->next_host)
     {
@@ -1074,13 +1180,36 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
 		case lopt_listen:
 		    c = parse_cli_listen (&cli_conf);
 		    break;
+		case lopt_debug:
+		    c = parse_cli_debug (&cli_conf);
+		    break;
+		case lopt_key:
+		    if (cli_conf.tacplus.secret_key)
+		    {
+			fprintf (stderr, "Duplicate global --key!\n");
+			exit(1);
+		    }
+		    else
+		    {
+			cli_conf.tacplus.secret_key = get_required_argument("secret key");
+		    }
+		    break;
 		case lopt_host:
 		    c = parse_cli_host (&cli_conf);
 		    break;
 		case lopt_user:
 		    c = parse_cli_user (&cli_conf);
 		    break;
+		case ':':
+		    fprintf (stderr, "Unknown option!\n");
+		    common_usage();
+		    break;
+		case '?':
+		    fprintf (stderr, "ambiguous option!\n");
+		    common_usage();
+		    break;
 		default:
+		    fprintf (stderr, "option %d syntax!\n", opt);
 		    common_usage();
 	    }
 	}

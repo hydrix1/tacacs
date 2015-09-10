@@ -19,10 +19,16 @@ id = tac_plus {
 
 	user = test_4902_a {
 		password = clear A4902
+		service = junos-exec {
+			set local-user-name = let_me_in
+		}
 	}
 
 	user = test_4902_b {
 		password = permit
+		service = junos-exec {
+			set local-user-name = let_me_in
+		}
 	}
 
 	user = test_4902_c {
