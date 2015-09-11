@@ -2,19 +2,22 @@
 # Makefile for TACACS+ unit tests
 #
 
-ALL = dummy empty
+ALL = dummy empty \
+      string_append \
+
 all : $(ALL)
 .PHONY : all clean
 
-# .SUFFIXES:
-# .SUFFIXES: .c .o .h
+MODIFIED = ../../modified
+MAVIS = $(MODIFIED)/mavis
 
-#settings
-# CC = gcc
-# COMP = $(CC) -c
-# LINK = $(CC)
+WRAP_SPAWND_MAIN_H = wrap_spawnd_main.c $(MAVIS)/spawnd_main.c
 
 UNITY = unity.o
+WRAP_SPAWND_MAIN = wrap_fixup.o
+
+#settings
+CFLAGS = -I$(MODIFIED)
 
 #rules
 # %:	%.o
@@ -24,12 +27,15 @@ UNITY = unity.o
 	# $(COMP) -o $@ $<
 
 #dependencies
-dummy.o:	dummy.c
-empty.o:	empty.c unity.h
-unity.o:	unity.c unity.h
+dummy.o:		dummy.c
+unity.o:		unity.c unity.h
+empty.o:		empty.c unity.h
+wrap_fixup.o:		wrap_fixup.c
+string_append.o:	string_append.c unity.h $(WRAP_SPAWND_MAIN_H)
 
-dummy:	dummy.o
-empty:	empty.o $(UNITY)
+dummy:			dummy.o
+empty:			empty.o $(UNITY)
+string_append:		string_append.o $(UNITY) $(WRAP_SPAWND_MAIN)
 
 clean:
 	rm -fr $(ALL) *.o
