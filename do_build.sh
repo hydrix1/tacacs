@@ -72,6 +72,16 @@ echo "***          $username            ALL=(ALL) NOPASSWD:ALL"
 echo "***"
 sudo make install
 
+# Build the units tests
+cd ../testing/unit
+
+echo "***"
+echo "***"
+echo "*** Running 'make' for unit tests..."
+echo "***"
+echo "***"
+make
+
 echo "***"
 echo "***"
 echo "*** $username finished running $script_name"

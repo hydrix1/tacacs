@@ -23,6 +23,10 @@ echo "***"
 # Connect to remote system to test this system
 cd testing
 
+# Include tools from other scripts
+. scripts/unity.sh
+
+
 echo "***"
 echo "***"
 echo "*** Empty any previous logs..."
@@ -31,9 +35,26 @@ echo "***"
 rm -fr output
 mkdir output
 
+# Start "unity testing,,,
+unity_start
+
+# Run unit tests:
+unity_start_group "Unit"
 . ./do_unit_test.sh
+unity_end_group
+
+# Run integration tests:
+unity_start_group "Integration"
 . ./do_integration_test.sh
+unity_end_group
+
+# Run system tests:
+unity_start_group "System"
 . ./do_system_test.sh
+unity_end_group
+
+# All tests finished
+unity_end
 
 echo "***"
 echo "***"
