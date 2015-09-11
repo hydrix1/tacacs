@@ -2,7 +2,7 @@
 # Makefile for TACACS+ unit tests
 #
 
-ALL = dummy
+ALL = dummy empty
 all : $(ALL)
 .PHONY : all clean
 
@@ -14,8 +14,7 @@ all : $(ALL)
 # COMP = $(CC) -c
 # LINK = $(CC)
 
-#dependencies
-# dummy:	dummy.o
+UNITY = unity.o
 
 #rules
 # %:	%.o
@@ -23,6 +22,14 @@ all : $(ALL)
 
 # %.o:	%.c
 	# $(COMP) -o $@ $<
+
+#dependencies
+dummy.o:	dummy.c
+empty.o:	empty.c unity.h
+unity.o:	unity.c unity.h
+
+dummy:	dummy.o
+empty:	empty.o $(UNITY)
 
 clean:
 	rm -fr $(ALL) *.o
