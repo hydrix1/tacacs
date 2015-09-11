@@ -14,8 +14,8 @@ exec /usr/local/sbin/tac_plus --print \
     --host=world \
 	--address ::/0 \
 		`# prompt = \"Welcome\"` \
-		`# enable 15 = clear secret` \
-	--key cisco \
+	--enable=15 --password=secret \
+	--key=cisco \
     --group=admin \
 		`# default service = permit` \
 		`# service = shell {` \
@@ -24,7 +24,7 @@ exec /usr/local/sbin/tac_plus --print \
 			`# set priv-lvl = 15` \
     --group=guest \
 		`# default service = permit` \
-		`# enable = deny` \
+	--enable --deny \
 		`# service = shell {` \
 			`# default command = permit` \
 			`# default attribute = permit` \
