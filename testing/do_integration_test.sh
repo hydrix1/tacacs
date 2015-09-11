@@ -1,6 +1,7 @@
 #!/bin/bash
 
-TACPLUS=/usr/local/sbin/tac_plus
+NEW_TACPLUS=/usr/local/sbin/tac_plus
+ORG_TACPLUS=/tmp/tacacs/sbin/tac_plus
 
 echo "***"
 echo "***"
