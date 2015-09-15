@@ -10,11 +10,12 @@ all : $(ALL)
 
 MODIFIED = ../../modified
 MAVIS = $(MODIFIED)/mavis
+MISC  = $(MODIFIED)/misc
 
-WRAP_SPAWND_MAIN_H = wrap_spawnd_main.c $(MAVIS)/spawnd_main.c
+WRAP_SPAWND_MAIN_H = wrap_spawnd_main.h $(MAVIS)/spawnd_main.c
 
 UNITY = unity.o
-WRAP_SPAWND_MAIN = wrap_fixup.o
+WRAP_SPAWND_MAIN = wrap_fixup.o $(MISC)/memops.o
 
 #settings
 CFLAGS = -I$(MODIFIED)

@@ -144,6 +144,12 @@ void unity_fail()
     unity.fail_test = 1;
 }
 
+void unity_fail_at (const char* filename, int line_no)
+{
+    printf ("*** UNITY ASSERT FAILED in %s ar line %d\n", filename, line_no);
+    unity_fail();
+}
+
 void unity_start_group (const char* name)
 {
     unity_group_t* group = malloc(sizeof(unity_group_t));
@@ -260,6 +266,75 @@ void unity_end_test()
         unity.this_test = 0;
     }
 }
+
+
+/* *********************************************************************** */
+
+
+void unity_assert_ptr_equal_at (const char* filename,
+                                int         line_no,
+                                const void* expect,
+                                const void* got)
+{
+    if (expect != got)
+    {
+	printf (" -- UNITY assert failed:\n");
+	printf (" --  -- Expected: %p\n", expect);
+	printf (" --  --      Got: %p\n", got);
+        unity_fail_at (filename, line_no);
+    }
+}
+
+
+void unity_assert_ptr_not_equal_at (const char* filename,
+                                    int         line_no,
+                                    const void* expect,
+                                    const void* got)
+{
+    if (expect == got)
+    {
+	printf (" -- UNITY assert failed:\n");
+	printf (" --  -- Expected: %p\n", expect);
+	printf (" --  --      Got: %p\n", got);
+        unity_fail_at (filename, line_no);
+    }
+}
+
+
+void unity_assert_str_equal_at (const char* filename,
+                                int         line_no,
+                                const char* expect,
+                                const char* got)
+{
+    if (expect == 0)
+    {
+	if (got != 0)
+	{
+	    printf (" -- UNITY assert failed:\n");
+	    printf (" --  -- Expected: <NULL>\n");
+	    printf (" --  --      Got: \"%s\"\n", got);
+	    unity_fail_at (filename, line_no);
+	}
+    }
+    else if (got == 0)
+    {
+	printf (" -- UNITY assert failed:\n");
+	printf (" --  -- Expected: \"%s\"\n", expect);
+	printf (" --  --      Got: <NULL>\n");
+	unity_fail_at (filename, line_no);
+    }
+    else if (strcmp(expect, got) != 0)
+    {
+	printf (" -- UNITY assert failed:\n");
+	printf (" --  -- Expected: \"%s\"\n", expect);
+	printf (" --  --      Got: \"%s\"\n", got);
+        unity_fail_at (filename, line_no);
+    }
+}
+
+
+/* *********************************************************************** */
+
 
 int main (int argc, char* argv[])
 {

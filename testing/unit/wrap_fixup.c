@@ -2,7 +2,11 @@
  * Fix-up missing items to allow wrapped test code to link.
  */
 
-int XXstrdup;
+/* Sourced from MISC/memops.o
+/* int XXstrdup; */
+/* int XXcalloc; */
+/* int XXrealloc; */
+
 int io_sched_renew_proc;
 int common_data;
 int logmsg;
@@ -10,8 +14,6 @@ int common_data;
 int spawnd_cleanup_internal;
 int spawnd_cleanup_tracking;
 int spawnd_process_signals;
-int XXcalloc;
-int XXrealloc;
 int io_sched_del;
 int su_socket;
 int logerr;

@@ -452,19 +452,22 @@ static char** opts_argv;
 static const char* short_opts = ":hvPd:i:p:c:bf1";
 static int opts_index;
 
-static void string_append(char** existing, char* extra)
+static void string_append(char** existing, const char* extra)
 {
-    if (*existing)
+    if (extra)
     {
-	*existing = realloc (*existing, strlen(*existing) + strlen(extra) + 1);
 	if (*existing)
 	{
-	    strcat (*existing, extra);
+	    *existing = realloc (*existing, strlen(*existing) + strlen(extra) + 1);
+	    if (*existing)
+	    {
+		strcat (*existing, extra);
+	    }
 	}
-    }
-    else
-    {
-	*existing = Xstrdup(extra);
+	else
+	{
+	    *existing = Xstrdup(extra);
+	}
     }
 }
 
