@@ -52,8 +52,8 @@ static void mark_time()
     double microsecs;
 
     gettimeofday(&unity.last_time, 0);
-    seconds = unity.last_time.tv_sec - unity.time_base.tv_sec;
-    microsecs = unity.last_time.tv_usec - unity.time_base.tv_usec;
+    seconds = unity.last_time.tv_sec;
+    microsecs = unity.last_time.tv_usec;
     printf ("@@@ %.3f\n", seconds + microsecs / 1000000.0);
 }
 
