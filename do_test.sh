@@ -9,7 +9,11 @@ base=$called_from/$offset
 cd $base
 
 # Local definition
-raw_test_output=raw_test_output.txt
+unit_test_output=unit_test_output.txt
+intgn_test_output=intgn_test_output.txt
+local_test_output=local_test_output.txt
+remote_test_output=remote_test_output.txt
+all_test_output=all_test_output.txt
 xml_test_output=junit_test_output.xml
 
 echo "***"
@@ -23,45 +27,15 @@ echo "***"
 # Connect to remote system to test this system
 cd testing
 
-# Include tools from other scripts
-. scripts/unity.sh
-
-
-echo "***"
-echo "***"
-echo "*** Empty any previous logs..."
-echo "***"
-echo "***"
-rm -fr output
-mkdir output
-
-# Start "unity testing,,,
-unity_start
-
-# Run unit tests:
-unity_start_group "Unit"
-. ./do_unit_test.sh
-unity_end_group
-
-# Run integration tests:
-unity_start_group "Integration"
-. ./do_integration_test.sh
-unity_end_group
-
-# Run system tests:
-unity_start_group "System"
-. ./do_system_test.sh
-unity_end_group
-
-# All tests finished
-unity_end
+# Run tests, capturing output
+. scripts/run_all_tests.sh | tee $all_test_output
 
 echo "***"
 echo "***"
 echo "*** Generate the report"
 echo "***"
 echo "***"
-awk -f generate_report.awk $raw_test_output > $xml_test_output
+awk -f generate_report.awk $all_test_output > $xml_test_output
 
 # echo "***"
 # echo "***"

@@ -28,5 +28,24 @@ unity_start_test "dummy"
     fi
 unity_end_test
 
+# Run the unit tests themselves
+unit_tests="string_append"
+for unit_test in $unit_tests
+do
+    unity_start_test "$unit_test"
+	if [ -x unit/$unit_test ]; then
+	    unit/$unit_test
+	    result=$?
+	    if [ $result != 0 ]; then
+		unity_fail
+		echo " -- exit code was $result; expected 0!"
+	    fi
+	else
+	    unity_skip
+	    echo " -- unit test program '$unit_test' not built!"
+	fi
+    unity_end_test
+done
+
 #unity_end_group
 

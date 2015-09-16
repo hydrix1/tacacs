@@ -56,7 +56,7 @@ echo "***"
 echo "*** Connecting to remote host $test_server as $test_username..."
 echo "***"
 echo "***"
-ssh -t -t $test_username@$test_server <<EOF | tee $raw_test_output
+ssh -t -t $test_username@$test_server <<EOF | tee $remote_test_output
 
 echo "***"
 echo "***"
