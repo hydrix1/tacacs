@@ -1348,7 +1348,7 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
     common_data.servers_min = 2;
     common_data.servers_max = 8;
     common_data.progname = Xstrdup(basename(argv[0]));
-    common_data.version = VERSION "/Hydrix_0.2"
+    common_data.version = VERSION
 #ifdef WITH_PCRE
 	"/PCRE"
 #endif
