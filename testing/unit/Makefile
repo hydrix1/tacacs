@@ -15,7 +15,7 @@ MISC  = $(MODIFIED)/misc
 WRAP_SPAWND_MAIN_H = wrap_spawnd_main.h $(MAVIS)/spawnd_main.c
 
 UNITY = unity.o
-WRAP_SPAWND_MAIN = wrap_fixup.o memops.o
+WRAP_SPAWND_MAIN = wrap_fixup.o memops.o getline.o
 
 #settings
 LINK = gcc -lsocket
@@ -25,13 +25,14 @@ CFLAGS = -I$(MODIFIED)
 %:	%.o
 	$(LINK) -o $@ $^
 
-# %.o:	%.c
-	# $(COMP) -o $@ $<
+%.o:	$(MISC)/%.c
+	$(CC) $(CFLAGS) -o $@ -c $<
 
 #dependencies
 dummy.o:		dummy.c
 unity.o:		unity.c unity.h
 empty.o:		empty.c unity.h
+getline.o:		$(MISC)/getline.c
 memops.o:		$(MISC)/memops.c
 wrap_fixup.o:		wrap_fixup.c
 string_append.o:	string_append.c unity.h $(WRAP_SPAWND_MAIN_H)

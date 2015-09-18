@@ -67,7 +67,7 @@ LIBMAVISOBJS	+= memops.o ostype.o io_sched.o mavis_parse.o token.o
 LIBMAVISOBJS	+= setproctitle.o mymd5.o mymd4.o io_child.o set_proctitle.o
 LIBMAVISOBJS	+= spawnd_accepted.o spawnd_conf.o spawnd_main.o
 LIBMAVISOBJS	+= spawnd_scm_spawn.o spawnd_signals.o pid_write.o
-LIBMAVISOBJS	+= sig_segv.o md5crypt.o av_send.o
+LIBMAVISOBJS	+= sig_segv.o md5crypt.o av_send.o getline.o
 
 ifeq ($(WITH_LWRES), 1)
 	LIBMAVISOBJS += io_dns_revmap.o
