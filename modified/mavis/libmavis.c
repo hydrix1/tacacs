@@ -25,11 +25,50 @@
 
 static const char rcsid[] __attribute__ ((used)) = "$Id: libmavis.c,v 1.26 2015/03/14 06:11:27 marc Exp marc $";
 
+extern struct module_defn mod_anonftp;
+extern struct module_defn mod_asciiftp;
+extern struct module_defn mod_auth;
+extern struct module_defn mod_cache;
+extern struct module_defn mod_external;
+extern struct module_defn mod_groups;
+extern struct module_defn mod_limit2;
+extern struct module_defn mod_limit;
+extern struct module_defn mod_log;
+extern struct module_defn mod_null;
+extern struct module_defn mod_pam;
+extern struct module_defn mod_remote;
+extern struct module_defn mod_system;
+extern struct module_defn mod_tee;
+extern struct module_defn mod_userdb;
+
+static struct module_defn * all_modules[]  = 
+{
+    &mod_anonftp,
+    &mod_asciiftp,
+    &mod_auth,
+    &mod_cache,
+    &mod_external,
+    &mod_groups,
+    &mod_limit2,
+    &mod_limit,
+    &mod_log,
+    &mod_null,
+#ifdef HAVE_SECURITY_PAM_APPL_H
+    &mod_pam,
+#endif
+    &mod_remote,
+    &mod_system,
+    &mod_tee,
+    &mod_userdb
+};
+
 int mavis_method_add(mavis_ctx ** mcx, struct io_context *ioctx, char *path, char *id)
 {
-    void *handle;
-    void *(*mn) (void *, struct io_context *, char *);
+    int i;
+    void *handle = NULL;
+    void *(*mn) (void *, struct io_context *, char *) = NULL;
 
+#if 0
     Debug((DEBUG_MAVIS, "+ %s(%s)\n", __func__, path));
 
     handle = dlopen(path, RTLD_LAZY | RTLD_GLOBAL);
@@ -43,6 +82,19 @@ int mavis_method_add(mavis_ctx ** mcx, struct io_context *ioctx, char *path, cha
 	  dlsym(handle, DLSYM_PREFIX "Mavis_new"))) {
 	Debug((DEBUG_MAVIS, "- %s(%s): dlsym (%s) failed: %s\n", __func__, path, DLSYM_PREFIX "Mavis_new", dlerror()));
 	return -1;
+    }
+#endif
+    for (i = 0; i < sizeof(all_modules) / sizeof(struct module_defn *); i++)
+    {
+        if (strcmp(all_modules[i]->name, path) == 0)
+        {
+            mn = all_modules[i]->new;
+        }
+    }
+
+    if (mn == NULL)
+    {
+        return -1;
     }
 
     if (!*mcx)
@@ -81,8 +133,10 @@ int mavis_drop(mavis_ctx * mcx)
 
     if (mcx)
 	handle = mcx->drop(mcx);
+#if 0
     if (handle)
 	dlclose(handle);
+#endif
 
     DebugOut(DEBUG_MAVIS);
     return 0;

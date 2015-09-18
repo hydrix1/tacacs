@@ -57,8 +57,10 @@ static void *Mavis_drop(mavis_ctx * mcx)
     mavis_drop_in(mcx);
 #endif
 
+#if 0
     if (mcx->down)
 	dlclose(mcx->down->drop(mcx->down));
+#endif
 
 #ifdef HAVE_mavis_drop_out
     mavis_drop_out(mcx);
