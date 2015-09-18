@@ -202,7 +202,7 @@ static int Mavis_append(mavis_ctx * mcx, void *m)
     return 0;
 }
 
-mavis_ctx *Mavis_new(void *handle, struct io_context * io, char *id)
+static mavis_ctx *Mavis_new(void *handle, struct io_context * io, char *id)
 {
     mavis_ctx *mcx = Xcalloc(1, sizeof(mavis_ctx) + strlen(id ? id : MAVIS_name));
     mcx->handle = handle;
