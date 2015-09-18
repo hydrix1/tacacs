@@ -2,10 +2,18 @@
 
 # define the test server and access
 test_server=192.168.0.161
+test_options=
 test_username=robot.build
 
+# Check if we are a cloud server using reverse tunnelling
+this_machine=`hostname`
+if [ "$this_machine" == "sovms102" ]; then
+    # Remote
+    test_server=localhost
+    test_options="-p 9022"
+fi
 
-# Inlcude tools from other scripts
+# Include tools from other scripts
 . scripts/unity.sh
 
 
@@ -53,10 +61,10 @@ unity_end_group
 
 echo "***"
 echo "***"
-echo "*** Connecting to remote host $test_server as $test_username..."
+echo "*** Connecting to remote host $test_options $test_server as $test_username..."
 echo "***"
 echo "***"
-ssh -t -t $test_username@$test_server <<EOF | tee $remote_test_output
+ssh -t -t $test_options $test_username@$test_server <<EOF | tee $remote_test_output
 
 echo "***"
 echo "***"
@@ -64,7 +72,7 @@ echo "*** Running tests remotely..."
 echo "***"
 echo "***"
 echo "***"
-tacacs/testing/run_test.sh
+tacacs/testing/run_test.sh $TEST_MACHINE_NAME
 exit
 EOF
 

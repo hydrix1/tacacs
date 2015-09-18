@@ -35,7 +35,7 @@ echo "***"
 echo "*** Generate the report"
 echo "***"
 echo "***"
-awk -f generate_report.awk $all_test_output > $xml_test_output
+gawk -f generate_report.awk $all_test_output > $xml_test_output
 
 # echo "***"
 # echo "***"
