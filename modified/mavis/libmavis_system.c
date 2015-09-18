@@ -64,7 +64,7 @@ static int mavis_init_in(mavis_ctx * mcx)
 	    mcx->ssluserspath = Xstrdup("/etc/ssl.users");
 	if (geteuid())
 	    logmsg("Warning: SYSTEM module requires root privileges");
-#ifdef WITH_LIBCRYPT
+#ifdef NOTHING // WITH_LIBCRYPT
 	/* We need to make sure to get crypt(3) from libcrypt.so, not from
 	 * the OpenSSL libcrypto.so library, which may be already loaded.
 	 * Reason for that is that the libcrypt version may support additional
@@ -175,7 +175,7 @@ static void mavis_drop_in(mavis_ctx * mcx)
     Xfree(&mcx->ftpuserspath);
     Xfree(&mcx->ssluserspath);
     Xfree(&mcx->shellpath);
-#ifdef WITH_LIBCRYPT
+#ifdef NOTHING // WITH_LIBCRYPT
     if (mcx->libcrypt)
 	dlclose(mcx->libcrypt);
 #endif
@@ -492,3 +492,21 @@ static void mavis_new(mavis_ctx * mcx)
 
 #define MAVIS_name "system"
 #include "mavis_glue.c"
+
+#ifdef STATIC_MODULES
+
+struct module_defn mod_system = 
+{
+    .name = MAVIS_name,
+    .new =  Mavis_new,
+    .append = Mavis_append, 
+    .init = Mavis_init,
+    .parse = Mavis_parse,
+    .send = Mavis_send,
+    .recv = Mavis_recv,
+    .cancel = Mavis_cancel,
+    .drop = Mavis_drop
+};
+
+#endif
+

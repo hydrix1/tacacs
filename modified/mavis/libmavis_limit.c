@@ -254,3 +254,22 @@ static void mavis_new(mavis_ctx * mcx)
 
 #define MAVIS_name "limit"
 #include "mavis_glue.c"
+
+
+#ifdef STATIC_MODULES
+
+struct module_defn mod_limit = 
+{
+    .name = MAVIS_name,
+    .new =  Mavis_new,
+    .append = Mavis_append, 
+    .init = Mavis_init,
+    .parse = Mavis_parse,
+    .send = Mavis_send,
+    .recv = Mavis_recv,
+    .cancel = Mavis_cancel,
+    .drop = Mavis_drop
+};
+
+#endif
+

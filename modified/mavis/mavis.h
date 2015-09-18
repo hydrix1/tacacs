@@ -254,6 +254,22 @@ int mavis_send(mavis_ctx *, av_ctx **);
 int mavis_recv(mavis_ctx *, av_ctx **, void *);
 int mavis_parse(mavis_ctx *, struct sym *, char *);
 
+/* Static module declaration: */
+struct module_defn {
+    char * name;
+    mavis_ctx * (*new) (void *handle, struct io_context * io, char *id);
+    int (*append) (mavis_ctx *, void *);
+    int (*init) (mavis_ctx *);
+    int (*parse) (mavis_ctx * mcx, struct sym *sym, char *id);
+    int (*send) (mavis_ctx *, av_ctx **);
+    int (*recv) (mavis_ctx *, av_ctx **, void *);
+    int (*cancel) (mavis_ctx *, void *);
+    void *(*drop) (mavis_ctx *);
+};
+
+#define MAKE_FN_NAME(X) mod_ ## X 
+#define MOD_NAME(X) MAKE_FN_NAME(X)
+
 /* Attribute-value handling: */
 av_ctx *av_new(void *, void *);
 void av_setcb(av_ctx *, void *, void *);

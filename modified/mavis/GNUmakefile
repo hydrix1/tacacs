@@ -18,10 +18,10 @@ token.h: $(BASE)/mavis/token.pl
 env: $(OD)
 
 build:	env
-	@$(MAKE) -f "$(BASE)/$(PROG)/Makefile.obj" -C "$(OD)" "BASE=$(BASE)"
+	@$(MAKE) -f "$(BASE)/$(PROG)/Makefile.static" -C "$(OD)" "BASE=$(BASE)"
 
 install: perl_install
-	@$(MAKE) -f "$(BASE)/$(PROG)/Makefile.obj" -C "$(OD)" "BASE=$(BASE)" install
+	@$(MAKE) -f "$(BASE)/$(PROG)/Makefile.static" -C "$(OD)" "BASE=$(BASE)" install
 
 clean:
 	@rm -rf "$(OD)" *~ core *.BAK
