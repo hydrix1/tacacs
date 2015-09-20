@@ -7,7 +7,7 @@ include $(BASE)/Makefile.inc
 
 PROG=mavisd
 
-LIB	+= $(LIB_MAVIS) $(LIBPROCTITLE) $(LIB_NET)
+LIB	+= $(LIB_MAVIS) $(LIBPROCTITLE) $(LIB_NET) $(LIBCRYPT)
 CFLAGS  += $(DEF) $(INC) $(INC_SSL)
 VPATH = $(BASE)/$(PROG)
 

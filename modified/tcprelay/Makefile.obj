@@ -7,7 +7,7 @@ include $(BASE)/Makefile.inc
 
 PROG=tcprelay
 
-LIB	+= $(LIB_MAVIS) $(LIBPROCTITLE) $(LIB_SSL) $(LIB_NET)
+LIB	+= $(LIB_MAVIS) $(LIBPROCTITLE) $(LIB_SSL) $(LIB_NET) $(LIBCRYPT)
 
 ifeq ($(WITH_SSL), 1)
 	OBJ += ssl_init.o
