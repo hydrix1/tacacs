@@ -566,6 +566,13 @@ ifeq ($(OSTYPE), sunos)
 	endif
 endif
 
+ifeq ($(OSTYPE), sunos)
+    GETLINE=$(shell grep getline /usr/include/stdio.h)
+	ifeq ($(GETLINE),)
+        WITH_GETLINE=1
+    endif
+endif
+
 ifeq ($(wildcard /usr/include/sys),)
 		# FIXME. Consider removing Ubuntu from the list of supported systems.
 		USRINCLUDESYS=/usr/include/$(shell uname -m)-linux-gnu/sys
