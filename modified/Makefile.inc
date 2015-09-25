@@ -153,7 +153,7 @@ ifeq ($(OSTYPE), sunos)
 	ifdef LD_LIBRARY_PATH
 $(error LD_LIBRARY_PATH may not be set for Solaris)
 	endif
-	LIB_NET	= -lnsl -lsocket
+	LIB_NET	= -Wl,-Bdynamic -lnsl -lsocket -lrt
 	ifeq ($(LD_GNU), 0)
 		LDOPT_R	= -R
 		LD_SHARED = $(LD) -G -z textwarn
@@ -253,6 +253,18 @@ ifeq ($(WITH_SSL),)
 			ifneq ($(wildcard /usr/local/include/openssl),)
 				INCDIR_SSL=/usr/local/include
 				LIBDIR_SSL=/usr/local/lib$(LIBARCH)
+				WITH_SSL=1
+			endif
+		endif
+	endif
+endif
+
+ifeq ($(WITH_SSL),)
+	ifneq ($(wildcard /usr/local/ssl/lib$(LIBARCH)/libcrypto$(SHLIB_EXT)*),)
+		ifneq ($(wildcard /usr/local/ssl/lib$(LIBARCH)/libssl$(SHLIB_EXT)*),)
+			ifneq ($(wildcard /usr/local/ssl/include/openssl),)
+				INCDIR_SSL=/usr/local/ssl/include
+				LIBDIR_SSL=/usr/local/ssl/lib$(LIBARCH)
 				WITH_SSL=1
 			endif
 		endif
@@ -488,7 +500,7 @@ ifeq ($(WITH_CURL),1)
 	ifneq ($(LIBDIR_CURL),)
 		LIB_CURL	= -L$(LIBDIR_CURL) $(LDOPT_R)$(LIBDIR_CURL)
 	endif
-	LIB_CURL	+= -lcurl
+	LIB_CURL	+= -static -lcurl -lssh2 -lidn -lintl -liconv -lz 
 endif
 
 # Check for PAM:
@@ -568,7 +580,7 @@ endif
 
 ifeq ($(OSTYPE), sunos)
     GETLINE=$(shell grep getline /usr/include/stdio.h)
-	ifeq ($(GETLINE),)
+    ifeq ($(GETLINE),)
         WITH_GETLINE=1
     endif
 endif

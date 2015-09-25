@@ -7,7 +7,7 @@ include $(BASE)/Makefile.inc
 
 PROG=spawnd
 
-LIB	+= $(LIB_MAVIS) $(LIB_NET) $(LIBCRYPT) $(LIB_PAM) $(LIB_CURL) $(LIB_SSL) $(LIB_SSL_CRYPTO)
+LIB	+= $(LIB_MAVIS) $(LIB_CURL) $(LIB_SSL) $(LIB_SSL_CRYPTO) $(LIBCRYPT) $(LIB_NET) $(LIB_PAM)
 CFLAGS	+= $(DEF) $(INC_SSL) $(INC)
 VPATH	= $(BASE)/$(PROG)
 

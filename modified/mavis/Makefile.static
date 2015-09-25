@@ -52,7 +52,7 @@ all:	$(ALL) install_stage
 
 mavistest$(EXEC_EXT): mavistest.o
 	@echo $(LIB_SSL)
-	$(CC) -o $@ $^ $(LIB_MAVIS) $(LIB) $(LIB_NET) $(LIBCRYPT) $(LIB_PAM) $(LIB_CURL) $(LIB_SSL) $(LIB_SSL_CRYPTO)
+	$(CC) -o $@ $^ $(LIB_MAVIS) $(LIB) $(LIBCRYPT) $(LIB_CURL) $(LIB_SSL) $(LIB_SSL_CRYPTO) $(LIB_NET) $(LIB_PAM)
 
 radmavis.o: INC += $(INC_FREERADIUS)
 
@@ -75,7 +75,10 @@ LIBMAVISOBJS    += libmavis_anonftp.o libmavis_asciiftp.o libmavis_auth.o libmav
 LIBMAVISOBJS    += libmavis_external.o libmavis_groups.o libmavis_limit2.o libmavis_limit.o
 LIBMAVISOBJS    += libmavis_log.o libmavis_null.o libmavis_remote.o libmavis_system.o
 LIBMAVISOBJS    += libmavis_tee.o libmavis_userdb.o
-LIBMAVISOBJS    += getline.o
+
+ifeq ($(WITH_GETLINE), 1)
+	LIBMAVISOBJS    += getline.o
+endif
 
 ifeq ($(WITH_LWRES), 1)
 	LIBMAVISOBJS += io_dns_revmap.o
