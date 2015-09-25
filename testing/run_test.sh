@@ -15,6 +15,7 @@ cd $wd
 . scripts/expect.sh
 
 . scripts/direct.sh
+. scripts/cisco.sh
 . scripts/junos.sh
 
 
@@ -25,6 +26,10 @@ cd $wd
 prog=$0
 login=`whoami`
 machine=`who am i | sed 's/[()]//g' | awk '{print $NF}'`
+if [ "$1" != "" ]; then
+    echo "(using supplied $1 instead of $machine)"
+    machine=$1
+fi
 
 tactest="/cygdrive/c/Program Files (x86)/TACACS.net/tactest"
 # Display our suspicions
@@ -35,8 +40,9 @@ unity_start
 
 
 # Test 1: the reference server
-tacacs_test_direct
-tacacs_test_junos
+#tacacs_test_direct
+tacacs_test_cisco
+#tacacs_test_junos
 
 
 # All tests finished
