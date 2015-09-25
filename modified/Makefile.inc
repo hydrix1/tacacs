@@ -454,6 +454,18 @@ ifeq ($(HAS_LIBCRYPT),1)
 	DEF += -DWITH_LIBCRYPT
 endif
 
+ifeq ($(HAS_LIBCRYPTA),)
+	ifneq ($(wildcard /lib$(LIBARCH)/libcrypt.a* /usr/lib$(LIBARCH)/libcrypt.a* /lib$(LIBARCH)/*/libcrypt.a*),)
+		HAS_LIBCRYPTA=1
+	endif
+endif
+
+ifeq ($(HAS_LIBCRYPTA),1)
+	LIBCRYPT	= 
+	LIBCRYPTA	= -lcrypt
+	DEF += -DWITH_LIBCRYPT
+endif
+
 # Check for IPC:
 
 ifeq ($(WITH_IPC),)
