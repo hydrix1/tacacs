@@ -10,12 +10,21 @@ import test_router
 ##################################################################################################
 
 def tacacs_test_cisco_configure_classic(my_unity, my_router, platform, port, key):
-    my_router.open("virl", "VIRL");
-    output01 = my_router.do_cmd('');
-    my_unity.expect_text(output01, 'virl@virl')
-    output02 = my_router.do_cmd('telnet '+my_router.ip_address+' '+my_router.indirect, 10);
-    my_unity.expect_text(output02, 'Connected to')
-    output03 = my_router.do_cmd('');
+    output03 = ''
+    delay_for = -1
+    while output03 == '':
+        if delay_for > 0:
+            my_router.close()
+            time.sleep(delay_for)
+        my_router.open("virl", "VIRL")
+        output01 = my_router.do_cmd('')
+        my_unity.expect_text(output01, 'virl@virl')
+        output02 = my_router.do_cmd('telnet '+my_router.ip_address+' '+my_router.indirect, 10)
+        my_unity.expect_text(output02, 'Connected to')
+        output03 = my_router.do_cmd('', 3, True)
+        delay_for += 3
+    if "Password:" in output03:
+        output03 = my_router.do_cmd('cisco', 2)
     my_unity.expect_text(output03, my_router.name+'>')
     output04 = my_router.do_cmd('enable')
     my_unity.expect_text(output04, 'Password:')
@@ -23,8 +32,10 @@ def tacacs_test_cisco_configure_classic(my_unity, my_router, platform, port, key
     my_unity.expect_text(output05, my_router.name+'#')
     output11 = my_router.do_cmd('terminal length 0', 2)
     my_unity.expect_text(output11, my_router.name+'#')
-    output12 = my_router.do_cmd('configure terminal', 2)
-    my_unity.expect_text(output12, my_router.name+'(config)#')
+    output14 = my_router.do_cmd('configure terminal', 2)
+    my_unity.expect_text(output14, my_router.name+'(config)#')
+    output17 = my_router.do_cmd('ip route 192.168.0.0 255.255.254.0 172.16.1.254')
+    my_unity.expect_text(output17, my_router.name+'(config)#')
     output21 = my_router.do_cmd('aaa new-model')
     output22 = my_router.do_cmd('aaa authentication login default line')
     output23 = my_router.do_cmd('aaa authentication login '+my_router.test_name+' group tacacs+ local')
@@ -37,7 +48,7 @@ def tacacs_test_cisco_configure_classic(my_unity, my_router, platform, port, key
     #output32 = my_router.do_cmd('tacacs-server directed-request')
     #output33 = my_router.do_cmd('tacacs-server key 7 '+key)
  
-    output31 = my_router.do_cmd('tacacs server jim'+platform, 3)
+    output31 = my_router.do_cmd('tacacs server Jimmy', 3)
     my_unity.expect_text(output31, my_router.name+'(config-server-tacacs)#')
     output32 = my_router.do_cmd('port '+port)
     output33 = my_router.do_cmd('address ipv4 '+platform)
@@ -58,48 +69,70 @@ def tacacs_test_cisco_configure_classic(my_unity, my_router, platform, port, key
     output70 = my_router.do_cmd('exit')
     my_unity.expect_text(output70, my_router.name+'#')
     output71 = my_router.do_cmd('exit')
-    my_router.close();
+    my_router.close()
 
 ##################################################################################################
 
-def tacacs_test_cisco_user_int(my_router, username, password):
+def tacacs_test_cisco_user_int(my_unity, my_router, username, password):
     test_ssh = test_router.Test_Router(my_router.ip_address)
-    is_good = test_ssh.open(username, password)
-    test_ssh.close();
+    ssh_good = test_ssh.open("virl", "VIRL")
+    is_good = False
+    if not ssh_good:
+        my_unity.fail(context + ' SSH failed!')
+    else:
+        output = test_ssh.do_cmd('telnet '+my_router.test_addr, 10)
+        my_unity.expect_text(output, 'Connected to')
+        if 'Username:' in output:
+            output = test_ssh.do_cmd(username)
+            if 'Password:' in output:
+                output = test_ssh.do_cmd(password, 8)
+                if my_router.name+'>' in output:
+                    is_good = True
+                    output = test_ssh.do_cmd('logout', 3)
+                else:
+                    output = test_ssh.do_cmd(chr(29)+'close')
+            else:
+                output = test_ssh.do_cmd(chr(29)+'close')
+
+    test_ssh.close()
     return is_good
 
 def tacacs_test_cisco_user(my_unity, my_router, username, password, expect_good):
     context = 'Username "' + username + '"/password "' + password + '"'
     my_unity.start_test('user_' + username + '_pass_' + password)
-    test_ssh = test_router.Test_Router(my_router.ip_address)
-    is_good = test_ssh.open(username, password)
-    if expect_good and not is_good:
+    was_good = tacacs_test_cisco_user_int(my_unity, my_router, username, password)
+    if expect_good and not was_good:
         my_unity.fail(context + ' failed!')
-    if not expect_good and is_good:
+    if not expect_good and was_good:
         my_unity.fail(context + ' unexpectedly worked!')
-    test_ssh.close();
     my_unity.end_test()
 
 ##################################################################################################
 
 def tacacs_test_cisco_comms(my_unity, my_router):
     my_unity.start_test('comms')
-    my_router.open("virl", "VIRL");
-    output = my_router.do_cmd('');
+    my_router.open("virl", "VIRL")
+    output = my_router.do_cmd('')
+    if "Password:" in output:
+        output = my_router.do_cmd('cisco', 2)
     my_unity.expect_text(output, 'virl@virl')
-    output = my_router.do_cmd('telnet '+my_router.ip_address+' '+my_router.indirect, 10);
+    output = my_router.do_cmd('telnet '+my_router.ip_address+' '+my_router.indirect, 10)
     my_unity.expect_text(output, 'Connected to')
-    output = my_router.do_cmd('');
+    output = my_router.do_cmd('', 3)
+    while 'Connection closed by foreign host' in output:
+        output = my_router.do_cmd('telnet '+my_router.ip_address+' '+my_router.indirect, 10)
+        my_unity.expect_text(output, 'Connected to')
+        output = my_router.do_cmd('', 3)
     my_unity.expect_text(output, my_router.name+'>')
-    output = my_router.do_cmd(chr(29)+'close');
+    output = my_router.do_cmd(chr(29)+'close')
     my_unity.expect_text(output, 'virl@virl')
-    my_router.close();
+    my_router.close()
     my_unity.end_test()
 
 def tacacs_test_cisco_config(my_unity, my_router, platform, port, key, username, password):
     my_unity.start_test('config')
     tacacs_test_cisco_configure_classic(my_unity, my_router, platform, port, key)
-    worked = tacacs_test_cisco_user_int(my_router, username, password)
+    worked = tacacs_test_cisco_user_int(my_unity, my_router, username, password)
     if not worked:
         my_unity.fail()
         print ' -- basic config sanity check failed!\n'
@@ -108,7 +141,7 @@ def tacacs_test_cisco_config(my_unity, my_router, platform, port, key, username,
 def tacacs_test_cisco_bad_server(my_unity, my_router, platform, port, key, username, password):
     my_unity.start_test('bad_server')
     tacacs_test_cisco_configure_classic(my_unity, my_router, platform, '666', key)
-    worked = tacacs_test_cisco_user_int(my_router, username, password)
+    worked = tacacs_test_cisco_user_int(my_unity, my_router, username, password)
     if worked:
         my_unity.fail()
         print ' -- user authorised using non-existant server!\n'
@@ -117,7 +150,7 @@ def tacacs_test_cisco_bad_server(my_unity, my_router, platform, port, key, usern
 def tacacs_test_cisco_bad_key(my_unity, my_router, platform, port, key, username, password):
     my_unity.start_test('bad_key')
     tacacs_test_cisco_configure_classic(my_unity, my_router, platform, port, 'not' + key)
-    worked = tacacs_test_cisco_user_int(my_router, username, password)
+    worked = tacacs_test_cisco_user_int(my_unity, my_router, username, password)
     if worked:
         my_unity.fail()
         print ' -- user authorised using bad secret key!\n'
@@ -194,7 +227,8 @@ def main(prog, argv):
     my_unity.start()
     my_unity.start_group("Cisco")
     my_unity.start_group("classic")
-    my_router.indirect = '17042'
+    my_router.indirect = '17046'
+    my_router.test_addr = '172.16.1.83'
     my_router.genre = 'classic'
     my_router.name = 'iosv-1'
     tacacs_test_cisco_basic(my_unity, my_router, platform, '4901', 'cisco')
