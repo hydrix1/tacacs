@@ -6,6 +6,7 @@ import warnings
 class Test_Router:
     def __init__(self, ip_addr):
         self.ip_address = ip_addr
+        self.new_line = '\n'
 
     # Bring up connection to the router
     def open(self, use_user='root', use_passw='hydrix1044a'):
@@ -49,7 +50,7 @@ class Test_Router:
 
     def do_cmd(self, cmd, timeout=1, resend=False):
         print ' -- ++:' + cmd
-        self.channel.send(cmd + '\n')
+        self.channel.send(cmd + self.new_line)
         time.sleep(timeout)
         if not self.channel.recv_ready():
             if resend:
