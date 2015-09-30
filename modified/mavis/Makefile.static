@@ -52,7 +52,7 @@ all:	$(ALL) install_stage
 
 mavistest$(EXEC_EXT): mavistest.o
 	@echo $(LIB_SSL)
-	$(CC) -o $@ $^ $(LIB_MAVIS) $(LIB) $(LIB_CURL) $(LIBCRYPTA) $(LIB_SSL) $(LIB_SSL_CRYPTO) $(LIB_NET) $(LIB_PAM) $(LIBCRYPT)
+	$(CC) -o $@ $^ $(LIB_MAVIS) $(LIB) $(LIB_CURL) $(LIBCRYPTA) $(LIB_SSL) $(LIB_SSL_CRYPTO) $(LIB_NET) $(LIB_PAM) $(LIBCRYPT) $(LIB_DL)
 
 radmavis.o: INC += $(INC_FREERADIUS)
 
