@@ -17,8 +17,18 @@ id = tac_plus {
 
         key = cisco
 
+	user = cisco {
+		password = clear cisco
+		service = shell {
+			default cmd = permit
+		}
+	}
+
 	user = test_4902_a {
 		password = clear A4902
+		service = shell {
+			cmd = write { permit .* }
+		}
 		service = junos-exec {
 			set local-user-name = let_me_in
 		}
@@ -26,6 +36,9 @@ id = tac_plus {
 
 	user = test_4902_b {
 		password = permit
+		service = shell {
+			cmd = write { permit .* }
+		}
 		service = junos-exec {
 			set local-user-name = let_me_in
 		}
@@ -33,5 +46,8 @@ id = tac_plus {
 
 	user = test_4902_c {
 		password = deny
+		service = shell {
+			cmd = write { permit .* }
+		}
 	}
 }
