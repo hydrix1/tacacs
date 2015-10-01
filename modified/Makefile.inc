@@ -58,7 +58,7 @@ else
 	CC_GCC	= 1
 endif
 
-LD	?= ld
+LD	?= gld
 
 LDV = $(shell set $(LD); $$1 -v 2>&1)
 
@@ -292,7 +292,11 @@ ifeq ($(WITH_SSL),1)
 		LIB_SSL_CRYPTO	= -L$(LIBDIR_SSL) $(LDOPT_R)$(LIBDIR_SSL)
 	endif
 	DEF += -DWITH_SSL
-	LIB_SSL	+= -lssl -lgssapi_krb5 -lkrb5 -lk5crypto -lcom_err -lresolv -lcrypto
+	ifeq ($(OSTYPE), sunos)
+		LIB_SSL	+= -lssl -lresolv -lcrypto
+	else
+		LIB_SSL	+= -lssl -lgssapi_krb5 -lkrb5 -lk5crypto -lcom_err -lresolv -lcrypto
+	endif
 	LIB_SSL_CRYPTO	+= -lcrypto 
 endif
 
@@ -513,7 +517,11 @@ ifeq ($(WITH_CURL),1)
 		LIB_CURL	= -L$(LIBDIR_CURL) $(LDOPT_R)$(LIBDIR_CURL)
 	endif
 	ifeq ($(OSTYPE), sunos)
-		LIB_CURL	+= -static -lcurl -lssh2 -lidn -lintl -liconv -lz 
+		ifeq ($(OSr),5.11)
+			LIB_CURL	+= -lcurl -lidn -lintl -lz 
+		else
+			LIB_CURL	+= -static -lcurl -lssh2 -lidn -lintl -liconv -lz 
+		endif
 	else
 		LIB_CURL	+= -static -lcurl -lidn -lz 
 	endif
