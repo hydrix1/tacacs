@@ -12,8 +12,8 @@ id = spawnd {
 id = tac_plus {
 	debug = PACKET AUTHEN AUTHOR
 
-	access log = output/access_4902.log
-	accounting log = output/acct_4902.log
+	access log = ../output/access_4902.log
+	accounting log = ../output/acct_4902.log
 
         key = cisco
 

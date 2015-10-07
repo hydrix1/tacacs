@@ -9,8 +9,8 @@ exec /usr/local/sbin/tac_plus --print \
 	`# background = no` \
 \
     --debug="PACKET AUTHEN AUTHOR" \
-	`# access log = output/access_4950` \
-	`# accounting log = output/acct_4950` \
+	`#--access_log=../output/access_4950.log` \
+	`#--accounting_log=../output/acct_4950.log` \
     --host=world \
 	--address ::/0 \
 		`# prompt = \"Welcome\"` \
