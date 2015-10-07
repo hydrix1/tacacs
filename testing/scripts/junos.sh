@@ -2,13 +2,13 @@
 #
 # Part of the  Tacacs+ test system.
 #
-# Run Tacacs+ tests from this machine via aJUNOS on a server running
-# on a different machine.
+# Configure a JunOS router to use the test TACACS+ servers
+# sending them various SSH logins to check
 #
 
-router_addr=192.168.1.243
+junos_router_addr=192.168.1.243
 
-lock_dir=/tmp/junos.$router_addr.lockdir
+junos_lock_dir=/tmp/junos.$junos_router_addr.lockdir
 
 
 ##################################################################################################
@@ -20,14 +20,14 @@ tacacs_test_junos()
     loops=0
     while [ $loops -lt 1000 ]; do
         loops=$(($loops + 1))
-        if mkdir $lock_dir; then
-            echo "$$" > $lock_dir/pid
-            echo "$login@$machine" > $lock_dir/user
-            python scripts/test_junos_router.py -p $machine -r $router_addr
-            rm -fr $lock_dir
+        if mkdir $junos_lock_dir; then
+            echo "$$" > $junos_lock_dir/pid
+            echo "$login@$machine" > $junos_lock_dir/user
+            python scripts/test_junos_router.py -p $machine -r $junos_router_addr
+            rm -fr $junos_lock_dir
             break;
         fi
-        who=`cat $lock_dir/user`
+        who=`cat $junos_lock_dir/user`
         if [ $? != 0 ]; then
              who="unknown"
         fi

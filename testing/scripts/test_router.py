@@ -6,6 +6,7 @@ import warnings
 class Test_Router:
     def __init__(self, ip_addr):
         self.ip_address = ip_addr
+        self.new_line = '\n'
 
     # Bring up connection to the router
     def open(self, use_user='root', use_passw='hydrix1044a'):
@@ -47,24 +48,43 @@ class Test_Router:
         self.client.close()
         print 'closed'
 
-    def do_cmd(self, cmd, timeout=1):
-        self.channel.send(cmd + '\n')
+    def do_cmd(self, cmd, timeout=1, resend=False):
+        print ' -- ++:' + cmd
+        self.channel.send(cmd + self.new_line)
         time.sleep(timeout)
-        output = self.channel.recv(2345)
-        clean = '\n'
-        margin = ' -- --: '
-        pretty = margin
-        for ch in output:
-            if ch == '\n':
-               pass
-            elif ch == '\r':
-               clean = clean + '\n'
-               pretty = pretty + '\n' + margin
-            elif ch < ' ':
-               clean = clean + '^' + chr(ord(ch) + 64)
-               pretty = pretty + '^' + chr(ord(ch) + 64)
+        if not self.channel.recv_ready():
+            if resend:
+                print ' -- ..:' + cmd
+                self.channel.send(cmd + '\n')
             else:
-               clean = clean + str(ch)
-               pretty = pretty + str(ch)
-        print pretty + '\n'
+                print ' -- ...'
+            time.sleep(timeout)
+        if not self.channel.recv_ready():
+            if resend:
+                print ' -- ..:' + cmd
+                self.channel.send(cmd + '\n')
+            else:
+                print ' -- ...'
+            time.sleep(timeout)
+        if not self.channel.recv_ready():
+            print ' -- !!!'
+            clean = ''
+        else:
+            output = self.channel.recv(12345)
+            clean = '\n'
+            margin = ' -- --: '
+            pretty = margin
+            for ch in output:
+                if ch == '\n':
+                   pass
+                elif ch == '\r':
+                   clean = clean + '\n'
+                   pretty = pretty + '\n' + margin
+                elif ch < ' ':
+                   clean = clean + '^' + chr(ord(ch) + 64)
+                   pretty = pretty + '^' + chr(ord(ch) + 64)
+                else:
+                   clean = clean + str(ch)
+                   pretty = pretty + str(ch)
+            print pretty
         return clean
