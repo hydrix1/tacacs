@@ -1,4 +1,5 @@
 import sys
+import string
 import getopt
 import time
 import paramiko
@@ -33,9 +34,13 @@ def tacacs_test_cisco_connect(my_unity, my_router):
             output03 = my_router.do_cmd('', 3)
         delay_for += 2
     if "Username:" in output03:
-        output03 = my_router.do_cmd('cisco', 2)
+        output03 = my_router.do_cmd('cisco', 3)
     if "Password:" in output03:
-        output03 = my_router.do_cmd('cisco', 2)
+        output03 = my_router.do_cmd('cisco', 9)
+    if "Username:" in output03:
+        output03 = my_router.do_cmd('cisco', 3)
+    if "Password:" in output03:
+        output03 = my_router.do_cmd('cisco', 9)
     return output03
 
 ##################################################################################################
@@ -107,55 +112,75 @@ def tacacs_test_cisco_configure_ios_xr(my_unity, my_router, platform, port, key)
         output = my_router.do_cmd('cisco', 2)
     my_unity.expect_text(output, my_router.name+'#')
 
-    output = my_router.do_cmd('terminal length 0', 2)
-    my_unity.expect_text(output, my_router.name+'#')
-    output = my_router.do_cmd('terminal width 0', 2)
-    my_unity.expect_text(output, my_router.name+'#')
+    # Rollback to a clean start
+    #output = my_router.do_cmd('configure terminal', 2)
+    #output = my_router.do_cmd('load bootflash:/base-config', 4)
+    #output = my_router.do_cmd('commit', 4)
+    #output = my_router.do_cmd('exit')
+    output = my_router.do_cmd('copy bootflash:/base-config running-config', 8)
 
-    output = my_router.do_cmd('configure terminal', 2)
+    output = my_router.do_cmd('terminal length 0')
+    my_unity.expect_text(output, my_router.name+'#')
+    output = my_router.do_cmd('terminal width 0')
+    my_unity.expect_text(output, my_router.name+'#')
+ 
+    output = my_router.do_cmd('configure terminal', 3)
     my_unity.expect_text(output, my_router.name+'(config)#')
     output = my_router.do_cmd('ip route 192.168.0.0 255.255.254.0 172.16.1.254', 3)
-    my_unity.expect_text(output, my_router.name+'(config)#')
+ 
+    # add desired server
+    output = my_router.do_cmd('tacacs-server host '+platform+' port '+port+' key '+key)
 
+    output = my_router.do_cmd('ip route 192.168.0.0 255.255.254.0 172.16.1.254', 3)
     output = my_router.do_cmd('aaa accounting exec default start-stop group tacacs+', 2)
     output = my_router.do_cmd('aaa accounting system default start-stop group tacacs+', 2)
     output = my_router.do_cmd('aaa accounting network default start-stop group tacacs+', 2)
     output = my_router.do_cmd('aaa accounting commands default start-stop group tacacs+', 2)
-    output = my_router.do_cmd('aaa authorization exec default group tacacs+ local', 2)
+    output = my_router.do_cmd('aaa authorization exec default local group tacacs+', 2)
     output = my_router.do_cmd('aaa authorization network default group tacacs+ local', 2)
     output = my_router.do_cmd('aaa authorization commands default group tacacs+ none', 2)
     output = my_router.do_cmd('aaa authorization eventmanager default group tacacs+ local', 2)
-    output = my_router.do_cmd('aaa authentication login default group tacacs+ local', 2)
- 
-    output = my_router.do_cmd('tacacs-server host '+platform+' port '+port)
-    output = my_router.do_cmd('tacacs-server key '+key)
+    output = my_router.do_cmd('aaa authentication login default local group tacacs+', 2)
 
-    output = my_router.do_cmd('commit', 5)
+    output = my_router.do_cmd('commit', 9)
     my_unity.expect_text(output, my_router.name+'(config)#')
     output = my_router.do_cmd('exit')
     my_unity.expect_text(output, my_router.name+'#')
+    output = my_router.do_cmd('ping '+platform, 15)
+    my_unity.expect_text(output, my_router.name+'#')
+    output = my_router.do_cmd('show config running', 20)
+    my_unity.expect_text(output, my_router.name+'#')
     output = my_router.do_cmd('exit')
+    my_router.new_line = ''
+    output = my_router.do_cmd(chr(29))
+    my_router.new_line = '\r'
+    output = my_router.do_cmd('close', 2)
     my_router.close()
 
 ##################################################################################################
 
 def tacacs_test_cisco_configure_ios_xe(my_unity, my_router, platform, port, key):
     output = tacacs_test_cisco_connect(my_unity, my_router)
-    if my_router.name+'#' not in output:
+    if my_router.name+'>' not in output and my_router.name+'#' not in output:
         if 'Username:' not in output:
             output = my_router.do_cmd('', 2)
-    if my_router.name+'#' not in output:
+    if my_router.name+'>' not in output and my_router.name+'#' not in output:
         if 'Username:' not in output:
             output = my_router.do_cmd('', 2)
-    if my_router.name+'#' not in output:
+    if my_router.name+'>' not in output and my_router.name+'#' not in output:
         if 'Username:' not in output:
             output = my_router.do_cmd('', 2)
-    if my_router.name+'#' not in output:
+    if my_router.name+'>' not in output and my_router.name+'#' not in output:
         if 'Username:' not in output:
             my_router.close()
             return
     if 'Username:' in output:
         output = my_router.do_cmd('cisco')
+        my_unity.expect_text(output, 'Password:')
+        output = my_router.do_cmd('cisco', 2)
+
+    if my_router.name+'>' in output:
+        output = my_router.do_cmd('enable')
         my_unity.expect_text(output, 'Password:')
         output = my_router.do_cmd('cisco', 2)
     my_unity.expect_text(output, my_router.name+'#')
@@ -167,27 +192,52 @@ def tacacs_test_cisco_configure_ios_xe(my_unity, my_router, platform, port, key)
 
     output = my_router.do_cmd('configure terminal', 2)
     my_unity.expect_text(output, my_router.name+'(config)#')
+
     output = my_router.do_cmd('ip route 192.168.0.0 255.255.254.0 172.16.1.254', 3)
     my_unity.expect_text(output, my_router.name+'(config)#')
 
-    output = my_router.do_cmd('aaa accounting exec default start-stop group tacacs+', 2)
-    output = my_router.do_cmd('aaa accounting system default start-stop group tacacs+', 2)
-    output = my_router.do_cmd('aaa accounting network default start-stop group tacacs+', 2)
-    output = my_router.do_cmd('aaa accounting commands default start-stop group tacacs+', 2)
-    output = my_router.do_cmd('aaa authorization exec default group tacacs+ local', 2)
-    output = my_router.do_cmd('aaa authorization network default group tacacs+ local', 2)
-    output = my_router.do_cmd('aaa authorization commands default group tacacs+ none', 2)
-    output = my_router.do_cmd('aaa authorization eventmanager default group tacacs+ local', 2)
-    output = my_router.do_cmd('aaa authentication login default group tacacs+ local', 2)
- 
-    output = my_router.do_cmd('tacacs-server host '+platform+' port '+port)
-    output = my_router.do_cmd('tacacs-server key '+key)
-
-    output = my_router.do_cmd('commit')
+    output = my_router.do_cmd('prompt %h%p')
     my_unity.expect_text(output, my_router.name+'(config)#')
+    output = my_router.do_cmd('username cisco password cisco', 2)
+    my_unity.expect_text(output, my_router.name+'(config)#')
+
+    output = my_router.do_cmd('line vty 0 4')
+    my_unity.expect_text(output, my_router.name+'(config-line)#')
+    #output = my_router.do_cmd('login local')
+    my_unity.expect_text(output, my_router.name+'(config-line)#')
+    output = my_router.do_cmd('exit')
+    my_unity.expect_text(output, my_router.name+'(config)#')
+
+    output = my_router.do_cmd('aaa new-model')
+    output = my_router.do_cmd('aaa accounting exec default start-stop group tacacs+')
+    output = my_router.do_cmd('aaa accounting system default start-stop group tacacs+')
+    output = my_router.do_cmd('aaa accounting network default start-stop group tacacs+')
+    for lvl in range(16):
+        output = my_router.do_cmd('aaa accounting commands '+str(lvl)+' default start-stop group tacacs+')
+    output = my_router.do_cmd('aaa authorization exec default group tacacs+ local')
+    output = my_router.do_cmd('aaa authorization network default group tacacs+ local')
+    for lvl in range(16):
+        output = my_router.do_cmd('aaa authorization commands '+str(lvl)+' default group tacacs+ none')
+    #output = my_router.do_cmd('aaa authorization eventmanager default group tacacs+ local')
+    output = my_router.do_cmd('aaa authentication login default group tacacs+ local')
+ 
+    my_unity.expect_text(output, my_router.name+'(config)#')
+    output = my_router.do_cmd('tacacs server '+my_router.test_name, 5)
+    my_unity.expect_text(output, my_router.name+'(config-server-tacacs)#')
+    output = my_router.do_cmd('address ipv4 '+platform)
+    my_unity.expect_text(output, my_router.name+'(config-server-tacacs)#')
+    output = my_router.do_cmd('port '+port)
+    my_unity.expect_text(output, my_router.name+'(config-server-tacacs)#')
+    output = my_router.do_cmd('key '+key)
+    my_unity.expect_text(output, my_router.name+'(config-server-tacacs)#')
+    output = my_router.do_cmd('exit')
+    my_unity.expect_text(output, my_router.name+'(config)#')
+
     output = my_router.do_cmd('exit')
     my_unity.expect_text(output, my_router.name+'#')
     output = my_router.do_cmd('exit')
+    if my_router.name+'>' in output:
+        output = my_router.do_cmd('exit')
     my_router.close()
 
 ##################################################################################################
@@ -214,16 +264,44 @@ def tacacs_test_cisco_user_int(my_unity, my_router, username, password):
         my_unity.expect_text(output, 'Connected to')
         if 'Username:' in output:
             output = test_ssh.do_cmd(username)
+        if 'Password:' in output:
+            output = test_ssh.do_cmd(password, 3)
+        if 'Connection closed by foreign host' in output:
+            output = test_ssh.do_cmd('telnet '+my_router.test_addr, 10)
+            my_unity.expect_text(output, 'Connected to')
+        if my_router.genre == 'IOS-XR':
+            if 'Username:' in output:
+                output = test_ssh.do_cmd(username)
             if 'Password:' in output:
-                output = test_ssh.do_cmd(password, 8)
-            if my_router.name+'>' in output:
-                is_good = True
-                output = test_ssh.do_cmd('logout', 3)
-            else:
-                test_ssh.new_line = ''
-                output = test_ssh.do_cmd(chr(29))
-                test_ssh.new_line = '\r'
-                output = test_ssh.do_cmd('close')
+                output = test_ssh.do_cmd(password, 28)
+            if 'Connection closed by foreign host' in output:
+                output = test_ssh.do_cmd('telnet '+my_router.test_addr, 10)
+                my_unity.expect_text(output, 'Connected to')
+            if 'Username:' in output:
+                output = test_ssh.do_cmd(username)
+            if 'Password:' in output:
+                output = test_ssh.do_cmd(password, 20)
+            if 'Connection closed by foreign host' in output:
+                output = test_ssh.do_cmd('telnet '+my_router.test_addr, 10)
+                my_unity.expect_text(output, 'Connected to')
+            if 'Username:' in output:
+                output = test_ssh.do_cmd(username)
+            if 'Password:' in output:
+                output = test_ssh.do_cmd(password, 40)
+            if 'Connection closed by foreign host' in output:
+                output = test_ssh.do_cmd('telnet '+my_router.test_addr, 10)
+                my_unity.expect_text(output, 'Connected to')
+        if 'Username:' in output:
+            output = test_ssh.do_cmd(username)
+        if 'Password:' in output:
+            output = test_ssh.do_cmd(password, 8)
+        if my_router.name+'>' in output or my_router.name+'#' in output:
+            is_good = True
+            output = test_ssh.do_cmd('logout', 3)
+        test_ssh.new_line = ''
+        output = test_ssh.do_cmd(chr(29))
+        test_ssh.new_line = '\r'
+        output = test_ssh.do_cmd('close')
 
     test_ssh.close()
     return is_good
@@ -244,6 +322,7 @@ def tacacs_test_cisco_comms(my_unity, my_router):
     my_unity.start_test('comms')
     output = tacacs_test_cisco_connect(my_unity, my_router)
     my_unity.expect_text(output, my_router.name)
+    output = my_router.do_cmd('exit')
     my_router.new_line = ''
     output = my_router.do_cmd(chr(29))
     my_router.new_line = '\r'
@@ -291,13 +370,15 @@ def tacacs_test_cisco_basic(my_unity, my_router, platform, port, secret):
 
 ##################################################################################################
 
-def tacacs_test_cisco_simple_access(my_unity, my_router, port):
+def tacacs_test_cisco_simple_access_good(my_unity, my_router, port):
     my_unity.start_group('good_access')
     tacacs_test_cisco_user(my_unity, my_router, 'test_'+port+'_a', 'A'+port, True)
     tacacs_test_cisco_user(my_unity, my_router, 'test_'+port+'_b', 'B'+port, True)
     tacacs_test_cisco_user(my_unity, my_router, 'test_'+port+'_b', 'XXXX',   True)
     #tacacs_test_cisco_user(my_unity, my_router, 'test_'+port+'_b', '',       True)
     my_unity.end_group()
+
+def tacacs_test_cisco_simple_access_bad(my_unity, my_router, port):
     my_unity.start_group('bad_access')
     tacacs_test_cisco_user(my_unity, my_router, 'test_'+port+'_a', '',       False)
     tacacs_test_cisco_user(my_unity, my_router, 'test_'+port+'_a', 'X'+port, False)
@@ -306,6 +387,10 @@ def tacacs_test_cisco_simple_access(my_unity, my_router, port):
     tacacs_test_cisco_user(my_unity, my_router, '',                '',       False)
     tacacs_test_cisco_user(my_unity, my_router, 'test_'+port+'_x', 'X'+port, False)
     my_unity.end_group()
+
+def tacacs_test_cisco_simple_access(my_unity, my_router, port):
+    tacacs_test_cisco_simple_access_good(my_unity, my_router, port)
+    tacacs_test_cisco_simple_access_bad(my_unity, my_router, port)
 
 def tacacs_test_cisco_simple(my_unity, my_router, platform, port, name):
     port_str = str(port)
@@ -325,6 +410,7 @@ def tacacs_test_cisco_all(my_unity, my_router, platform, genre, name, indirect, 
     my_router.name = name
     my_router.indirect = indirect
     my_router.test_addr = address
+    my_router.new_line = '\r'
     my_unity.start_group(my_router.genre)
     tacacs_test_cisco_basic(my_unity, my_router, platform, '4901', 'cisco')
     tacacs_test_cisco_simple(my_unity, my_router, platform, 4901, 'original')
@@ -360,13 +446,13 @@ def main(prog, argv):
     my_unity = test_unity.Unity()
     my_router = test_router.Test_Router(router)
     my_router.test_name = 'Jimmy'
-    my_router.new_line = '\r'
 
     # With exclusive use of CISCO router, run tests
     my_unity.start()
     my_unity.start_group("Cisco")
     tacacs_test_cisco_all(my_unity, my_router, platform, 'classic', 'iosv-1',     '17003', '172.16.1.85')
-    tacacs_test_cisco_all(my_unity, my_router, platform, 'IOS-XR',  'iosxrv-1',   '17000', '172.16.1.84')
+    # XR testing has been removed pro temp
+    #tacacs_test_cisco_all(my_unity, my_router, platform, 'IOS-XR',  'iosxrv-1',   '17000', '172.16.1.84')
     tacacs_test_cisco_all(my_unity, my_router, platform, 'IOS-XE',  'csr1000v-1', '17005', '172.16.1.86')
 
     my_unity.end_group()
