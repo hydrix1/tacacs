@@ -289,11 +289,12 @@ typedef enum {
     lopt_print,
     lopt_listen,
     lopt_port,
-    lopt_group,
     lopt_key,
     lopt_address,
     lopt_host,
+    lopt_group,
     lopt_user,
+    lopt_enable,
     lopt_password,
     lopt_debug,
     lopt_cmd,
@@ -324,6 +325,7 @@ static struct option long_opts[] =
     { "address",     required_argument, 0, lopt_address },
     { "group",       required_argument, 0, lopt_group },
     { "user",        required_argument, 0, lopt_user },
+    { "enable",      optional_argument, 0, lopt_enable },
     { "password",    required_argument, 0, lopt_password },
     { "debug",       required_argument, 0, lopt_debug },
     { "cmd",         required_argument, 0, lopt_cmd },
@@ -340,12 +342,24 @@ struct listen_config
     char*                   port;
 };
 
+struct level_config
+{
+    char*                   name;
+    char*                   password;
+};
+
+struct level_set_config
+{
+    struct level_config     level_entry[16];
+};
+
 struct host_config
 {
     struct host_config*     next_host;
     char*                   host_name;
     char*                   secret_key;
     char*                   address;
+    struct level_set_config level_table;
 };
 
 struct access_config
@@ -380,11 +394,26 @@ struct service_config
     struct set_config*      set_tail;
 };
 
+struct group_config
+{
+    struct group_config*    next_group;
+    char*                   group_name;
+    struct level_set_config level_table;
+};
+
+struct member_config
+{
+    struct member_config*   next_member;
+    char*                   member_name;
+};
+
 struct user_config
 {
     struct user_config*     next_user;
     char*                   username;
     char*                   password;
+    struct member_config*   member_head;
+    struct member_config*   member_tail;
     struct service_config*  service_head;
     struct service_config*  service_tail;
     struct service_config*  shell_service;
@@ -402,6 +431,8 @@ struct tacplus_config
     char*                   secret_key;
     struct host_config*     host_head;
     struct host_config*     host_tail;
+    struct group_config*    group_head;
+    struct group_config*    group_tail;
     struct user_config*     user_head;
     struct user_config*     user_tail;
 };
@@ -421,19 +452,22 @@ static char** opts_argv;
 static const char* short_opts = ":hvPd:i:p:c:bf1";
 static int opts_index;
 
-static void string_append(char** existing, char* extra)
+static void string_append(char** existing, const char* extra)
 {
-    if (*existing)
+    if (extra)
     {
-	*existing = realloc (*existing, strlen(*existing) + strlen(extra) + 1);
 	if (*existing)
 	{
-	    strcat (*existing, extra);
+	    *existing = realloc (*existing, strlen(*existing) + strlen(extra) + 1);
+	    if (*existing)
+	    {
+		strcat (*existing, extra);
+	    }
 	}
-    }
-    else
-    {
-	*existing = Xstrdup(extra);
+	else
+	{
+	    *existing = Xstrdup(extra);
+	}
     }
 }
 
@@ -599,6 +633,69 @@ static int parse_cli_listen(struct cli_config* cli_cfg)
     return next_symbol;
 }
 
+static void set_password(char** pass_ptr,
+                         char*  pass_type,
+                         int    has_value,
+                         char*  pass_name,
+                         char*  pass_context)
+{
+    if (*pass_ptr)
+    {
+	fprintf (stderr, "Duplicate password/permit/deny for %s %s!\n", pass_name, pass_context);
+	exit(1);
+    }
+    else if (has_value == 0)
+    {
+	*pass_ptr = pass_type;
+    }
+    else
+    {
+	char* password = get_required_argument("password for %s %s!\n", pass_name, pass_context);
+	*pass_ptr = Xstrdup(pass_type);
+	string_append (pass_ptr, " ");
+	string_append (pass_ptr, password);
+    }
+}
+
+static int parse_level_subopts(struct level_config* level, char* name)
+{
+    int c = EOF;
+
+    if (level->name != 0)
+    {
+	fprintf (stderr, "priviledge level %s already defined!\n", name);
+	exit(1);
+    }
+    level->name = name;
+    level->password = 0;
+
+    do
+    {
+	while (c != EOF)
+	{
+	    int opt = c;
+	    c = EOF;
+	    switch (opt)
+	    {
+		case lopt_deny:
+		    set_password (&level->password, "deny", 0, "privilege level", name);
+		    break;
+		case lopt_permit:
+		    set_password (&level->password, "permit", 0, "privilege level", name);
+		    break;
+		case lopt_password:
+		    set_password (&level->password, "clear", 1, "privilege level", name);
+		    break;
+		default:
+		    return opt;
+	    }
+	}
+	c = get_next_option();
+    } while (c != EOF);
+
+    return c;
+}
+
 static int parse_host_subopts(struct host_config* host)
 {
     int c = EOF;
@@ -631,6 +728,18 @@ static int parse_host_subopts(struct host_config* host)
 		    else
 		    {
 			host->secret_key = get_required_argument("key for host %s", host->host_name);
+		    }
+		    break;
+		case lopt_enable:
+		    {
+		    	char* level_text = get_optional_argument("15");
+			int   level_number = atoi(level_text);
+                        if ((level_number < 0) || (level_number >15))
+			{
+			    fprintf (stderr, "invalid level number ``%s''!\n", level_text);
+			    exit(1);
+			}
+			c = parse_level_subopts (&host->level_table.level_entry[level_number], level_text);
 		    }
 		    break;
 		default:
@@ -742,28 +851,60 @@ static int parse_cmd_subopts(struct cmd_config* cmd)
     return c;
 }
 
-static void set_password(char** pass_ptr,
-                         char*  pass_type,
-                         int    has_value,
-                         char*  pass_name,
-                         char*  pass_context)
+static int parse_group_subopts(struct group_config* group)
 {
-    if (*pass_ptr)
+    int c = EOF;
+
+    do
     {
-	fprintf (stderr, "Duplicate password/permit/deny for %s %s!\n", pass_name, pass_context);
-	exit(1);
-    }
-    else if (has_value == 0)
+	while (c != EOF)
+	{
+	    int opt = c;
+	    c = EOF;
+	    switch (opt)
+	    {
+		case lopt_enable:
+		    {
+		    	char* level_text = get_optional_argument("15");
+			int   level_number = atoi(level_text);
+                        if ((level_number < 0) || (level_number >15))
+			{
+			    fprintf (stderr, "invalid level number ``%s''!\n", level_text);
+			    exit(1);
+			}
+			c = parse_level_subopts (&group->level_table.level_entry[level_number], level_text);
+		    }
+		    break;
+		default:
+		    return opt;
+	    }
+	}
+	c = get_next_option();
+    } while (c != EOF);
+
+    return c;
+}
+
+static int parse_cli_group(struct cli_config* cli_cfg)
+{
+    int next_symbol;
+    struct group_config* group = Xcalloc(1, sizeof(struct group_config));
+
+    if (cli_cfg->tacplus.group_tail == 0)
     {
-	*pass_ptr = pass_type;
+	cli_cfg->tacplus.group_head = group;
     }
     else
     {
-	char* password = get_required_argument("password for %s %s!\n", pass_name, pass_context);
-	*pass_ptr = Xstrdup(pass_type);
-	string_append (pass_ptr, " ");
-	string_append (pass_ptr, password);
+	cli_cfg->tacplus.group_tail->next_group = group;
     }
+    cli_cfg->tacplus.group_tail = group;
+    cli_cfg->used = 1;
+
+    group->group_name = get_required_argument("name for the group");
+    next_symbol = parse_group_subopts(group);
+
+    return next_symbol;
 }
 
 static int parse_user_subopts(struct user_config* user)
@@ -786,7 +927,21 @@ static int parse_user_subopts(struct user_config* user)
 		    break;
 		case lopt_password:
 		    set_password (&user->password, "clear", 1, "--user", user->username);
-		    if (user->password)
+		    break;
+		case lopt_group:
+		    {
+			struct member_config* member = Xcalloc(1, sizeof(struct member_config));
+		    	member->member_name = get_required_argument("group name for --group");
+			if (user->member_tail == 0)
+			{
+			    user->member_head = member;
+			}
+			else
+			{
+			    user->member_tail->next_member = member;
+			}
+			user->member_tail = member;
+		    }
 		    break;
 		case lopt_cmd:
 		    if (user->shell_service == 0)
@@ -853,7 +1008,6 @@ static int parse_user_subopts(struct user_config* user)
 static int parse_cli_user(struct cli_config* cli_cfg)
 {
     int next_symbol;
-    char* colon;
     struct user_config* user = Xcalloc(1, sizeof(struct user_config));
 
     if (cli_cfg->tacplus.user_tail == 0)
@@ -873,15 +1027,17 @@ static int parse_cli_user(struct cli_config* cli_cfg)
     // Check this user is complete
     if (user->password == 0)
     {
-	user->password = get_omitted_argument("password for user %s", user->username);
-    }
+	char* colon;
 
-    // Fix-up password formatting: if the string is of the format
-    // "clear:text", replace the first colon with a space
-    colon = strchr(user->password, ':');
-    if (colon)
-    {
-	*colon = ' ';
+	user->password = get_omitted_argument("password for user %s", user->username);
+
+	// Fix-up password formatting: if the string is of the format
+	// "clear:text", replace the first colon with a space
+	colon = strchr(user->password, ':');
+	if (colon)
+	{
+	    *colon = ' ';
+	}
     }
 
     return next_symbol;
@@ -943,6 +1099,33 @@ static char* generate_spawnd_config(char* so_far, struct spawnd_config* spawnd_c
     return so_far;
 }
 
+static char* generate_level_config(char* so_far, struct level_config* level)
+{
+    so_far = generate_more (so_far, "\t\tenable ");
+    so_far = generate_more (so_far, level->name);
+    so_far = generate_more (so_far, " = ");
+    so_far = generate_more (so_far, level->password);
+    so_far = generate_more (so_far, "\n");
+
+    return so_far;
+}
+
+static char* generate_level_set_config(char* so_far, struct level_set_config* table)
+{
+    int idx;
+
+    for (idx = 0; idx <= 15; ++idx)
+    {
+	struct level_config* level = &table->level_entry[idx];
+	if (level->name)
+	{
+	    so_far = generate_level_config (so_far, level);
+	}
+    }
+
+    return so_far;
+}
+
 static char* generate_host_config(char* so_far, struct host_config* host)
 {
     so_far = generate_more (so_far, "\thost = ");
@@ -955,6 +1138,8 @@ static char* generate_host_config(char* so_far, struct host_config* host)
 	so_far = generate_more (so_far, host->address);
 	so_far = generate_more (so_far, "\n");
     }
+
+    so_far = generate_level_set_config(so_far, &host->level_table);
 
     if (host->secret_key)
     {
@@ -1028,8 +1213,30 @@ static char* generate_service_config(char* so_far, struct service_config* svc)
     return so_far;
 }
 
+static char* generate_group_config(char* so_far, struct group_config* group)
+{
+    so_far = generate_more (so_far, "\tgroup = ");
+    so_far = generate_more (so_far, group->group_name);
+    so_far = generate_more (so_far, " {\n");
+
+    so_far = generate_level_set_config(so_far, &group->level_table);
+
+    // Static items that are candidates for parameterising...
+    so_far = generate_more (so_far, "\t\tdefault service = permit\n");
+    // so_far = generate_more (so_far, "\t\tenable = deny\n");
+    // so_far = generate_more (so_far, "\t\tservice = shell {\n");
+    // so_far = generate_more (so_far, "\t\t\tdefault command = permit\n");
+    // so_far = generate_more (so_far, "\t\t\tdefault attribute = permit\n");
+    // so_far = generate_more (so_far, "\t\t\tset priv-lvl = 1\n");
+    // so_far = generate_more (so_far, "\t\t}\n");
+
+    so_far = generate_more (so_far, "\t}\n");
+    return so_far;
+}
+
 static char* generate_user_config(char* so_far, struct user_config* user)
 {
+    struct member_config*  member;
     struct service_config* svc;
 
     so_far = generate_more (so_far, "\tuser = ");
@@ -1046,6 +1253,13 @@ static char* generate_user_config(char* so_far, struct user_config* user)
     // Static items that are candidates for parameterising...
     // so_far = generate_more (so_far, "\t\tmember = guest\n");
 
+    for (member = user->member_head; member; member = member->next_member)
+    {
+	so_far = generate_more (so_far, "\t\tmember = ");
+	so_far = generate_more (so_far, member->member_name);
+	so_far = generate_more (so_far, "\n");
+    }
+
     for (svc = user->service_head; svc; svc = svc->next_service)
     {
 	so_far = generate_service_config (so_far, svc);
@@ -1058,8 +1272,9 @@ static char* generate_user_config(char* so_far, struct user_config* user)
 static char* generate_tacplus_config(char* so_far, struct tacplus_config* tacplus_cfg)
 {
     char* text;
-    struct host_config* host;
-    struct user_config* user;
+    struct host_config*  host;
+    struct group_config* group;
+    struct user_config*  user;
 
     so_far = generate_more (so_far, "\nid = tac_plus {\n");
 
@@ -1088,17 +1303,10 @@ static char* generate_tacplus_config(char* so_far, struct tacplus_config* tacplu
 	so_far = generate_host_config (so_far, host);
     }
 
-    // Static items that are candidates for parameterising...
-    // so_far = generate_more (so_far, "\tgroup = guest {\n");
-    // so_far = generate_more (so_far, "\t\tdefault service = permit\n");
-    // so_far = generate_more (so_far, "\t\tenable = deny\n");
-    // so_far = generate_more (so_far, "\t\tservice = shell {\n");
-    // so_far = generate_more (so_far, "\t\t\tdefault command = permit\n");
-    // so_far = generate_more (so_far, "\t\t\tdefault attribute = permit\n");
-    // so_far = generate_more (so_far, "\t\t\tset priv-lvl = 1\n");
-    // so_far = generate_more (so_far, "\t\t}\n");
-    // so_far = generate_more (so_far, "\t}\n");
-
+    for (group = tacplus_cfg->group_head; group; group = group->next_group)
+    {
+	so_far = generate_group_config (so_far, group);
+    }
 
     for (user = tacplus_cfg->user_head; user; user = user->next_user)
     {
@@ -1140,7 +1348,7 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
     common_data.servers_min = 2;
     common_data.servers_max = 8;
     common_data.progname = Xstrdup(basename(argv[0]));
-    common_data.version = VERSION "/Hydrix_0.2"
+    common_data.version = VERSION
 #ifdef WITH_PCRE
 	"/PCRE"
 #endif
@@ -1237,6 +1445,9 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
 		    break;
 		case lopt_host:
 		    c = parse_cli_host (&cli_conf);
+		    break;
+		case lopt_group:
+		    c = parse_cli_group (&cli_conf);
 		    break;
 		case lopt_user:
 		    c = parse_cli_user (&cli_conf);

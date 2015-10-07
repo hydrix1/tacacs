@@ -7,15 +7,15 @@ include $(BASE)/Makefile.inc
 
 PROG=ftpd
 
+LIB += $(LIB_MAVIS) $(LIBPROCTITLE) $(LIB_CURL) $(LIBCRYPTA) $(LIB_SSL) $(LIB_SSL_CRYPTO) $(LIB_NET) $(LIB_PAM) $(LIBSCTP) $(LIBCRYPT) $(LIB_DL)
+INC += $(INC_ZLIB) $(INC_PCRE) $(INC_SSL) $(INC_LWRES)
+
 ifeq ($(OSTYPE), sunos)
 	ifneq ($(wildcard /usr/lib/libsendfile.so*),)
 		CFLAGS	+= -DWITH_SENDFILE
 		LIB	+= -lsendfile
 	endif
 endif
-
-LIB += $(LIB_MAVIS) $(LIBSCTP) $(LIBPROCTITLE) $(LIB_ZLIB) $(LIB_PCRE) $(LIB_SSL) $(LIBCRYPT) $(LIB_NET)
-INC += $(INC_ZLIB) $(INC_PCRE) $(INC_SSL) $(INC_LWRES)
 
 ifeq ($(WITH_PCRE), 1)
 	OBJ += pcre_rewrite.o

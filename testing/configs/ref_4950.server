@@ -8,33 +8,35 @@ exec /usr/local/sbin/tac_plus --print \
 	`# }` \
 	`# background = no` \
 \
-	`# debug = PACKET AUTHEN AUTHOR` \
+    --debug="PACKET AUTHEN AUTHOR" \
 	`# access log = output/access_4950` \
 	`# accounting log = output/acct_4950` \
     --host=world \
 	--address ::/0 \
 		`# prompt = \"Welcome\"` \
-		`# enable 15 = clear secret` \
-	--key cisco \
-	`# group = admin {` \
+	--enable=15 --password=secret \
+	--key=cisco \
+    --group=admin \
 		`# default service = permit` \
 		`# service = shell {` \
 			`# default command = permit` \
 			`# default attribute = permit` \
 			`# set priv-lvl = 15` \
-	`# group = guest {` \
+    --group=guest \
 		`# default service = permit` \
-		`# enable = deny` \
+	--enable --deny \
 		`# service = shell {` \
 			`# default command = permit` \
 			`# default attribute = permit` \
 			`# set priv-lvl = 1` \
-    --user cisco --password cisco \
-		`# member = admin` \
+    --user=cisco \
+	--password=cisco \
+	--group=admin \
 		`# service = shell {` \
 			`# default command = permit` \
 			`# default attribute = permit` \
 			`# set priv-lvl = 15` \
-    --user readonly --password readonly \
-		`# member = guest` \
+    --user=readonly \
+	--password=readonly \
+	--group=guest \
 

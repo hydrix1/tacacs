@@ -58,7 +58,7 @@ else
 	CC_GCC	= 1
 endif
 
-LD	?= ld
+LD	?= gld
 
 LDV = $(shell set $(LD); $$1 -v 2>&1)
 
@@ -153,7 +153,7 @@ ifeq ($(OSTYPE), sunos)
 	ifdef LD_LIBRARY_PATH
 $(error LD_LIBRARY_PATH may not be set for Solaris)
 	endif
-	LIB_NET	= -lnsl -lsocket
+	LIB_NET	= -Wl,-Bdynamic -lnsl -lsocket -lrt
 	ifeq ($(LD_GNU), 0)
 		LDOPT_R	= -R
 		LD_SHARED = $(LD) -G -z textwarn
@@ -260,6 +260,18 @@ ifeq ($(WITH_SSL),)
 endif
 
 ifeq ($(WITH_SSL),)
+	ifneq ($(wildcard /usr/local/ssl/lib$(LIBARCH)/libcrypto$(SHLIB_EXT)*),)
+		ifneq ($(wildcard /usr/local/ssl/lib$(LIBARCH)/libssl$(SHLIB_EXT)*),)
+			ifneq ($(wildcard /usr/local/ssl/include/openssl),)
+				INCDIR_SSL=/usr/local/ssl/include
+				LIBDIR_SSL=/usr/local/ssl/lib$(LIBARCH)
+				WITH_SSL=1
+			endif
+		endif
+	endif
+endif
+
+ifeq ($(WITH_SSL),)
 	ifneq ($(wildcard /usr/sfw/lib$(LIBARCH)/libcrypto$(SHLIB_EXT)*),)
 		ifneq ($(wildcard /usr/sfw/lib$(LIBARCH)/libssl$(SHLIB_EXT)*),)
 			ifneq ($(wildcard /usr/sfw/include/openssl),)
@@ -280,7 +292,11 @@ ifeq ($(WITH_SSL),1)
 		LIB_SSL_CRYPTO	= -L$(LIBDIR_SSL) $(LDOPT_R)$(LIBDIR_SSL)
 	endif
 	DEF += -DWITH_SSL
-	LIB_SSL	+= -lssl -lcrypto 
+	ifeq ($(OSTYPE), sunos)
+		LIB_SSL	+= -lssl -lresolv -lcrypto
+	else
+		LIB_SSL	+= -lssl -lgssapi_krb5 -lkrb5 -lk5crypto -lcom_err -lresolv -lcrypto
+	endif
 	LIB_SSL_CRYPTO	+= -lcrypto 
 endif
 
@@ -442,6 +458,18 @@ ifeq ($(HAS_LIBCRYPT),1)
 	DEF += -DWITH_LIBCRYPT
 endif
 
+ifeq ($(HAS_LIBCRYPTA),)
+	ifneq ($(wildcard /lib$(LIBARCH)/libcrypt.a* /usr/lib$(LIBARCH)/libcrypt.a* /lib$(LIBARCH)/*/libcrypt.a*),)
+		HAS_LIBCRYPTA=1
+	endif
+endif
+
+ifeq ($(HAS_LIBCRYPTA),1)
+	LIBCRYPT	= 
+	LIBCRYPTA	= -lcrypt
+	DEF += -DWITH_LIBCRYPT
+endif
+
 # Check for IPC:
 
 ifeq ($(WITH_IPC),)
@@ -488,7 +516,15 @@ ifeq ($(WITH_CURL),1)
 	ifneq ($(LIBDIR_CURL),)
 		LIB_CURL	= -L$(LIBDIR_CURL) $(LDOPT_R)$(LIBDIR_CURL)
 	endif
-	LIB_CURL	+= -lcurl
+	ifeq ($(OSTYPE), sunos)
+		ifeq ($(OSr),5.11)
+			LIB_CURL	+= -lcurl -lidn -lintl -lz 
+		else
+			LIB_CURL	+= -static -lcurl -lssh2 -lidn -lintl -liconv -lz 
+		endif
+	else
+		LIB_CURL	+= -static -lcurl -lidn -lz 
+	endif
 endif
 
 # Check for PAM:
@@ -527,7 +563,11 @@ ifeq ($(WITH_PAM),1)
 	ifneq ($(LIBDIR_PAM),)
 		LIB_PAM	= -L$(LIBDIR_PAM) $(LDOPT_R)$(LIBDIR_PAM)
 	endif
-	LIB_PAM	+= -lpam
+	ifeq ($(OSTYPE), linux)
+		LIB_PAM	+= -lpam -laudit
+	else
+		LIB_PAM	+= -lpam
+	endif
 endif
 
 # Check for SCTP:
@@ -551,19 +591,26 @@ ifeq ($(OSTYPE), linux)
 	LIB_DL	= -ldl
 endif
 	
+#ifeq ($(OSTYPE), sunos)
+#	LIB_DL	= -ldl
+#	ifeq ($(WITH_PORT),)
+#		ifneq ($(wildcard /usr/include/port.h),)
+#			WITH_PORT=1
+#		endif
+#	endif
+#	ifeq ($(WITH_DEVPOLL),)
+#		# Deprecated by Sun, and rightfully so.
+#		ifneq ($(wildcard /usr/include/sys/devpoll.h),)
+#			WITH_DEVPOLL=1
+#		endif
+#	endif
+#endif
+
 ifeq ($(OSTYPE), sunos)
-	LIB_DL	= -ldl
-	ifeq ($(WITH_PORT),)
-		ifneq ($(wildcard /usr/include/port.h),)
-			WITH_PORT=1
-		endif
-	endif
-	ifeq ($(WITH_DEVPOLL),)
-		# Deprecated by Sun, and rightfully so.
-		ifneq ($(wildcard /usr/include/sys/devpoll.h),)
-			WITH_DEVPOLL=1
-		endif
-	endif
+    GETLINE=$(shell grep getline /usr/include/stdio.h)
+    ifeq ($(GETLINE),)
+        WITH_GETLINE=1
+    endif
 endif
 
 ifeq ($(wildcard /usr/include/sys),)

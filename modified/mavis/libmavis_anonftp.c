@@ -155,3 +155,21 @@ static int mavis_send_in(mavis_ctx * mcx, av_ctx ** ac)
 }
 
 #include "mavis_glue.c"
+
+#ifdef STATIC_MODULES
+
+struct module_defn mod_anonftp = 
+{
+    .name = MAVIS_name,
+    .new =  Mavis_new,
+    .append = Mavis_append, 
+    .init = Mavis_init,
+    .parse = Mavis_parse,
+    .send = Mavis_send,
+    .recv = Mavis_recv,
+    .cancel = Mavis_cancel,
+    .drop = Mavis_drop
+};
+
+#endif
+
