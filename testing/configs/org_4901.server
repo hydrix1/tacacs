@@ -12,13 +12,27 @@ id = spawnd {
 id = tac_plus {
 	debug = PACKET AUTHEN AUTHOR ALL
 
-	access log = output/access_4901.log
-	accounting log = output/acct_4901.log
+	access log = ../output/access_4901.log
+	accounting log = ../output/acct_4901.log
 
         key = cisco
 
+	user = cisco {
+		password = clear cisco
+		service = shell {
+			default cmd = permit
+		}
+	}
+
 	user = test_4901_a {
 		password = clear A4901
+		service = shell {
+			cmd = exit { permit .* }
+			cmd = enable { permit .* }
+			cmd = terminal { permit length }
+			cmd = write { permit .* }
+			cmd = copy { permit running-config }
+		}
 		service = junos-exec {
 			set local-user-name = let_me_in
 		}
@@ -26,6 +40,12 @@ id = tac_plus {
 
 	user = test_4901_b {
 		password = permit
+		service = shell {
+			cmd = exit { permit .* }
+			cmd = enable { permit .* }
+			cmd = terminal { permit length }
+			cmd = write { permit .* }
+		}
 		service = junos-exec {
 			set local-user-name = let_me_in
 		}
@@ -33,5 +53,11 @@ id = tac_plus {
 
 	user = test_4901_c {
 		password = deny
+		service = shell {
+			cmd = exit { permit .* }
+			cmd = enable { permit .* }
+			cmd = terminal { permit length }
+			cmd = write { permit .* }
+		}
 	}
 }

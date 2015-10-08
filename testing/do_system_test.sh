@@ -19,7 +19,7 @@ fi
 
 expect_file()
 {
-    file_name="$1"
+    file_name="../$1"
     if [ ! -f "${file_name}" ]; then
 	unity_fail
 	echo " -- ERROR: file ${file_name} NOT created!"

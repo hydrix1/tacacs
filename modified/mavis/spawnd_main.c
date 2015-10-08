@@ -948,7 +948,6 @@ static int parse_user_subopts(struct user_config* user)
 		    {
 			struct service_config* shell = Xcalloc(1, sizeof(struct service_config));
 		    	shell->svc_name = "shell";
-			shell->next_service = user->service_tail;
 			if (user->service_tail == 0)
 			{
 			    user->service_head = shell;
@@ -979,7 +978,6 @@ static int parse_user_subopts(struct user_config* user)
 			struct service_config* junos = Xcalloc(1, sizeof(struct service_config));
 			struct set_config* set = Xcalloc(1, sizeof(struct set_config));
 		    	junos->svc_name = "junos-exec";
-			junos->next_service = user->service_tail;
 			if (user->service_tail == 0)
 			{
 			    user->service_head = junos;

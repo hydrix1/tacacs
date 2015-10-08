@@ -75,7 +75,7 @@ unity_start_group()
 
 unity_end_group()
 {
-    if [ $test_depth > 0 ]; then
+    if [ $test_depth -gt 0 ]; then
         test_depth=$(($test_depth - 1))
         test_context="${test_group[$test_depth]}"
     else

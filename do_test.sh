@@ -35,7 +35,8 @@ echo "***"
 echo "*** Generate the report"
 echo "***"
 echo "***"
-gawk -f generate_report.awk $all_test_output > $xml_test_output
+sed 's/\x1d/^]/g' $all_test_output > fixed_$all_test_output
+gawk -f generate_report.awk fixed_$all_test_output > $xml_test_output
 
 # echo "***"
 # echo "***"
