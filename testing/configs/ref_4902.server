@@ -27,7 +27,11 @@ id = tac_plus {
 	user = test_4902_a {
 		password = clear A4902
 		service = shell {
+			cmd = exit { permit .* }
+			cmd = enable { permit .* }
+			cmd = terminal { permit length }
 			cmd = write { permit .* }
+			cmd = copy { permit running-config }
 		}
 		service = junos-exec {
 			set local-user-name = let_me_in
@@ -37,6 +41,9 @@ id = tac_plus {
 	user = test_4902_b {
 		password = permit
 		service = shell {
+			cmd = exit { permit .* }
+			cmd = enable { permit .* }
+			cmd = terminal { permit length }
 			cmd = write { permit .* }
 		}
 		service = junos-exec {
@@ -47,6 +54,9 @@ id = tac_plus {
 	user = test_4902_c {
 		password = deny
 		service = shell {
+			cmd = exit { permit .* }
+			cmd = enable { permit .* }
+			cmd = terminal { permit length }
 			cmd = write { permit .* }
 		}
 	}
