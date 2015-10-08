@@ -252,7 +252,7 @@ def tacacs_test_cisco_configure_whatever(my_unity, my_router, platform, port, ke
 
 ##################################################################################################
 
-def tacacs_test_cisco_user_int(my_unity, my_router, username, password):
+def tacacs_test_cisco_open_user(my_unity, my_router, username, password):
     test_ssh = test_router.Test_Router(my_router.ip_address)
     test_ssh.new_line = '\r'
     ssh_good = test_ssh.open("virl", "VIRL")
@@ -297,14 +297,19 @@ def tacacs_test_cisco_user_int(my_unity, my_router, username, password):
             output = test_ssh.do_cmd(password, 8)
         if my_router.name+'>' in output or my_router.name+'#' in output:
             is_good = True
-            output = test_ssh.do_cmd('logout', 3)
-        test_ssh.new_line = ''
-        output = test_ssh.do_cmd(chr(29))
-        test_ssh.new_line = '\r'
-        output = test_ssh.do_cmd('close')
+    return (ssh_good, is_good, test_ssh)
 
-    test_ssh.close()
-    return is_good
+def tacacs_test_cisco_user_int(my_unity, my_router, username, password):
+    (ssh_good, telnet_good, trial_ssh) = tacacs_test_cisco_open_user(my_unity, my_router, username, password)
+    if telnet_good:
+        output = trial_ssh.do_cmd('logout', 3)
+    if ssh_good:
+        trial_ssh.new_line = ''
+        output = trial_ssh.do_cmd(chr(29))
+        trial_ssh.new_line = '\r'
+        output = trial_ssh.do_cmd('close')
+    trial_ssh.close()
+    return ssh_good and telnet_good
 
 def tacacs_test_cisco_user(my_unity, my_router, username, password, expect_good):
     context = 'Username "' + username + '"/password "' + password + '"'
@@ -392,6 +397,70 @@ def tacacs_test_cisco_simple_access(my_unity, my_router, port):
     tacacs_test_cisco_simple_access_good(my_unity, my_router, port)
     tacacs_test_cisco_simple_access_bad(my_unity, my_router, port)
 
+##################################################################################################
+
+def tacacs_test_cisco_simple_authorisation_start(my_unity, my_router, username, password):
+    my_unity.start_group(username)
+    (good, open, session) = tacacs_test_cisco_open_user(my_unity, my_router, username, password)
+    if good and not open:
+        test_ssh.new_line = ''
+        output = test_ssh.do_cmd(chr(29))
+        test_ssh.new_line = '\r'
+        output = test_ssh.do_cmd('close')
+    if open:
+        session.do_cmd('terminal length 0', 2)
+    return (open, session)
+
+def tacacs_test_cisco_cmd(my_unity, my_router, open, session, cmd, expect_pass):
+    my_unity.start_test(cmd.replace(' ','_'))
+    if open:
+        output = session.do_cmd('', 2)
+        if my_router.name+'>' in output:
+            output = session.do_cmd('enable', 3)
+            if 'Password:' in output:
+                output = session.do_cmd('cisco', 3)
+        #if  my_router.name+'#' in output:
+        output = session.do_cmd(cmd, 9)
+        if 'authorization failed' in output:
+            if expect_pass:
+                my_unity.fail(cmd + ' failed!')
+        else:
+            if not expect_pass:
+                my_unity.fail(cmd + ' unexpectedly worked!')
+    else:
+        my_unity.skip()
+    my_unity.end_test()
+
+def tacacs_test_cisco_simple_authorisation_end(my_unity, session):
+    session.close()
+    my_unity.end_group()
+
+def tacacs_test_cisco_simple_authorisation_a(my_unity, my_router, port):
+    (open, session) = tacacs_test_cisco_simple_authorisation_start(my_unity, my_router, 'test_'+port+'_a', 'A'+port)
+    tacacs_test_cisco_cmd(my_unity, my_router, open, session, 'delete flash:/gordon', False)
+    tacacs_test_cisco_cmd(my_unity, my_router, open, session, 'copy running-config null:', True)
+    tacacs_test_cisco_cmd(my_unity, my_router, open, session, 'copy runn null:', True)
+    tacacs_test_cisco_cmd(my_unity, my_router, open, session, 'copy startup-config null:', False)
+    tacacs_test_cisco_cmd(my_unity, my_router, open, session, 'write terminal', True)
+    tacacs_test_cisco_simple_authorisation_end(my_unity, session)
+
+def tacacs_test_cisco_simple_authorisation_b(my_unity, my_router, port):
+    (open, session) = tacacs_test_cisco_simple_authorisation_start(my_unity, my_router, 'test_'+port+'_b', 'B'+port)
+    tacacs_test_cisco_cmd(my_unity, my_router, open, session, 'delete flash:/gordon', False)
+    tacacs_test_cisco_cmd(my_unity, my_router, open, session, 'copy running-config null:', False)
+    tacacs_test_cisco_cmd(my_unity, my_router, open, session, 'copy runn null:', False)
+    tacacs_test_cisco_cmd(my_unity, my_router, open, session, 'copy startup-config null:', False)
+    tacacs_test_cisco_cmd(my_unity, my_router, open, session, 'write terminal', True)
+    tacacs_test_cisco_simple_authorisation_end(my_unity, session)
+
+def tacacs_test_cisco_simple_authorisation(my_unity, my_router, port):
+    my_unity.start_group('authorisation')
+    tacacs_test_cisco_simple_authorisation_a(my_unity, my_router, port)
+    tacacs_test_cisco_simple_authorisation_b(my_unity, my_router, port)
+    my_unity.end_group()
+
+##################################################################################################
+
 def tacacs_test_cisco_simple(my_unity, my_router, platform, port, name):
     port_str = str(port)
     print ' -- Testing simple ' + name + ' (port ' + port_str + ')'
@@ -399,7 +468,7 @@ def tacacs_test_cisco_simple(my_unity, my_router, platform, port, name):
     tacacs_test_cisco_configure_whatever(my_unity, my_router, platform, port_str, 'cisco')
     tacacs_test_cisco_simple_access(my_unity, my_router, port_str)
     #tacacs_test_accounting
-    #tacacs_test_authorisation
+    tacacs_test_cisco_simple_authorisation(my_unity, my_router, port_str)
     my_unity.end_group()
 
 
@@ -414,8 +483,8 @@ def tacacs_test_cisco_all(my_unity, my_router, platform, genre, name, indirect, 
     my_unity.start_group(my_router.genre)
     tacacs_test_cisco_basic(my_unity, my_router, platform, '4901', 'cisco')
     tacacs_test_cisco_simple(my_unity, my_router, platform, 4901, 'original')
-    #tacacs_test_cisco_simple(my_unity, my_router, platform, 4902, 'reference')
-    #tacacs_test_cisco_simple(my_unity, my_router, platform, 4903, 'CLI')
+    tacacs_test_cisco_simple(my_unity, my_router, platform, 4902, 'reference')
+    tacacs_test_cisco_simple(my_unity, my_router, platform, 4903, 'CLI')
     my_unity.end_group()
 
 
