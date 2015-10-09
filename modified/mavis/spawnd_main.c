@@ -287,51 +287,79 @@ void spawnd_bind_listener(struct spawnd_context *ctx, int cur)
 typedef enum {
     lopt_end = 300,
     lopt_print,
-    lopt_listen,
-    lopt_port,
-    lopt_key,
-    lopt_address,
-    lopt_host,
-    lopt_group,
-    lopt_user,
-    lopt_enable,
-    lopt_password,
     lopt_debug,
-    lopt_cmd,
-    lopt_deny,
-    lopt_permit,
-    lopt_junos,
+    lopt_listen,
+    lopt_listen_port,
+    lopt_access_log,
+    lopt_account_log,
+    lopt_key,
+    lopt_host,
+    lopt_host_address,
+    lopt_host_key,
+    lopt_host_enable,
+    lopt_host_enable_password,
+    lopt_host_enable_deny,
+    lopt_host_enable_permit,
+    lopt_group,
+    lopt_group_enable,
+    lopt_group_enable_password,
+    lopt_group_enable_deny,
+    lopt_group_enable_permit,
+    lopt_user,
+    lopt_user_password,
+    lopt_user_deny,
+    lopt_user_permit,
+    lopt_user_default_cmd,
+    lopt_user_cmd,
+    lopt_user_cmd_deny,
+    lopt_user_cmd_permit,
+    lopt_user_group,
+    lopt_user_junos,
 } lopts_e;
 
 static struct option long_opts[] =
 {
     /* Long version of standard short options */
     /* "vPd:i:p:c:bf1" */
-    { "help",        no_argument,       0, 'h' },
-    { "version",     no_argument,       0, 'v' },
-    { "check",       no_argument,       0, 'P' },
-    { "degraded",    no_argument,       0, 'l' },
-    { "child-id",    required_argument, 0, 'i' },
-    { "debug-levek", required_argument, 0, 'd' },
-    { "pid-file",    required_argument, 0, 'p' },
-    { "foreground",  no_argument,       0, 'f' },
-    { "background",  no_argument,       0, 'b' },
+    { "help",                  no_argument,       0, 'h' },
+    { "version",               no_argument,       0, 'v' },
+    { "check",                 no_argument,       0, 'P' },
+    { "degraded",              no_argument,       0, 'l' },
+    { "child-id",              required_argument, 0, 'i' },
+    { "debug-level",           required_argument, 0, 'd' },
+    { "pid-file",              required_argument, 0, 'p' },
+    { "foreground",            no_argument,       0, 'f' },
+    { "background",            no_argument,       0, 'b' },
     /* CLI configuration options */
-    { "print",       no_argument,       0, lopt_print },
-    { "listen",      no_argument,       0, lopt_listen },
-    { "port",        required_argument, 0, lopt_port },
-    { "host",        optional_argument, 0, lopt_host },
-    { "key",         required_argument, 0, lopt_key },
-    { "address",     required_argument, 0, lopt_address },
-    { "group",       required_argument, 0, lopt_group },
-    { "user",        required_argument, 0, lopt_user },
-    { "enable",      optional_argument, 0, lopt_enable },
-    { "password",    required_argument, 0, lopt_password },
-    { "debug",       required_argument, 0, lopt_debug },
-    { "cmd",         required_argument, 0, lopt_cmd },
-    { "deny",        optional_argument, 0, lopt_deny },
-    { "permit",      optional_argument, 0, lopt_permit },
-    { "junos",       no_argument,       0, lopt_junos },
+    { "print",                 no_argument,       0, lopt_print },
+    { "debug",                 required_argument, 0, lopt_debug },
+    { "listen",                no_argument,       0, lopt_listen },
+    { "listen_port",           required_argument, 0, lopt_listen_port },
+    { "access_log",            required_argument, 0, lopt_access_log },
+    { "accounting_log",        required_argument, 0, lopt_account_log },
+    { "key",                   required_argument, 0, lopt_key },
+    { "host",                  optional_argument, 0, lopt_host },
+    { "host_address",          required_argument, 0, lopt_host_address },
+    { "host_key",              required_argument, 0, lopt_host_key },
+    { "host_enable",           optional_argument, 0, lopt_host_enable },
+    { "host_enable_password",  required_argument, 0, lopt_host_enable_password },
+    { "host_enable_deny",      optional_argument, 0, lopt_host_enable_deny },
+    { "host_enable_permit",    optional_argument, 0, lopt_host_enable_permit },
+    { "group",                 required_argument, 0, lopt_group },
+    { "group_enable",          optional_argument, 0, lopt_group_enable },
+    { "group_enable_password", required_argument, 0, lopt_group_enable_password },
+    { "group_enable_deny",     optional_argument, 0, lopt_group_enable_deny },
+    { "group_enable_permit",   optional_argument, 0, lopt_group_enable_permit },
+    { "user",                  required_argument, 0, lopt_user },
+    { "user_password",         required_argument, 0, lopt_user_password },
+    { "user_deny",             optional_argument, 0, lopt_user_deny },
+    { "user_permit",           optional_argument, 0, lopt_user_permit },
+    { "user_default_cmd",      required_argument, 0, lopt_user_default_cmd },
+    { "user_cmd",              required_argument, 0, lopt_user_cmd },
+    { "user_cmd_deny",         optional_argument, 0, lopt_user_cmd_deny },
+    { "user_cmd_permit",       optional_argument, 0, lopt_user_cmd_permit },
+    { "user_group",            required_argument, 0, lopt_user_group },
+    { "user_junos",            no_argument,       0, lopt_user_junos },
     /* end marker */
     { 0, 0, 0, 0}
 };
@@ -388,6 +416,7 @@ struct service_config
 {
     struct service_config*  next_service;
     char*                   svc_name;
+    char*                   dflt_cmd;
     struct cmd_config*      cmd_head;
     struct cmd_config*      cmd_tail;
     struct set_config*      set_head;
@@ -428,6 +457,8 @@ struct spawnd_config
 struct tacplus_config
 {
     char*                   debug_opts;
+    char*                   access_log;
+    char*                   account_log;
     char*                   secret_key;
     struct host_config*     host_head;
     struct host_config*     host_tail;
@@ -585,7 +616,7 @@ static int parse_listen_subopts(struct listen_config* listen)
 	    c = EOF;
 	    switch (opt)
 	    {
-		case lopt_port:
+		case lopt_listen_port:
 		    if (listen->port)
 		    {
 			fprintf (stderr, "Duplicate --port for --listen!\n");
@@ -657,7 +688,7 @@ static void set_password(char** pass_ptr,
     }
 }
 
-static int parse_level_subopts(struct level_config* level, char* name)
+static int parse_level_subopts(int base_opt, struct level_config* level, char* name)
 {
     int c = EOF;
 
@@ -673,17 +704,17 @@ static int parse_level_subopts(struct level_config* level, char* name)
     {
 	while (c != EOF)
 	{
-	    int opt = c;
+	    int opt = c + lopt_host_enable - base_opt;
 	    c = EOF;
 	    switch (opt)
 	    {
-		case lopt_deny:
+		case lopt_host_enable_deny:
 		    set_password (&level->password, "deny", 0, "privilege level", name);
 		    break;
-		case lopt_permit:
+		case lopt_host_enable_permit:
 		    set_password (&level->password, "permit", 0, "privilege level", name);
 		    break;
-		case lopt_password:
+		case lopt_host_enable_password:
 		    set_password (&level->password, "clear", 1, "privilege level", name);
 		    break;
 		default:
@@ -708,7 +739,7 @@ static int parse_host_subopts(struct host_config* host)
 	    c = EOF;
 	    switch (opt)
 	    {
-		case lopt_address:
+		case lopt_host_address:
 		    if (host->address)
 		    {
 			fprintf (stderr, "Duplicate --address for --host %s!\n", host->host_name);
@@ -719,7 +750,7 @@ static int parse_host_subopts(struct host_config* host)
 			host->address = get_required_argument("address for host %s", host->host_name);
 		    }
 		    break;
-		case lopt_key:
+		case lopt_host_key:
 		    if (host->secret_key)
 		    {
 			fprintf (stderr, "Duplicate --key for --host %s!\n", host->host_name);
@@ -730,7 +761,7 @@ static int parse_host_subopts(struct host_config* host)
 			host->secret_key = get_required_argument("key for host %s", host->host_name);
 		    }
 		    break;
-		case lopt_enable:
+		case lopt_host_enable:
 		    {
 		    	char* level_text = get_optional_argument("15");
 			int   level_number = atoi(level_text);
@@ -739,7 +770,7 @@ static int parse_host_subopts(struct host_config* host)
 			    fprintf (stderr, "invalid level number ``%s''!\n", level_text);
 			    exit(1);
 			}
-			c = parse_level_subopts (&host->level_table.level_entry[level_number], level_text);
+			c = parse_level_subopts (opt, &host->level_table.level_entry[level_number], level_text);
 		    }
 		    break;
 		default:
@@ -825,10 +856,10 @@ static int parse_cmd_subopts(struct cmd_config* cmd)
 	    c = EOF;
 	    switch (opt)
 	    {
-		case lopt_deny:
+		case lopt_user_cmd_deny:
 		    mode = "deny";
 		    /* fall through */
-		case lopt_permit:
+		case lopt_user_cmd_permit:
 		    access = Xcalloc(1, sizeof(struct access_config));
 		    if (cmd->access_tail == 0)
 		    {
@@ -863,7 +894,7 @@ static int parse_group_subopts(struct group_config* group)
 	    c = EOF;
 	    switch (opt)
 	    {
-		case lopt_enable:
+		case lopt_group_enable:
 		    {
 		    	char* level_text = get_optional_argument("15");
 			int   level_number = atoi(level_text);
@@ -872,7 +903,7 @@ static int parse_group_subopts(struct group_config* group)
 			    fprintf (stderr, "invalid level number ``%s''!\n", level_text);
 			    exit(1);
 			}
-			c = parse_level_subopts (&group->level_table.level_entry[level_number], level_text);
+			c = parse_level_subopts (opt, &group->level_table.level_entry[level_number], level_text);
 		    }
 		    break;
 		default:
@@ -907,6 +938,29 @@ static int parse_cli_group(struct cli_config* cli_cfg)
     return next_symbol;
 }
 
+static struct service_config* get_user_shell(struct user_config* user)
+{
+    struct service_config* shell = user->shell_service;
+
+    if (shell == 0)
+    {
+	shell = Xcalloc(1, sizeof(struct service_config));
+    	shell->svc_name = "shell";
+	if (user->service_tail == 0)
+	{
+	    user->service_head = shell;
+	}
+	else
+	{
+	    user->service_tail->next_service = shell;
+	}
+	user->shell_service = shell;
+	user->service_tail = shell;
+    }
+
+    return shell;
+}
+
 static int parse_user_subopts(struct user_config* user)
 {
     int c = EOF;
@@ -919,16 +973,16 @@ static int parse_user_subopts(struct user_config* user)
 	    c = EOF;
 	    switch (opt)
 	    {
-		case lopt_deny:
+		case lopt_user_deny:
 		    set_password (&user->password, "deny", 0, "--user", user->username);
 		    break;
-		case lopt_permit:
+		case lopt_user_permit:
 		    set_password (&user->password, "permit", 0, "--user", user->username);
 		    break;
-		case lopt_password:
+		case lopt_user_password:
 		    set_password (&user->password, "clear", 1, "--user", user->username);
 		    break;
-		case lopt_group:
+		case lopt_user_group:
 		    {
 			struct member_config* member = Xcalloc(1, sizeof(struct member_config));
 		    	member->member_name = get_required_argument("group name for --group");
@@ -943,37 +997,38 @@ static int parse_user_subopts(struct user_config* user)
 			user->member_tail = member;
 		    }
 		    break;
-		case lopt_cmd:
-		    if (user->shell_service == 0)
+		case lopt_user_default_cmd:
 		    {
-			struct service_config* shell = Xcalloc(1, sizeof(struct service_config));
-		    	shell->svc_name = "shell";
-			if (user->service_tail == 0)
+			struct service_config* shell = get_user_shell(user);
+			if (shell->dflt_cmd)
 			{
-			    user->service_head = shell;
+			    fprintf (stderr, "Duplicate --default_cmd for --user %s!\n", user->username);
+			    exit(1);
 			}
 			else
 			{
-			    user->service_tail->next_service = shell;
+			    shell->dflt_cmd = get_required_argument("default cmd access for user %s", user->username);
 			}
-			user->shell_service = shell;
-			user->service_tail = shell;
 		    }
-		    struct service_config* shell = user->shell_service;
-		    struct cmd_config* cmd = Xcalloc(1, sizeof(struct cmd_config));
-		    if (shell->cmd_tail == 0)
-		    {
-			shell->cmd_head = cmd;
-		    }
-		    else
-		    {
-			shell->cmd_tail->next_cmd = cmd;
-		    }
-		    shell->cmd_tail = cmd;
-		    cmd->cmd_name = get_required_argument("command name for --cmd");
-		    c = parse_cmd_subopts(cmd);
 		    break;
-		case lopt_junos:
+		case lopt_user_cmd:
+		    {
+			struct service_config* shell = get_user_shell(user);
+			struct cmd_config* cmd = Xcalloc(1, sizeof(struct cmd_config));
+			if (shell->cmd_tail == 0)
+			{
+			    shell->cmd_head = cmd;
+			}
+			else
+			{
+			    shell->cmd_tail->next_cmd = cmd;
+			}
+			shell->cmd_tail = cmd;
+			cmd->cmd_name = get_required_argument("command name for --cmd");
+			c = parse_cmd_subopts(cmd);
+		    }
+		    break;
+		case lopt_user_junos:
 		    {
 			struct service_config* junos = Xcalloc(1, sizeof(struct service_config));
 			struct set_config* set = Xcalloc(1, sizeof(struct set_config));
@@ -1192,6 +1247,13 @@ static char* generate_service_config(char* so_far, struct service_config* svc)
     so_far = generate_more (so_far, svc->svc_name);
     so_far = generate_more (so_far, " {\n");
 
+    if (svc->dflt_cmd)
+    {
+	so_far = generate_more (so_far, "\t\t\tdefault cmd = ");
+	so_far = generate_more (so_far, svc->dflt_cmd);
+	so_far = generate_more (so_far, "\n");
+    }
+
     for (cmd = svc->cmd_head; cmd; cmd = cmd->next_cmd)
     {
 	so_far = generate_cmd_config (so_far, cmd);
@@ -1284,6 +1346,22 @@ static char* generate_tacplus_config(char* so_far, struct tacplus_config* tacplu
 	so_far = generate_more (so_far, "\n");
     }
 
+    text = tacplus_cfg->access_log;
+    if (text && *text)
+    {
+	so_far = generate_more (so_far, "\taccess log = \"");
+	so_far = generate_more (so_far, text);
+	so_far = generate_more (so_far, "\"\n");
+    }
+
+    text = tacplus_cfg->account_log;
+    if (text && *text)
+    {
+	so_far = generate_more (so_far, "\taccounting log = \"");
+	so_far = generate_more (so_far, text);
+	so_far = generate_more (so_far, "\"\n");
+    }
+
     text = tacplus_cfg->secret_key;
     if (text && *text)
     {
@@ -1291,10 +1369,6 @@ static char* generate_tacplus_config(char* so_far, struct tacplus_config* tacplu
 	so_far = generate_more (so_far, text);
 	so_far = generate_more (so_far, "\"\n");
     }
-
-    // Static items that are candidates for parameterising...
-    // so_far = generate_more (so_far, "\taccess log = output/access_4950\n");
-    // so_far = generate_more (so_far, "\taccounting log = output/acct_4950\n");
 
     for (host = tacplus_cfg->host_head; host; host = host->next_host)
     {
@@ -1426,6 +1500,12 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
 		    break;
 		case lopt_listen:
 		    c = parse_cli_listen (&cli_conf);
+		    break;
+		case lopt_access_log:
+		    cli_conf.tacplus.access_log = get_required_argument("access log file name");
+		    break;
+		case lopt_account_log:
+		    cli_conf.tacplus.account_log = get_required_argument("accounting log file name");
 		    break;
 		case lopt_debug:
 		    c = parse_cli_debug (&cli_conf);

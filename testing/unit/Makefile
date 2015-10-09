@@ -18,7 +18,8 @@ UNITY = unity.o
 WRAP_SPAWND_MAIN = wrap_fixup.o memops.o getline.o
 
 #settings
-LINK = gcc -lsocket
+#LINK = gcc -lsocket
+LINK = gcc
 CFLAGS = -I$(MODIFIED)
 
 #rules

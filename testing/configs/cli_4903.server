@@ -1,33 +1,33 @@
 #!/bin/bash
 
 exec /usr/local/sbin/tac_plus --print \
-	--listen --port=4903 \
+	--listen --listen_port=4903 \
 	--debug="PACKET AUTHEN AUTHOR" \
-	`#--access_log=../output/access_4903.log` \
-	`#--accounting_log=../output/acct_4903.log` \
+	--access_log=../output/access_4903.log \
+	--accounting_log=../output/acct_4903.log \
 	--key=cisco \
 	--user=cisco \
-		--password=cisco \
-		--cmd --permit \
+		--user_password=cisco \
+		--user_default_cmd=permit \
 	--user=test_4903_a \
-		--password=A4903 \
-		--cmd=exit --permit \
-		--cmd=enable --permit \
-		--cmd=terminal --permit=length \
-		--cmd=write --permit \
-		--cmd=copy --permit=running-config \
-		--junos \
+		--user_password=A4903 \
+		--user_cmd=exit --user_cmd_permit \
+		--user_cmd=enable --user_cmd_permit \
+		--user_cmd=terminal --user_cmd_permit=length \
+		--user_cmd=write --user_cmd_permit \
+		--user_cmd=copy --user_cmd_permit=running-config \
+		--user_junos \
 	--user=test_4903_b \
-		--permit \
-		--cmd=exit --permit \
-		--cmd=enable --permit \
-		--cmd=terminal --permit=length \
-		--cmd=write --permit \
-		--junos \
+		--user_permit \
+		--user_cmd=exit --user_cmd_permit \
+		--user_cmd=enable --user_cmd_permit \
+		--user_cmd=terminal --user_cmd_permit=length \
+		--user_cmd=write --user_cmd_permit \
+		--user_junos \
 	--user=test_4903_c \
-		--deny \
-		--cmd=exit --permit \
-		--cmd=enable --permit \
-		--cmd=terminal --permit=length \
-		--cmd=write --permit \
+		--user_deny \
+		--user_cmd=exit --user_cmd_permit \
+		--user_cmd=enable --user_cmd_permit \
+		--user_cmd=terminal --user_cmd_permit=length \
+		--user_cmd=write --user_cmd_permit \
 
