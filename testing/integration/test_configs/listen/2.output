@@ -1,0 +1,17 @@
+Missing TCP port number for the listen
+>> generated configuration is:
+id = spawnd {
+	listen = {
+		port = 20202
+	}
+	spawn = {
+	        instances min = 1
+	        instances max = 10
+	}
+	background = no
+}
+
+id = tac_plus {
+}
+
+======

@@ -12,11 +12,16 @@ echo "***"
 # Include tools from other scripts
 . scripts/unity.sh
 
-. integration/basic.sh
+cd integration
+. ./basic.sh
+. ./configs.sh
 
 
 ###########################################################################
 
 # Run the unit tests themselves
 tacacs_basic_integration_tests
+tacacs_config_integration_tests
+
+cd ..
 
