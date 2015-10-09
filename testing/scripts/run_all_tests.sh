@@ -15,8 +15,8 @@ echo "***"
 echo "*** Empty any previous logs..."
 echo "***"
 echo "***"
-rm -fr output
-mkdir output
+rm -fr ../output
+mkdir ../output
 
 # Start "unity testing,,,
 unity_start
@@ -44,7 +44,7 @@ unity_end
 # echo "*** Tidy up..."
 # echo "***"
 # echo "***"
-# rm -fr output
+# rm -fr ../output
 
 echo "***"
 echo "***"
