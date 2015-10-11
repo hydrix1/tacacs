@@ -93,6 +93,7 @@ tacacs_integration_test_configs()
 
 tacacs_config_integration_tests()
 {
+    mkdir -p outputs
     unity_start_group "config"
 	for group in test_configs/*; do
 	    tacacs_integration_test_configs $group
