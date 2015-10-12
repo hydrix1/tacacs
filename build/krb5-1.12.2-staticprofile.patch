@@ -1,0 +1,23 @@
+--- krb5-1.12.2.orig/src/util/profile/Makefile.in	2015-10-12 11:56:43.014276951 +1100
++++ krb5-1.12.2/src/util/profile/Makefile.in	2015-10-12 13:32:42.408178038 +1100
+@@ -1,6 +1,6 @@
+ mydir=util$(S)profile
+ BUILDTOP=$(REL)..$(S)..
+-SUBDIRS=testmod
++SUBDIRS=
+ PROG_LIBPATH=-L$(TOPLIBD) $(TCL_LIBPATH) -L.
+ PROG_RPATH=$(KRB5_LIBDIR)$(TCL_RPATH)
+ ##DOS##BUILDTOP = ..\..
+@@ -135,9 +135,9 @@
+ clean-windows::
+ 	$(RM) $(PROFILE_HDR)
+ 
+-check-unix:: test_parse test_profile test_vtable test_load modtest.conf
+-	$(RUN_SETUP) $(VALGRIND) ./test_vtable
+-	$(RUN_SETUP) $(VALGRIND) ./test_load
++check-unix:: 
++	@echo Do nothing to check
++	
+ 
+ DO_TCL=@DO_TCL@
+ check-unix:: check-unix-tcl-$(DO_TCL)
