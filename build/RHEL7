@@ -1,5 +1,21 @@
 
-Install the following packages:
+RHEL7 static build notes:
 
-yum install glibc-static zlib-static audit-libs-static openssl-static pcre-static libselinux-static libsepol-static
+Install the following static libraries:
+
+% yum install glibc-static zlib-static audit-libs-static openssl-static pcre-static libselinux-static libsepol-static
+
+Install the following dynamic libraries:
+
+% yum install openldap-devel libssh2-devel xz-devel
+
+
+Re-build the following packages with static libraries (given the spec files herein) and install:
+
+* krb5-libs-static-1.12.2-15.el7.x86_64.rpm 
+* libidn-devel-1.28-3.el7.x86_64.rpm 
+* libcurl-devel-7.29.0-19.el7.x86_64.rpm 
+* pam-devel-1.1.8-12.el7_1.1.x86_64.rpm 
+
+
 

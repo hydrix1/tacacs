@@ -18,6 +18,7 @@ OSm	:= $(shell uname -m | env -i $(TR) "[:upper:]/ " "[:lower:]--")
 OS	:= $(OSs)-$(OSr)-$(OSm)
 OSTYPE	:= $(shell echo $(OSs) | sed "s/-.*//")
 OSLEVEL	:= $(shell printf "0x%.2x%.2x%.4x" `echo $(OSr) | env -i $(TR) -c "[:digit:]" "[ *]"` 0 0 0 | cut -c-10)
+REDHATVERSION := $(shell cat /etc/redhat-release | cut -f7 -d' ' | cut -f1 -d\.)
 
 MF_OBJ=build/Makefile.inc.$(OS)
 ifeq ($(wildcard $(MF_OBJ)),)
@@ -295,7 +296,11 @@ ifeq ($(WITH_SSL),1)
 	ifeq ($(OSTYPE), sunos)
 		LIB_SSL	+= -lssl -lresolv -lcrypto
 	else
-		LIB_SSL	+= -lssl -lgssapi_krb5 -lkrb5 -lk5crypto -lresolv -lcrypto
+		ifeq ($(REDHATVERSION),7)
+			LIB_SSL	+= -lssl -lgssapi_krb5 -lkrb5 -lkrb5support -lk5crypto -lresolv -lcrypto -lselinux -lsepol -lpcre -lz -Wl,-Bdynamic -lldap -llber -lfreebl3 -lpthread -lssh2 -lcom_err -lkeyutils -llzma
+		else
+			LIB_SSL	+= -lssl -lgssapi_krb5 -lkrb5 -lk5crypto -lresolv -lcrypto
+		endif
 	endif
 	LIB_SSL_CRYPTO	+= -lcrypto 
 endif
@@ -523,7 +528,11 @@ ifeq ($(WITH_CURL),1)
 			LIB_CURL	+= -static -lcurl -lssh2 -lidn -lintl -liconv -lz 
 		endif
 	else
-		LIB_CURL	+= -static -lcurl -lidn -lz 
+		ifeq ($(REDHATVERSION),7)
+			LIB_CURL += -Wl,-Bstatic -lcurl -lidn 
+		else
+			LIB_CURL += -static -lcurl -lidn -lz 
+		endif
 	endif
 endif
 
@@ -564,7 +573,11 @@ ifeq ($(WITH_PAM),1)
 		LIB_PAM	= -L$(LIBDIR_PAM) $(LDOPT_R)$(LIBDIR_PAM)
 	endif
 	ifeq ($(OSTYPE), linux)
-		LIB_PAM	+= -lpam -laudit
+		ifeq ($(REDHATVERSION),7)
+			LIB_PAM += -Wl,-Bstatic -lpam -laudit -Wl,-Bdynamic
+		else
+			LIB_PAM	+= -lpam -laudit
+		endif
 	else
 		LIB_PAM	+= -lpam
 	endif
