@@ -1,0 +1,11 @@
+--- Linux-PAM-1.1.8.orig/modules/pam_pwhistory/Makefile.am	2015-10-12 15:02:56.571083998 +1100
++++ Linux-PAM-1.1.8/modules/pam_pwhistory/Makefile.am	2015-10-12 15:10:41.816904621 +1100
+@@ -10,7 +10,7 @@
+ 
+ TESTS = tst-pam_pwhistory
+ 
+-man_MANS = pam_pwhistory.8 pwhistory_helper.8
++man_MANS = 
+ 
+ XMLS = README.xml pam_pwhistory.8.xml pwhistory_helper.8.xml
+ 
