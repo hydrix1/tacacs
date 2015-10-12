@@ -1,0 +1,18 @@
+Missing access log file name
+>> generated configuration is:
+id = spawnd {
+	listen = {
+		port = 112
+	}
+	spawn = {
+	        instances min = 1
+	        instances max = 10
+	}
+	background = no
+}
+
+id = tac_plus {
+	access log = "access_112.log"
+}
+
+======

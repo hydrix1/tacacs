@@ -1,0 +1,18 @@
+Missing accounting log file name
+>> generated configuration is:
+id = spawnd {
+	listen = {
+		port = 122
+	}
+	spawn = {
+	        instances min = 1
+	        instances max = 10
+	}
+	background = no
+}
+
+id = tac_plus {
+	accounting log = "account_122.log"
+}
+
+======
