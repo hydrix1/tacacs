@@ -32,17 +32,14 @@ tacacs_integration_test_one_config()
     errors=outputs/${home////_}_${name}.$$.err
     script=${home}/${base}.script
 
-    args="--check --print"
-    for arg in `cat $script`; do
-        args="$args $arg"
-    done
+    args="--check --print $(<$script)"
 
     if [ ! -f $stdin ]; then
         stdin=/dev/null
     fi
 
-    echo "-- running: /usr/local/sbin/tac_plus $args"
-    /usr/local/sbin/tac_plus $args > $output 2> $errors < $stdin
+    echo -- running: /usr/local/sbin/tac_plus $args
+    eval /usr/local/sbin/tac_plus $args > $output 2> $errors < $stdin
     result=$?
 
     if [ -f $stdout ]; then

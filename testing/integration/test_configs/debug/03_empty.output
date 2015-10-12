@@ -1,0 +1,16 @@
+generated configuration is:
+id = spawnd {
+	listen = {
+		port = 103
+	}
+	spawn = {
+	        instances min = 1
+	        instances max = 10
+	}
+	background = no
+}
+
+id = tac_plus {
+}
+
+======
