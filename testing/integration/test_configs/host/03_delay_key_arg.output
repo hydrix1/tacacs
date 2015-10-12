@@ -1,0 +1,25 @@
+Missing key for host mango
+>> Missing key for host mango
+>> Missing key for host mango
+>> Missing key for host mango
+>> Missing key for host mango
+>> generated configuration is:
+id = spawnd {
+	listen = {
+		port = 32103
+	}
+	spawn = {
+	        instances min = 1
+	        instances max = 10
+	}
+	background = no
+}
+
+id = tac_plus {
+	host = mango {
+		address = 0.0.0.0/0
+		key = "to tango"
+	}
+}
+
+======

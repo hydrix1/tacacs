@@ -1,0 +1,25 @@
+Missing key for host pear
+>> Missing key for host pear
+>> Missing key for host pear
+>> Missing key for host pear
+>> Missing key for host pear
+>> generated configuration is:
+id = spawnd {
+	listen = {
+		port = 32106
+	}
+	spawn = {
+	        instances min = 1
+	        instances max = 10
+	}
+	background = no
+}
+
+id = tac_plus {
+	host = pear {
+		address = 0.0.0.0/0
+		key = "twins"
+	}
+}
+
+======

@@ -1,0 +1,3 @@
+--listen --listen_port=32102
+--host=pineapple
+--host_key

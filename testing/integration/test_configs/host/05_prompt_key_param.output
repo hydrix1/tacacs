@@ -1,0 +1,21 @@
+Missing key for host apple
+>> generated configuration is:
+id = spawnd {
+	listen = {
+		port = 32105
+	}
+	spawn = {
+	        instances min = 1
+	        instances max = 10
+	}
+	background = no
+}
+
+id = tac_plus {
+	host = apple {
+		address = 0.0.0.0/0
+		key = "turnover"
+	}
+}
+
+======

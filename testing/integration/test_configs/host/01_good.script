@@ -1,0 +1,3 @@
+--listen --listen_port=32101
+--host=banana
+--host_key=republic

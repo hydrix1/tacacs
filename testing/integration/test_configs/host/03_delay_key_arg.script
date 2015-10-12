@@ -1,0 +1,3 @@
+--listen --listen_port=32103
+--host=mango
+--host_key

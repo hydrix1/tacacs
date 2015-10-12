@@ -1,0 +1,3 @@
+--listen --listen_port=32104
+--host=gooseberry
+--host_key
