@@ -18,7 +18,7 @@ cisco_lock_dir=/tmp/cisco.$cisco_router_addr.lockdir
 tacacs_test_cisco()
 {
     loops=0
-    while [ $loops -lt 1000 ]; do
+    while [ $loops -lt 2000 ]; do
         loops=$(($loops + 1))
         if mkdir $cisco_lock_dir; then
             echo "$$" > $cisco_lock_dir/pid
@@ -32,6 +32,6 @@ tacacs_test_cisco()
              who="unknown"
         fi
         echo "Cisco router busy by $who"
-        sleep 10;
+        sleep 20;
     done
 }
