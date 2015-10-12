@@ -2,7 +2,7 @@ Missing TCP port number for the listen
 >> generated configuration is:
 id = spawnd {
 	listen = {
-		port = 20202
+		port = 40404
 	}
 	spawn = {
 	        instances min = 1

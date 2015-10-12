@@ -1,0 +1,33 @@
+Missing TCP port number for the listen
+>> Missing TCP port number for the listen
+>> Missing TCP port number for the listen
+>> Missing TCP port number for the listen
+>> Missing TCP port number for the listen
+>> Missing TCP port number for the listen
+>> Missing TCP port number for the listen
+>> Missing TCP port number for the listen
+>> Missing TCP port number for the listen
+>> Missing TCP port number for the listen
+>> Missing TCP port number for the listen
+>> Missing TCP port number for the listen
+>> Missing TCP port number for the listen
+>> Missing TCP port number for the listen
+>> generated configuration is:
+id = spawnd {
+	listen = {
+		port = 50101
+	}
+	listen = {
+		port = 50102
+	}
+	spawn = {
+	        instances min = 1
+	        instances max = 10
+	}
+	background = no
+}
+
+id = tac_plus {
+}
+
+======

@@ -8,10 +8,17 @@ Missing TCP port number for the listen
 >> Missing TCP port number for the listen
 >> Missing TCP port number for the listen
 >> Missing TCP port number for the listen
+>> Missing TCP port number for the listen
+>> Missing TCP port number for the listen
+>> Missing TCP port number for the listen
+>> Missing TCP port number for the listen
 >> generated configuration is:
 id = spawnd {
 	listen = {
-		port = 30303
+		port = 30101
+	}
+	listen = {
+		port = 30102
 	}
 	spawn = {
 	        instances min = 1

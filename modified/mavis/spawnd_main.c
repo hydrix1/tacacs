@@ -334,7 +334,7 @@ static struct option long_opts[] =
     { "print",                 no_argument,       0, lopt_print },
     { "debug",                 required_argument, 0, lopt_debug },
     { "listen",                no_argument,       0, lopt_listen },
-    { "listen_port",           required_argument, 0, lopt_listen_port },
+    { "listen_port",           optional_argument, 0, lopt_listen_port },
     { "access_log",            required_argument, 0, lopt_access_log },
     { "accounting_log",        required_argument, 0, lopt_account_log },
     { "key",                   required_argument, 0, lopt_key },
