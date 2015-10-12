@@ -295,7 +295,7 @@ ifeq ($(WITH_SSL),1)
 	ifeq ($(OSTYPE), sunos)
 		LIB_SSL	+= -lssl -lresolv -lcrypto
 	else
-		LIB_SSL	+= -lssl -lgssapi_krb5 -lkrb5 -lk5crypto -lcom_err -lresolv -lcrypto
+		LIB_SSL	+= -lssl -lgssapi_krb5 -lkrb5 -lk5crypto -lresolv -lcrypto
 	endif
 	LIB_SSL_CRYPTO	+= -lcrypto 
 endif
