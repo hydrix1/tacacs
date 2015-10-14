@@ -19,7 +19,7 @@ unit_tests="string_append
             get_optional_argument
             get_next_option
             parse_listen_subopts
-            patse_cli_listen
+            parse_cli_listen
             set_password
             parse_level_subopts
             parse_host_subopts

@@ -10,7 +10,7 @@ ALL = dummy empty \
       get_optional_argument \
       get_next_option \
       parse_listen_subopts \
-      patse_cli_listen \
+      parse_cli_listen \
       set_password \
       parse_level_subopts \
       parse_host_subopts \
@@ -72,7 +72,7 @@ get_required_argument:		get_required_argument.c unity.h $(WRAP_SPAWND_MAIN) $(UN
 get_optional_argument:		get_optional_argument.c unity.h $(WRAP_SPAWND_MAIN) $(UNITY)
 get_next_option:		get_next_option.c unity.h $(WRAP_SPAWND_MAIN) $(UNITY)
 parse_listen_subopts:		parse_listen_subopts.c unity.h $(WRAP_SPAWND_MAIN) $(UNITY)
-patse_cli_listen:		patse_cli_listen.c unity.h $(WRAP_SPAWND_MAIN) $(UNITY)
+parse_cli_listen:		parse_cli_listen.c unity.h $(WRAP_SPAWND_MAIN) $(UNITY)
 set_password:			set_password.c unity.h $(WRAP_SPAWND_MAIN) $(UNITY)
 parse_level_subopts:		parse_level_subopts.c unity.h $(WRAP_SPAWND_MAIN) $(UNITY)
 parse_host_subopts:		parse_host_subopts.c unity.h $(WRAP_SPAWND_MAIN) $(UNITY)
