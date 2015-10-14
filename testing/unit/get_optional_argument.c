@@ -16,7 +16,7 @@ void test_get_optional_argument()
 
     unity_start_group("get_optional_argument");
 
-    unity_start_test("presnt");
+    unity_start_test("present");
     optarg = (char*) supplied_1;
     result = get_optional_argument (default_1);
     unity_assert_ptr_equal (optarg, 0);

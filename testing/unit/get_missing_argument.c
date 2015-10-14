@@ -1,5 +1,5 @@
 /*
- * Unit test program for string_append()
+ * Unit test program for get_missing_argument()
  */
 
 #include <stdlib.h>
@@ -7,34 +7,122 @@
 #include "wrap_spawnd_main.h"
 
 
-void test_string_append_new()
+static const char* call_get_missing_argument(const char* prompt, ...)
 {
-    static const char* easy = "Easy";
-    static const char* assm = "as Sunday morning";
-    char* base_1 = 0;
-    char* base_2 = 0;
+    char* result;
+    va_list args;
 
-    unity_start_group("new");
+    va_start (args, prompt);
+    result = get_missing_argument(prompt, args);
+    va_end (args);
 
-    unity_start_test("Easy");
-    string_append (&base_1, easy);
-    unity_assert_ptr_not_equal (base_1, 0);
-    unity_assert_ptr_not_equal (base_1, easy);
-    unity_assert_str_equal (base_1, easy);
-    unity_end_test();
+    return result;
+}
 
-    unity_start_test("Again");
-    string_append (&base_2, assm);
-    unity_assert_ptr_not_equal (base_2, 0);
-    unity_assert_ptr_not_equal (base_2, easy);
-    unity_assert_ptr_not_equal (base_2, assm);
-    unity_assert_ptr_not_equal (base_2, base_1);
-    unity_assert_str_equal (base_2, assm);
-    unity_end_test();
 
-    unity_start_test("free");
-    free (base_1);
-    free (base_2);
+
+static int trace_system(const char* cmd)
+{
+    int result;
+    fprintf (stderr, "-- running ``%s''\n", cmd);
+    result = system (cmd);
+    fprintf (stderr, "    -- returned %d\n", result);
+    return result;
+}
+
+
+
+static int catch_test_get_missing_argument(const char* file_base,
+                                           const char* prompt, ...)
+{
+    pid_t parent;
+    pid_t child;
+    int   result = 0;
+    char* in_file = 0;
+    char* expected_output = 0;
+    char* expected_error = 0;
+    char* actual_output = 0;
+    char* actual_error = 0;
+    char* make_actual_dir = 0;
+    char* cmp_outputs = 0;
+    char* cmp_errors = 0;
+
+    parent = getpid();
+
+    asprintf(&in_file, "unit/inputs/%s.input", file_base);
+    asprintf(&expected_output, "unit/expect/%s.output", file_base);
+    asprintf(&expected_error, "unit/expect/%s.error", file_base);
+    asprintf(&actual_output, "unit/got_%d/%s.output", parent, file_base);
+    asprintf(&actual_error, "unit/got_%d/%s.error", parent, file_base);
+    asprintf(&make_actual_dir, "mkdir -p unit/got_%d", parent);
+    asprintf(&cmp_outputs, "diff -bw %s %s", expected_output, actual_output);
+    asprintf(&cmp_errors, "diff -bw %s %s", expected_error, actual_error);
+
+    trace_system(make_actual_dir);
+
+    child = fork();
+    if (child == -1)
+    {
+        /* fork() failed! */
+        fprintf(stderr, "fork() failed!\n");
+        unity_fail();
+        result = -1;
+    }
+    else if (child == 0)
+    {
+        /* we are the child process */
+        char* result;
+        va_list args;
+
+        freopen (in_file, "r", stdin);
+        freopen (actual_output, "w", stdout);
+        freopen (actual_error, "w", stderr);
+
+        va_start (args, prompt);
+        result = get_missing_argument(prompt, args);
+        va_end (args);
+
+        // We were not suppoed to reach here!
+        exit(0);
+    }
+    else
+    {
+        /* we are the parent */
+        int status = 0;
+        int delta;
+        pid_t from = waitpid (child, &status, 0);
+        fprintf(stderr, "waitpid(%d) response from %d\n", child, from);
+        unity_assert_int_equal(child, from);
+        fprintf(stderr, "wait() exited with code %d\n", status);
+        /* Check exit status is "exited" ...*/
+        unity_assert_int_equal(1, WIFEXITED(status));
+        /* ... and that the return value is non-zero */
+        unity_assert_int_not_equal(0, WEXITSTATUS(status));
+        /* Confirm the output and error files are as expected */
+        delta = trace_system(cmp_outputs);
+        unity_assert_int_equal(0, delta);
+        delta = trace_system(cmp_errors);
+        unity_assert_int_equal(0, delta);
+    }
+
+    return result;
+}
+
+
+
+void test_get_missing_argument_eof()
+{
+    static const char* prompt1 = "First prompt";
+    static const char* file_1 =  "get_missing_argument_eof_nothing";
+    int result;
+
+    unity_start_group("EOF");
+
+    unity_start_test("nothing");
+    result = catch_test_get_missing_argument(file_1, prompt1);
+    //unity_assert_ptr_not_equal (base_1, 0);
+   //unity_assert_ptr_not_equal (base_1, easy);
+    //unity_assert_str_equal (base_1, easy);
     unity_end_test();
 
     unity_end_group();
@@ -42,115 +130,10 @@ void test_string_append_new()
 
 
 
-void test_string_append_existing()
+void test_get_missing_argument()
 {
-    static const char* easy = "Easy";
-    static const char* as   = " as";
-    static const char* assm = " a very lazy Sunday morning";
-    static const char* not  = "Not";
-    static const char* so   = " so";
-    static const char* mon  = " lazy as Monday morning back at work";
-    char* base_1 = 0;
-    char* base_2 = 0;
-    char* base_3 = 0;
-    char* base_4 = 0;
-
-    unity_start_group("existing");
-
-    unity_start_test("short");
-    string_append (&base_1, easy);
-    string_append (&base_1, as);
-    unity_assert_ptr_not_equal (base_1, 0);
-    unity_assert_ptr_not_equal (base_1, easy);
-    unity_assert_ptr_not_equal (base_1, as);
-    unity_assert_str_equal (base_1, "Easy as");
-    unity_end_test();
-
-    unity_start_test("again");
-    string_append (&base_2, not);
-    string_append (&base_2, so);
-    unity_assert_ptr_not_equal (base_2, 0);
-    unity_assert_ptr_not_equal (base_2, not);
-    unity_assert_ptr_not_equal (base_2, so);
-    unity_assert_ptr_not_equal (base_2, base_1);
-    unity_assert_str_equal (base_2, "Not so");
-    unity_end_test();
-
-    unity_start_test("long");
-    base_3 = base_1;
-    string_append (&base_3, assm);
-    unity_assert_ptr_not_equal (base_3, 0);
-    unity_assert_ptr_not_equal (base_3, base_2);
-    unity_assert_ptr_not_equal (base_3, assm);
-    unity_assert_str_equal (base_3, "Easy as a very lazy Sunday morning");
-    unity_end_test();
-
-    unity_start_test("longer");
-    base_4 = base_2;
-    string_append (&base_4, mon);
-    unity_assert_ptr_not_equal (base_4, 0);
-    unity_assert_ptr_not_equal (base_4, base_3);
-    unity_assert_ptr_not_equal (base_4, mon);
-    unity_assert_str_equal (base_4, "Not so lazy as Monday morning back at work");
-    unity_end_test();
-
-    unity_start_test("free");
-    free (base_3);
-    free (base_4);
-    unity_end_test();
-
-    unity_end_group();
-}
-
-
-
-void test_string_append_missing()
-{
-    static const char* easy = "Easy";
-    static const char* assm = "as Sunday morning:";
-    char* base_1 = 0;
-    char* base_2 = 0;
-    char* base_3 = 0;
-
-    unity_start_group("missing");
-
-    unity_start_test("null-null");
-    string_append (&base_1, 0);
-    unity_assert_ptr_equal (base_1, 0);
-    unity_end_test();
-
-    unity_start_test("basea-null");
-    string_append (&base_2, easy);
-    unity_assert_ptr_not_equal (base_2, 0);
-    unity_assert_ptr_not_equal (base_2, easy);
-    unity_assert_str_equal (base_2, easy);
-    unity_end_test();
-
-    unity_start_test("extra-null");
-    string_append (&base_3, assm);
-    string_append (&base_3, 0);
-    unity_assert_ptr_not_equal (base_3, 0);
-    unity_assert_ptr_not_equal (base_3, base_2);
-    unity_assert_ptr_not_equal (base_3, assm);
-    unity_assert_str_equal (base_3, assm);
-    unity_end_test();
-
-    unity_start_test("free");
-    free (base_3);
-    free (base_2);
-    unity_end_test();
-
-    unity_end_group();
-}
-
-
-
-void test_string_append()
-{
-    unity_start_group("string_append");
-    test_string_append_new();
-    test_string_append_existing();
-    test_string_append_missing();
+    unity_start_group("get_missing_argument");
+    test_get_missing_argument_eof();
     unity_end_group();
 }
 
@@ -158,6 +141,6 @@ void test_string_append()
 
 void test_entry()
 {
-    test_string_append();
+    test_get_missing_argument();
 }
 
