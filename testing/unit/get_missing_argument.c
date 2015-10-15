@@ -169,6 +169,7 @@ void test_entry()
     catch_test_get_missing_argument("four_words", "four words prompt");
     catch_test_get_missing_argument("padded", "padded prompt");
     catch_test_get_missing_argument("spaced", "spaced prompt");
+    catch_test_get_missing_argument("format", "pretty %s prompt #%04d", "format", 123);
     catch_test_get_missing_argument("eventually", "eventually prompt");
     catch_test_get_missing_argument("eof_nothing", "First prompt");
     catch_test_get_missing_argument("eof_spaces", "second prompt");
