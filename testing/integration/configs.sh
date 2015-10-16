@@ -24,12 +24,13 @@ tacacs_integration_test_one_config()
     base="$3"
 
     unity_start_test "${name}"
+    base_result=`basename $home`
 
     stdin=${home}/${base}.input
     stdout=${home}/${base}.output
     stderr=${home}/${base}.error
-    output=outputs/${home////_}_${name}.$$.out
-    errors=outputs/${home////_}_${name}.$$.err
+    output=outputs/${base_result}_${name}.$$.out
+    errors=outputs/${base_result}_${name}.$$.err
     script=${home}/${base}.script
 
     args="--check --print $(<$script)"

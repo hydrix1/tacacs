@@ -301,6 +301,36 @@ void unity_assert_ptr_not_equal_at (const char* filename,
 }
 
 
+void unity_assert_int_equal_at (const char* filename,
+                                int         line_no,
+                                long        expect,
+                                long        got)
+{
+    if (expect != got)
+    {
+	printf (" -- UNITY assert failed:\n");
+	printf (" --  -- Expected: %ld\n", expect);
+	printf (" --  --      Got: %ld\n", got);
+        unity_fail_at (filename, line_no);
+    }
+}
+
+
+void unity_assert_int_not_equal_at (const char* filename,
+                                    int         line_no,
+                                    long        expect,
+                                    long        got)
+{
+    if (expect == got)
+    {
+	printf (" -- UNITY assert failed:\n");
+	printf (" --  -- Expected: %ld\n", expect);
+	printf (" --  --      Got: %ld\n", got);
+        unity_fail_at (filename, line_no);
+    }
+}
+
+
 void unity_assert_str_equal_at (const char* filename,
                                 int         line_no,
                                 const char* expect,

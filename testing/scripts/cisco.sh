@@ -32,6 +32,6 @@ tacacs_test_cisco()
              who="unknown"
         fi
         echo "Cisco router busy by $who"
-        sleep 20;
+        sleep 30;
     done
 }
