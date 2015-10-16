@@ -1,0 +1,26 @@
+Next symbol = 320
+CLI config:
+    used  = 1
+    print = 0
+----
+spawnd config:
+    listen list has multiple entries
+----
+Listen config:
+    next_listen is not null
+    port = ``123''
+----
+Listen config:
+    next_listen is last
+    port = ``456''
+----
+Listen config:
+    next_listen is null
+    port = ``1234''
+----
+tacplus config:
+    debug = ``(null)''
+    access = ``(null)''
+    account = ``(null)''
+    key = ``(null)''
+----
