@@ -146,7 +146,7 @@ void unity_fail()
 
 void unity_fail_at (const char* filename, int line_no)
 {
-    printf ("*** UNITY ASSERT FAILED in %s ar line %d\n", filename, line_no);
+    printf ("*** UNITY ASSERT FAILED in %s at line %d\n", filename, line_no);
     unity_fail();
 }
 
