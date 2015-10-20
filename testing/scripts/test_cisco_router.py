@@ -403,10 +403,10 @@ def tacacs_test_cisco_simple_authorisation_start(my_unity, my_router, username, 
     my_unity.start_group(username)
     (good, open, session) = tacacs_test_cisco_open_user(my_unity, my_router, username, password)
     if good and not open:
-        test_ssh.new_line = ''
-        output = test_ssh.do_cmd(chr(29))
-        test_ssh.new_line = '\r'
-        output = test_ssh.do_cmd('close')
+        session.new_line = ''
+        output = session.do_cmd(chr(29))
+        session.new_line = '\r'
+        output = session.do_cmd('close')
     if open:
         session.do_cmd('terminal length 0', 2)
     return (open, session)
@@ -519,10 +519,10 @@ def main(prog, argv):
     # With exclusive use of CISCO router, run tests
     my_unity.start()
     my_unity.start_group("Cisco")
-    tacacs_test_cisco_all(my_unity, my_router, platform, 'classic', 'iosv-1',     '17003', '172.16.1.85')
+    tacacs_test_cisco_all(my_unity, my_router, platform, 'classic', 'iosv-1',     '17004', '172.16.1.88')
     # XR testing has been removed pro temp
-    #tacacs_test_cisco_all(my_unity, my_router, platform, 'IOS-XR',  'iosxrv-1',   '17000', '172.16.1.84')
-    tacacs_test_cisco_all(my_unity, my_router, platform, 'IOS-XE',  'csr1000v-1', '17005', '172.16.1.86')
+    #tacacs_test_cisco_all(my_unity, my_router, platform, 'IOS-XR',  'iosxrv-1',   '17001', '172.16.1.87')
+    tacacs_test_cisco_all(my_unity, my_router, platform, 'IOS-XE',  'csr1000v-1', '17006', '172.16.1.89')
 
     my_unity.end_group()
     my_unity.end()
