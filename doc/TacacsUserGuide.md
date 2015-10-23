@@ -59,6 +59,7 @@ important.
 
 ## Examples - CLI Configuration
 
+### Example 1
       #!/tmp/tacacs/sbin/tac_plus
 
       id = spawnd {
@@ -87,3 +88,87 @@ The equivalent command line version:
         --user=fred --user_password=abcdef \
         --user_cmd=write --user_cmd_permit=terminal \
         --user_cmd=configure --user_cmd_permit
+
+### Example 2
+	#!/tmp/tacacs/sbin/tac_plus
+	
+	id = spawnd {
+	    listen = { port = 4901 }
+	    spawn = {
+	        instances min = 1
+	        instances max = 10
+	    }
+	    background = no
+	}
+	
+	id = tac_plus {
+	    debug = PACKET AUTHEN AUTHOR ALL
+	
+	    access log = ../output/access_4901.log
+	    accounting log = ../output/acct_4901.log
+	
+	        key = cisco
+	
+	    user = cisco {
+	        password = clear cisco
+	        service = shell {
+	            default cmd = permit
+	        }
+	    }
+	
+	    user = test_4901_a {
+	        password = clear A4901
+	        service = shell {
+	            cmd = exit { permit .* }
+	            cmd = enable { permit .* }
+	            cmd = terminal { permit length }
+	            cmd = write { permit .* }
+	            cmd = copy { permit running-config }
+	        }
+	        service = junos-exec {
+	            set local-user-name = let_me_in
+	        }
+	    }
+	
+	    user = test_4901_b {
+	        password = permit
+	        service = shell {
+	            cmd = exit { permit .* }
+	            cmd = enable { permit .* }
+	            cmd = terminal { permit length }
+	            cmd = write { permit .* }
+	        }
+	        service = junos-exec {
+	            set local-user-name = let_me_in
+	        }
+	    }
+    }
+
+The equivalent command line version:
+#!/bin/bash
+
+exec /usr/local/sbin/tac_plus --print \
+    --listen --listen_port=4901 \
+    --debug="PACKET AUTHEN AUTHOR" \
+    --access_log=../output/access_4901.log \
+    --accounting_log=../output/acct_4901.log \
+    --key=cisco \
+    --user=cisco \
+        --user_password=cisco \
+        --user_default_cmd=permit \
+    --user=test_4901_a \
+        --user_password=A4901 \
+        --user_cmd=exit --user_cmd_permit \
+        --user_cmd=enable --user_cmd_permit \
+        --user_cmd=terminal --user_cmd_permit=length \
+        --user_cmd=write --user_cmd_permit \
+        --user_cmd=copy --user_cmd_permit=running-config \
+        --user_junos \
+    --user=test_4901_b \
+        --user_permit \
+        --user_cmd=exit --user_cmd_permit \
+        --user_cmd=enable --user_cmd_permit \
+        --user_cmd=terminal --user_cmd_permit=length \
+        --user_cmd=write --user_cmd_permit \
+        --user_junos \
+

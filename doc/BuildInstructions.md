@@ -32,8 +32,11 @@ Install versions of audit-libs-devel, git, perl-DBI, perl-Error, perl-Git, zlib.
 
 From the modified/ sub-directory:
 
+    % export RELEASE=1
     % configure
     % make
+
+Use RELEASE=0 for a debug build.
 
 ## Redhat 5, 6 (i386 and x86_64)
 
@@ -48,8 +51,11 @@ Also install recent versions of git and perl-Git
 
 From the modified/ sub-directory:
 
+    % export RELEASE=1
     % configure
     % make
+
+Use RELEASE=0 for a debug build.
 
 ### Package Installation
 
