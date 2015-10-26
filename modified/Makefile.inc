@@ -69,6 +69,14 @@ else
 	LD_GNU	= 1
 endif
 
+ifeq ($(RELEASE),1)
+	CFLAGS	?= -O2 -Wall -W -Wno-strict-prototypes
+	STRIP=/usr/bin/strip
+else
+	CFLAGS	?= -g -Wall -W -Wno-strict-prototypes
+	STRIP=echo
+endif
+
 ifeq ($(CC_GCC),1)
 	ifeq ($(findstring "4.8.2",$CCV),)
 			CFLAGS		?= -Wall -W -Wno-strict-prototypes
@@ -80,7 +88,11 @@ ifeq ($(CC_GCC),1)
 	LDOPT_R		?= -Wl,-rpath,
 	LD_SHARED	= $(CC) -shared
 	ifeq ($(DEBUG),1)
-		CFLAGS	+= -Werror
+		CFLAGS	?= -g -Werror -Wall -W -Wno-strict-prototypes
+		STRIP=echo
+	else
+		CFLAGS	?= -O2 -Wall -W -Wno-strict-prototypes
+		STRIP=/usr/bin/strip
 	endif
 endif
 
