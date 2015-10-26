@@ -4,13 +4,13 @@ id = spawnd {
 	listen = { port = 4902 }
 	spawn = {
 		instances min = 1
-		instances max = 10
+		instances max = 100
 	}
 	background = no
 }
 
 id = tac_plus {
-	debug = PACKET AUTHEN AUTHOR
+	debug = PACKET AUTHEN AUTHOR ALL
 
 	access log = ../output/access_4902.log
 	accounting log = ../output/acct_4902.log
@@ -32,6 +32,8 @@ id = tac_plus {
 			cmd = terminal { permit length }
 			cmd = write { permit .* }
 			cmd = copy { permit running-config }
+			cmd = dir { permit .* }
+			set priv-lvl=14
 		}
 		service = junos-exec {
 			set local-user-name = let_me_in
@@ -45,6 +47,9 @@ id = tac_plus {
 			cmd = enable { permit .* }
 			cmd = terminal { permit length }
 			cmd = write { permit .* }
+			cmd = delete { permit usr/test2 }
+			cmd = dir { permit .* }
+			set priv-lvl=14
 		}
 		service = junos-exec {
 			set local-user-name = let_me_in

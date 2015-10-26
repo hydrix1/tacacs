@@ -314,6 +314,7 @@ typedef enum {
     lopt_user_cmd_deny,
     lopt_user_cmd_permit,
     lopt_user_group,
+    lopt_user_priv,
     lopt_user_junos,
 } lopts_e;
 
@@ -324,7 +325,7 @@ static struct option long_opts[] =
     { "help",                  no_argument,       0, 'h' },
     { "version",               no_argument,       0, 'v' },
     { "check",                 no_argument,       0, 'P' },
-    { "degraded",              no_argument,       0, 'l' },
+    { "degraded",              no_argument,       0, '1' },
     { "child-id",              required_argument, 0, 'i' },
     { "debug-level",           required_argument, 0, 'd' },
     { "pid-file",              required_argument, 0, 'p' },
@@ -359,6 +360,7 @@ static struct option long_opts[] =
     { "user_cmd_deny",         optional_argument, 0, lopt_user_cmd_deny },
     { "user_cmd_permit",       optional_argument, 0, lopt_user_cmd_permit },
     { "user_group",            required_argument, 0, lopt_user_group },
+    { "user_priv-lvl",         required_argument, 0, lopt_user_priv },
     { "user_junos",            no_argument,       0, lopt_user_junos },
     /* end marker */
     { 0, 0, 0, 0}
@@ -588,6 +590,7 @@ static char* get_optional_argument(const char* default_value)
 
 static int get_next_option()
 {
+    static int last_opt = EOF;
     int next_opt;
 
     opts_index = -1;
@@ -601,6 +604,14 @@ static int get_next_option()
 	optarg = 0;
     }
 
+    if (next_opt == '?')
+    {
+	// Unrecognised option
+	fprintf(stderr, "Bad option! after=%d, opts_index=%d, optarg=%p, optopt=%d\n",
+                         last_opt, opts_index, optarg, optopt);
+    }
+
+    last_opt = next_opt;
     return next_opt;
 }
 
@@ -985,7 +996,7 @@ static int parse_user_subopts(struct user_config* user)
 		case lopt_user_group:
 		    {
 			struct member_config* member = Xcalloc(1, sizeof(struct member_config));
-		    	member->member_name = get_required_argument("group name for --group");
+		    	member->member_name = get_required_argument("group name for --user_group");
 			if (user->member_tail == 0)
 			{
 			    user->member_head = member;
@@ -995,6 +1006,23 @@ static int parse_user_subopts(struct user_config* user)
 			    user->member_tail->next_member = member;
 			}
 			user->member_tail = member;
+		    }
+		    break;
+		case lopt_user_priv:
+		    {
+			struct service_config* shell = get_user_shell(user);
+			struct set_config* set = Xcalloc(1, sizeof(struct set_config));
+			if (shell->set_tail == 0)
+			{
+			    shell->set_head = set;
+			}
+			else
+			{
+			    shell->set_tail->next_set = set;
+			}
+			shell->set_tail = set;
+			set->set_name = "priv-lvl";
+			set->set_value = get_required_argument("privilege level for --user_priv-lvl");
 		    }
 		    break;
 		case lopt_user_default_cmd:
@@ -1535,7 +1563,7 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
 		    common_usage();
 		    break;
 		case '?':
-		    fprintf (stderr, "ambiguous option!\n");
+		    fprintf (stderr, "Ambiguous option!\n");
 		    common_usage();
 		    break;
 		default:
