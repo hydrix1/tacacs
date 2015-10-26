@@ -16,6 +16,8 @@ remote_test_output=remote_test_output.txt
 all_test_output=all_test_output.txt
 xml_test_output=junit_test_output.xml
 
+sudo /sbin/route add -net 172.16.1.0 netmask 255.255.255.0 gw 192.168.1.24
+
 echo "***"
 echo "***"
 echo "*** This is $username running $script_name"
