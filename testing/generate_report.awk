@@ -78,7 +78,12 @@ function print_suite()
 	    printf   " skipped=\"%d\"", n_skips
 	    printf   " errors=\"%d\"", n_errors
 	    printf   " failures=\"%d\"", n_fails
-	    printf   " package=\"%s\"", n_name[n_depth]
+	    printf   " package=\"%s", n_name[1]
+	    for (ii = 2; ii <= n_depth; ii++)
+	    {
+		printf   ".%s", n_name[ii]
+	    }
+	    printf   "\""
 	    printf   " time=\"%5.3f\"", n_duration
 	    printf ">\n" margin "    <properties/>\n"
 	    margin = margin "  "
