@@ -84,13 +84,13 @@ echo "***"
 unity_start_group "stop_servers"
 for task in $task_list
 do
-    unity_start_test "tast_$task"
+    unity_start_test "task_$task"
         echo "+++ killing $task"
         kill -9 $task
         result=$?
         if [ $result != 0 ]; then
 	    unity_fail
-	    echo " -- faied to stop tesk $task"
+	    echo " -- failed to stop task $task"
 	fi
     unity_end_test
 done
