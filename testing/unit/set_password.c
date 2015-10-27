@@ -33,7 +33,6 @@ static int trace_system(const char* cmd)
 
 static void catch_test_set_password(const struct test_case* this_test)
 {
-    pid_t parent;
     pid_t child;
     char* file_base = 0;
     char* in_file = 0;
@@ -49,17 +48,16 @@ static void catch_test_set_password(const struct test_case* this_test)
     char* cmp_errors = 0;
 
     unity_start_test(this_test->name);
-    parent = getpid();
 
     asprintf(&file_base, "set_password_%s", this_test->name);
     asprintf(&in_file, "unit/inputs/%s.input", file_base);
     asprintf(&expected_result, "unit/expect/%s.result", file_base);
     asprintf(&expected_output, "unit/expect/%s.output", file_base);
     asprintf(&expected_error, "unit/expect/%s.error", file_base);
-    asprintf(&actual_result, "unit/got_%d/%s.result", parent, file_base);
-    asprintf(&actual_output, "unit/got_%d/%s.output", parent, file_base);
-    asprintf(&actual_error, "unit/got_%d/%s.error", parent, file_base);
-    asprintf(&make_actual_dir, "mkdir -p unit/got_%d", parent);
+    asprintf(&actual_result, "unit/got/%s.result", file_base);
+    asprintf(&actual_output, "unit/got/%s.output", file_base);
+    asprintf(&actual_error, "unit/got/%s.error", file_base);
+    asprintf(&make_actual_dir, "mkdir -p unit/got");
     asprintf(&cmp_results, "diff -bw %s %s", expected_result, actual_result);
     asprintf(&cmp_outputs, "diff -bw %s %s", expected_output, actual_output);
     asprintf(&cmp_errors, "diff -bw %s %s", expected_error, actual_error);

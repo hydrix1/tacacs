@@ -15,8 +15,8 @@ tacacs_integration_test_one_config()
     stdin=${home}/${base}.input
     stdout=${home}/${base}.output
     stderr=${home}/${base}.error
-    output=outputs/${base_result}_${name}.$$.out
-    errors=outputs/${base_result}_${name}.$$.err
+    output=outputs/${base_result}_${name}.out
+    errors=outputs/${base_result}_${name}.err
     script=${home}/${base}.script
 
     args="--check --print $(<$script)"

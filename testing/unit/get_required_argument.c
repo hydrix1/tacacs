@@ -22,7 +22,6 @@ static void catch_test_get_required_argument(const char* test_name,
                                              const char* value,
                                              const char* prompt)
 {
-    pid_t parent;
     pid_t child;
     char* file_base = 0;
     char* in_file = 0;
@@ -38,17 +37,16 @@ static void catch_test_get_required_argument(const char* test_name,
     char* cmp_errors = 0;
 
     unity_start_test(test_name);
-    parent = getpid();
 
     asprintf(&file_base, "get_required_argument_%s", test_name);
     asprintf(&in_file, "unit/inputs/%s.input", file_base);
     asprintf(&expected_result, "unit/expect/%s.result", file_base);
     asprintf(&expected_output, "unit/expect/%s.output", file_base);
     asprintf(&expected_error, "unit/expect/%s.error", file_base);
-    asprintf(&actual_result, "unit/got_%d/%s.result", parent, file_base);
-    asprintf(&actual_output, "unit/got_%d/%s.output", parent, file_base);
-    asprintf(&actual_error, "unit/got_%d/%s.error", parent, file_base);
-    asprintf(&make_actual_dir, "mkdir -p unit/got_%d", parent);
+    asprintf(&actual_result, "unit/got/%s.result", file_base);
+    asprintf(&actual_output, "unit/got/%s.output", file_base);
+    asprintf(&actual_error, "unit/got/%s.error", file_base);
+    asprintf(&make_actual_dir, "mkdir -p unit/got");
     asprintf(&cmp_results, "diff -bw %s %s", expected_result, actual_result);
     asprintf(&cmp_outputs, "diff -bw %s %s", expected_output, actual_output);
     asprintf(&cmp_errors, "diff -bw %s %s", expected_error, actual_error);
