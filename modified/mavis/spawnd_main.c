@@ -510,12 +510,13 @@ static char* get_missing_argument(const char* prompt, va_list args)
     size_t  space = 0;
     ssize_t count = 0;
     char*   buffer = 0;
+    char*   details = 0;
+
+    vasprintf(&details, prompt, args);
 
     do
     {
-	fprintf (stdout, "Missing ");
-	vfprintf (stdout, prompt, args);
-	fprintf (stdout, "\n>> ");
+	fprintf (stdout, "Missing %s\n>> ", details);
 	count = getline(&buffer, &space, stdin);
 	if (count < 0)
 	{
@@ -535,6 +536,7 @@ static char* get_missing_argument(const char* prompt, va_list args)
 
     result = Xstrdup(result);
     free (buffer);
+    free (details);
 
     return result;
 }
