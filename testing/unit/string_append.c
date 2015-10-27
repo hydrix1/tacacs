@@ -16,14 +16,14 @@ void test_string_append_new()
 
     unity_start_group("new");
 
-    unity_start_test("Easy");
+    unity_start_test("easy");
     string_append (&base_1, easy);
     unity_assert_ptr_not_equal (base_1, 0);
     unity_assert_ptr_not_equal (base_1, easy);
     unity_assert_str_equal (base_1, easy);
     unity_end_test();
 
-    unity_start_test("Again");
+    unity_start_test("again");
     string_append (&base_2, assm);
     unity_assert_ptr_not_equal (base_2, 0);
     unity_assert_ptr_not_equal (base_2, easy);
@@ -119,7 +119,7 @@ void test_string_append_missing()
     unity_assert_ptr_equal (base_1, 0);
     unity_end_test();
 
-    unity_start_test("basea-null");
+    unity_start_test("base-null");
     string_append (&base_2, easy);
     unity_assert_ptr_not_equal (base_2, 0);
     unity_assert_ptr_not_equal (base_2, easy);

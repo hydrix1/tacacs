@@ -46,9 +46,6 @@ unit_tests="string_append
             generate_cli_config
            "
 
-# 
-unity_start_group "Unit"
-
 # Sanity check
 unity_start_test "dummy"
     if [ -x unit/dummy ]; then
@@ -83,5 +80,3 @@ do
     fi
 done
 
-#
-unity_end_group
