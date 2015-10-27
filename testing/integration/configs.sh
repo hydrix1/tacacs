@@ -3,20 +3,6 @@
 ###################################################################################
 
 
-tacacs_integration_test_prog_exists()
-{
-    expected=$1
-    unity_start_test "${expected}_exist"
-	if [ ! -f $expected ]; then
-	    unity_fail
-	    echo " -- TACACS+ program '$expected' doesn't exist!"
-	elif [ ! -x $expected ]; then
-	    unity_fail
-	    echo " -- TACACS+ program '$expected' not executable!"
-	fi
-    unity_end_test
-}
-
 tacacs_integration_test_one_config()
 {
     name="$1"

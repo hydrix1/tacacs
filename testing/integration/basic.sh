@@ -5,8 +5,9 @@
 
 tacacs_integration_test_prog_exists()
 {
-    expected=$1
-    unity_start_test "$(basename ${expected})_exist"
+    name=$1
+    expected=$2
+    unity_start_test "${name}_exists"
 	if [ ! -f $expected ]; then
 	    unity_fail
 	    echo " -- TACACS+ program '$expected' doesn't exist!"
@@ -20,8 +21,8 @@ tacacs_integration_test_prog_exists()
 tacacs_integration_test_progs_exist()
 {
     unity_start_group "programs_exist"
-	tacacs_integration_test_prog_exists $ORG_TACPLUS
-	tacacs_integration_test_prog_exists $NEW_TACPLUS
+	tacacs_integration_test_prog_exists original_tacplus $ORG_TACPLUS
+	tacacs_integration_test_prog_exists new_tacplus $NEW_TACPLUS
     unity_end_group
 }
 
