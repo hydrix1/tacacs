@@ -16,6 +16,13 @@ echo "***   -- working in  $base"
 echo "***"
 echo "***"
 
+echo "***"
+echo "***"
+echo "*** No cheating!  delete executables if they exist"
+echo "***"
+echo "***"
+sudo rm -fr /usr/local/sbin/tac_plus /tmp/tacacs
+
 # Configure, build and install the original version
 cd original
 
