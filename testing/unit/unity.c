@@ -87,12 +87,15 @@ static void unity_start (const char* program)
     gettimeofday(&unity.time_base, 0);
 
     printf ("### Unit test program %s starting ###\n", unity.program);
+    unity_start_group (unity.program)
 }
 
 
 static int unity_end()
 {
     unity_test_t* test;
+
+    unity_end_group()
 
     printf ("### Unit test program %s finished ###\n", unity.program);
     printf ("%d Tests %d Failures %d Ignored\n", unity.total, unity.fails, unity.skips);

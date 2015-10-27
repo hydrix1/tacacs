@@ -46,6 +46,9 @@ unit_tests="string_append
             generate_cli_config
            "
 
+# 
+unity_start_group "Unit"
+
 # Sanity check
 unity_start_test "dummy"
     if [ -x unit/dummy ]; then
@@ -76,7 +79,9 @@ do
         unity_start_test "$unit_test"
 	unity_skip
 	echo " -- unit test program '$unit_test' not built!"
+        unity_end_test
     fi
-    unity_end_test
 done
 
+#
+unity_end_group
