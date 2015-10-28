@@ -87,7 +87,7 @@ echo "***"
 echo "*** Running 'make' for unit tests..."
 echo "***"
 echo "***"
-make
+gmake
 
 echo "***"
 echo "***"
