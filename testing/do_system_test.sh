@@ -7,7 +7,7 @@ test_username=robot.build
 
 # Check if we are a cloud server using reverse tunnelling
 this_machine=`hostname`
-if [ "$this_machine" == "sovms102" ]; then
+if [ "$this_machine" == "sovms102" ] || [ "$this_machine" == "sovms582" ]; then
     # Remote
     test_server=localhost
     test_options="-p 9022"

@@ -33,7 +33,7 @@ unity_end_group
 
 # Run system tests:
 unity_start_group "System"
-#. ./do_system_test.sh
+. ./do_system_test.sh
 unity_end_group
 
 # All tests finished

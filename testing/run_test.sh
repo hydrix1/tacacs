@@ -35,6 +35,10 @@ tactest="/cygdrive/c/Program Files (x86)/TACACS.net/tactest"
 # Display our suspicions
 echo "I am $login for $machine running $prog in $init_dir"
 
+echo "ensuring reverse ssh tunnels are up"
+#ssh -C -g -f -T -R 8022:localhost:22 -p 58222 hydrix@cloud.siteox.com ./keep_open.sh
+#ssh -C -g -f -T -R 8022:localhost:22 -p 10222 hydrix@cloud.siteox.com ./keep_open.sh
+
 # Start "Unity" testing...
 unity_start
 
