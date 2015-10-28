@@ -468,6 +468,7 @@ fprintf(stdout, "Sanity: 5\n");fprintf(stderr, "SANITY: 5\n");
                         if (PRINT_ERROR)
                                 xwarnx(illoptstring, current_argv);
                         optopt = 0;
+                        optarg = current_argv;
                         return BADCH;
                 }
                 if (long_options[match].flag) {

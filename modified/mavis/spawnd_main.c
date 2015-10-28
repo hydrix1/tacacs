@@ -590,6 +590,43 @@ static char* get_optional_argument(const char* default_value)
     return result;
 }
 
+static void fprint_opt (FILE* fp, int opt_number)
+{
+    int idx;
+    const char* prev_opt_name = 0;
+
+    for (idx = 0; long_opts[idx].name; ++idx)
+    {
+	if (long_opts[idx].val == opt_number)
+	{
+	    prev_opt_name = long_opts[idx].name;
+	    break;
+	}
+    }
+    if (prev_opt_name)
+    {
+	if (opt_number <= 255)
+	{
+	    fprintf(fp, "-%c/--%s", (char) opt_number, prev_opt_name);
+	}
+	else
+	{
+	    fprintf(fp, "--%s", prev_opt_name);
+	}
+    }
+    else
+    {
+	if (opt_number <= 255)
+	{
+	    fprintf(fp, "-%c", (char) opt_number);
+	}
+	else
+	{
+	    fprintf(fp, "%d", opt_number);
+	}
+    }
+}
+
 static int get_next_option()
 {
     static int last_opt = EOF;
@@ -609,8 +646,26 @@ static int get_next_option()
     if (next_opt == '?')
     {
 	// Unrecognised option
-	fprintf(stderr, "Bad option! after=%d, opts_index=%d, optarg=%p, optopt=%d\n",
-                         last_opt, opts_index, optarg, optopt);
+	if (optarg)
+	{
+	    fprintf(stderr, "Bad option ``%s'' ", optarg);
+	}
+	else
+	{
+	    fprintf(stderr, "Bad option ");
+	}
+        if (last_opt <= 0)
+	{
+	    fprintf(stderr, "at start!");
+	}
+	else
+	{
+	    fprintf(stderr, "after ");
+	    fprint_opt(stderr, last_opt);
+	    fprintf(stderr, "!");
+	}
+	//fprintf(stderr, " (opts_index=%d, optarg=%p, optopt=%d)", opts_index, optarg, optopt);
+	fprintf(stderr, "\n");
     }
 
     last_opt = next_opt;
@@ -717,6 +772,7 @@ static int parse_level_subopts(int base_opt, struct level_config* level, char* n
     {
 	while (c != EOF)
 	{
+	    int original_opt = c;
 	    int opt = c + lopt_host_enable - base_opt;
 	    c = EOF;
 	    switch (opt)
@@ -731,7 +787,7 @@ static int parse_level_subopts(int base_opt, struct level_config* level, char* n
 		    set_password (&level->password, "clear", 1, "privilege level", name);
 		    break;
 		default:
-		    return opt;
+		    return original_opt;
 	    }
 	}
 	c = get_next_option();
@@ -1569,8 +1625,11 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
 		    common_usage();
 		    break;
 		default:
-		    fprintf (stderr, "option %d syntax!\n", opt);
+		    fprintf (stderr, "option ");
+		    fprint_opt (stderr, opt);
+		    fprintf (stderr, " syntax!\n");
 		    common_usage();
+		    break;
 	    }
 	}
 	c = get_next_option();
