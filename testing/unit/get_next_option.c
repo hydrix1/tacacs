@@ -112,7 +112,7 @@ static struct test_set test_data_long_unwanted[] =
 {
     { "help",           3, { "-P", "--help=unwanted", "-i", "-d" },
                         2, { '?', 'i' } },
-    { "version",        3, { "?', 'iP", "--version=unwanted", "-i", "-d" },
+    { "version",        3, { "-P", "--version=unwanted", "-i", "-d" },
                         2, { '?', 'i' } },
     { "check",          3, { "-P", "--check=unwanted", "-i", "-d" },
                         2, { '?', 'i' } },

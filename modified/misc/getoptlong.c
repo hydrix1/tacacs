@@ -44,14 +44,15 @@
 int     opterr = 1;             /* if error message should be printed */
 int     optind = 1;             /* index into parent argv vector */
 int     optopt = '?';           /* character checked for validity */
-int     optreset;               /* reset getopt */
+int     optreset = 0;           /* reset getopt */
 char    *optarg;                /* argument associated with option */
 
 
 #define IGNORE_FIRST    (*options == '-' || *options == '+')
 #define PRINT_ERROR     ((opterr) && ((*options != ':') \
                                       || (IGNORE_FIRST && options[1] != ':')))
-#define IS_POSIXLY_CORRECT (getenv("POSIXLY_CORRECT") != NULL)
+//#define IS_POSIXLY_CORRECT (getenv("POSIXLY_CORRECT") != NULL)
+#define IS_POSIXLY_CORRECT (0)
 #define PERMUTE         (!IS_POSIXLY_CORRECT && !IGNORE_FIRST)
 /* XXX: GNU ignores PC if *options == '-' */
 #define IN_ORDER        (!IS_POSIXLY_CORRECT && *options == '-')
@@ -99,8 +100,8 @@ static void xwarnx(const char *fmt, ...) {
 }
 
 /*
- *  * Compute the greatest common divisor of a and b.
- *   */
+ * Compute the greatest common divisor of a and b.
+ */
 static int
 gcd(int a, int b)
 {
@@ -117,10 +118,10 @@ gcd(int a, int b)
 }
 
 /*
- *  * Exchange the block from nonopt_start to nonopt_end with the block
- *   * from nonopt_end to opt_end (keeping the same order of arguments
- *    * in each block).
- *     */
+ * Exchange the block from nonopt_start to nonopt_end with the block
+ * from nonopt_end to opt_end (keeping the same order of arguments
+ * in each block).
+ */
 static void
 permute_args(int nonopt_start, int nonopt_end, int opt_end, char * const *nargv)
 {
@@ -128,8 +129,8 @@ permute_args(int nonopt_start, int nonopt_end, int opt_end, char * const *nargv)
         char *swap;
 
         /*
- *          * compute lengths of blocks and number and size of cycles
- *                   */
+         * compute lengths of blocks and number and size of cycles
+         */
         nnonopts = nonopt_end - nonopt_start;
         nopts = opt_end - nonopt_end;
         ncycle = gcd(nnonopts, nopts);
@@ -153,10 +154,10 @@ permute_args(int nonopt_start, int nonopt_end, int opt_end, char * const *nargv)
 }
 
 /*
- *  * getopt_internal --
- *   *      Parse argc/argv argument vector.  Called by user level routines.
- *    *  Returns -2 if -- is found (can be long option or end of options marker).
- *     */
+ * getopt_internal --
+ *      Parse argc/argv argument vector.  Called by user level routines.
+ *  Returns -2 if -- is found (can be long option or end of options marker).
+ */
 static int
 getopt_internal(int nargc, char * const *nargv, const char *options)
 {
@@ -169,10 +170,10 @@ getopt_internal(int nargc, char * const *nargv, const char *options)
         optarg = NULL;
 
         /*
- *          * XXX Some programs (like rsyncd) expect to be able to
- *                   * XXX re-initialize optind to 0 and have getopt_long(3)
- *                            * XXX properly function again.  Work around this braindamage.
- *                                     */
+         * XXX Some programs (like rsyncd) expect to be able to
+         * XXX re-initialize optind to 0 and have getopt_long(3)
+         * XXX properly function again.  Work around this braindamage.
+         */
         if (optind == 0)
                 optind = 1;
 
@@ -191,9 +192,9 @@ start:
                         }
                         else if (nonopt_start != -1) {
                                 /*
- *                                  * If we skipped non-options, set optind
- *                                                                   * to the first of them.
- *                                                                                                    */
+                                 * If we skipped non-options, set optind
+                                 * to the first of them.
+                                 */
                                 optind = nonopt_start;
                         }
                         nonopt_start = nonopt_end = -1;
@@ -203,17 +204,17 @@ start:
                         place = EMSG;
                         if (IN_ORDER) {
                                 /*
- *                                  * GNU extension: 
- *                                                                   * return non-option as argument to option 1
- *                                                                                                    */
+                                 * GNU extension: 
+                                 * return non-option as argument to option 1
+                                 */
                                 optarg = nargv[optind++];
                                 return INORDER;
                         }
                         if (!PERMUTE) {
                                 /*
- *                                  * if no permutation wanted, stop parsing
- *                                                                   * at first non-option
- *                                                                                                    */
+                                 * if no permutation wanted, stop parsing
+                                 * at first non-option
+                                 */
                                 return -1;
                         }
                         /* do permutation */
@@ -258,13 +259,14 @@ start:
                                 xwarnx(recargchar, optchar);
                         optopt = optchar;
                         /* XXX: GNU returns '?' if options[0] != ':' */
+fprintf(stdout, "Sanity: 2\n");fprintf(stderr, "SANITY: 2\n");
                         return BADARG;
                 } else                          /* white space */
                         place = nargv[optind];
                 /*
- *                  * Handle -W arg the same as --arg (which causes getopt to
- *                                   * stop parsing).
- *                                                    */
+                 * Handle -W arg the same as --arg (which causes getopt to
+                 * stop parsing).
+                 */
                 return -2;
         }
         if (*++oli != ':') {                    /* doesn't take argument */
@@ -282,6 +284,7 @@ start:
                                         xwarnx(recargchar, optchar);
                                 optopt = optchar;
                                 /* XXX: GNU returns '?' if options[0] != ':' */
+fprintf(stdout, "Sanity: 3\n");fprintf(stderr, "SANITY: 3\n");
                                 return BADARG;
                         } else
                                 optarg = nargv[optind];
@@ -294,11 +297,11 @@ start:
 }
 
 /*
- *  * getopt --
- *   *      Parse argc/argv argument vector.
- *    *
- *     * [eventually this will replace the real getopt]
- *      */
+ * getopt --
+ *      Parse argc/argv argument vector.
+ *
+ * [eventually this will replace the real getopt]
+ */
 int
 getopt(int nargc, char * const *nargv, const char *options)
 {
@@ -309,9 +312,9 @@ getopt(int nargc, char * const *nargv, const char *options)
         if ((retval = getopt_internal(nargc, nargv, options)) == -2) {
                 ++optind;
                 /*
- *                  * We found an option (--), so if we skipped non-options,
- *                                   * we have to permute.
- *                                                    */
+                 * We found an option (--), so if we skipped non-options,
+                 * we have to permute.
+                 */
                 if (nonopt_end != -1) {
                         permute_args(nonopt_start, nonopt_end, optind,
                                        nargv);
@@ -324,9 +327,9 @@ getopt(int nargc, char * const *nargv, const char *options)
 }
 
 /*
- *  * getopt_long --
- *   *      Parse argc/argv argument vector.
- *    */
+ * getopt_long --
+ *      Parse argc/argv argument vector.
+ */
 int
 getopt_long(int nargc,
             char * const *nargv,
@@ -358,9 +361,9 @@ getopt_long(int nargc,
 
                 if (*current_argv == '\0') {            /* found "--" */
                         /*
- *                          * We found an option (--), so if we skipped
- *                                                   * non-options, we have to permute.
- *                                                                            */
+                         * We found an option (--), so if we skipped
+                         * non-options, we have to permute.
+                         */
                         if (nonopt_end != -1) {
                                 permute_args(nonopt_start, nonopt_end,
                                     optind, nargv);
@@ -406,14 +409,19 @@ getopt_long(int nargc,
                                         xwarnx(noarg, (int)current_argv_len,
                                              current_argv);
                                 /*
- *                                  * XXX: GNU sets optopt to val regardless of
- *                                                                   * flag
- *                                                                                                    */
+                                 * XXX: GNU sets optopt to val regardless of
+                                 * flag
+                                 */
                                 if (long_options[match].flag == NULL)
                                         optopt = long_options[match].val;
                                 else
                                         optopt = 0;
                                 /* XXX: GNU returns '?' if options[0] != ':' */
+fprintf(stdout, "Sanity: 5\n");fprintf(stderr, "SANITY: 5\n");
+                             //   if (options[0] != ':')
+                              //          return BADCH;
+                                optopt = BADCH;
+                                //        return BADCH;
                                 return BADARG;
                         }
                         if (long_options[match].has_arg == required_argument ||
@@ -423,30 +431,37 @@ getopt_long(int nargc,
                                 else if (long_options[match].has_arg ==
                                     required_argument) {
                                         /*
- *                                          * optional argument doesn't use
- *                                                                                   * next nargv
- *                                                                                                                            */
-                                        optarg = nargv[optind++];
+                                         * optional argument doesn't use
+                                         * next nargv
+                                         */
+                                        if (optind >= nargc) {          /* end of argument vector */
+//fprintf(stdout, "Sanity: 8\n");fprintf(stderr, "SANITY: 8\n");
+                                                optarg = 0;
+                                        } else {
+//fprintf(stdout, "Sanity: 9\n");fprintf(stderr, "SANITY: 9\n");
+                                                optarg = nargv[optind++];
+                                        }
                                 }
                         }
                         if ((long_options[match].has_arg == required_argument)
                             && (optarg == NULL)) {
                                 /*
- *                                  * Missing argument; leading ':'
- *                                                                   * indicates no error should be generated
- *                                                                                                    */
+                                 * Missing argument; leading ':'
+                                 * indicates no error should be generated
+                                 */
                                 if (PRINT_ERROR)
                                         xwarnx(recargstring, current_argv);
                                 /*
- *                                  * XXX: GNU sets optopt to val regardless
- *                                                                   * of flag
- *                                                                                                    */
+                                 * XXX: GNU sets optopt to val regardless
+                                 * of flag
+                                 */
                                 if (long_options[match].flag == NULL)
                                         optopt = long_options[match].val;
                                 else
                                         optopt = 0;
                                 /* XXX: GNU returns '?' if options[0] != ':' */
-                                --optind;
+                                //--optind;
+//fprintf(stdout, "Sanity: 6\n");fprintf(stderr, "SANITY: 6\n");
                                 return BADARG;
                         }
                 } else {                        /* unknown option */
@@ -463,6 +478,7 @@ getopt_long(int nargc,
                 if (idx)
                         *idx = match;
         }
+//fprintf(stdout, "Terminal: %d\n",retval);fprintf(stderr, "TERMINAL: %d\n",retval);
         return retval;
 }
 
