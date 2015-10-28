@@ -44,7 +44,7 @@ MAVIS = $(MODIFIED)/mavis
 MISC  = $(MODIFIED)/misc
 
 UNITY = unity.o
-WRAP_SPAWND_MAIN = wrap_fixup.o memops.o getline.o
+WRAP_SPAWND_MAIN = wrap_fixup.o memops.o getline.o getoptlong.o
 
 #settings
 UNAME = $(shell uname)
@@ -65,6 +65,7 @@ CFLAGS = -I$(MODIFIED)
 #dependencies
 unity.o:			unity.c unity.h
 getline.o:			$(MISC)/getline.c
+getoptlong.o:			$(MISC)/getoptlong.c
 memops.o:			$(MISC)/memops.c
 wrap_fixup.o:			wrap_fixup.c wrap_spawnd_main.h $(MAVIS)/spawnd_main.c
 dummy:				dummy.o

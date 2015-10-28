@@ -63,6 +63,7 @@ static void catch_test_set_password(const struct test_case* this_test)
     asprintf(&cmp_errors, "diff -bw %s %s", expected_error, actual_error);
 
     trace_system(make_actual_dir);
+    fflush(stdout);
 
     child = fork();
     if (child == -1)

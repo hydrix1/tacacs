@@ -51,6 +51,7 @@ static void catch_test_get_omitted_argument(const char* test_name,
     asprintf(&cmp_errors, "diff -bw %s %s", expected_error, actual_error);
 
     trace_system(make_actual_dir);
+    fflush(stdout);
 
     child = fork();
     if (child == -1)
