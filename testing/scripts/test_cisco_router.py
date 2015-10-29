@@ -198,8 +198,14 @@ def tacacs_test_cisco_configure_ios_xe(my_unity, my_router, platform, port, key)
 
     if my_router.name+'>' in output:
         output = my_router.do_cmd('enable')
-        my_unity.expect_text(output, 'Password:')
-        output = my_router.do_cmd('cisco', 2)
+        if 'Password:' in output:
+            output = my_router.do_cmd('cisco', 2)
+    if my_router.name+'#' not in output:
+        output = my_router.do_cmd('', 5)
+    if my_router.name+'#' not in output:
+        output = my_router.do_cmd('', 10)
+    if my_router.name+'#' not in output:
+        output = my_router.do_cmd('', 20)
     my_unity.expect_text(output, my_router.name+'#')
 
     output = my_router.do_cmd('terminal length 0', 2)
@@ -208,6 +214,9 @@ def tacacs_test_cisco_configure_ios_xe(my_unity, my_router, platform, port, key)
     my_unity.expect_text(output, my_router.name+'#')
 
     output = my_router.do_cmd('configure terminal', 2)
+    my_unity.expect_text(output, my_router.name+'(config)#')
+
+    output = my_router.do_cmd('enable password cisco', 3)
     my_unity.expect_text(output, my_router.name+'(config)#')
 
     output = my_router.do_cmd('ip route 192.168.0.0 255.255.254.0 172.16.1.254', 3)
@@ -221,7 +230,12 @@ def tacacs_test_cisco_configure_ios_xe(my_unity, my_router, platform, port, key)
     output = my_router.do_cmd('line vty 0 4')
     my_unity.expect_text(output, my_router.name+'(config-line)#')
     #output = my_router.do_cmd('login local')
-    my_unity.expect_text(output, my_router.name+'(config-line)#')
+    #my_unity.expect_text(output, my_router.name+'(config-line)#')
+    #output = my_router.do_cmd('authorization commands 15 default')
+    #output = my_router.do_cmd('authorization exec default')
+    #output = my_router.do_cmd('accounting commands 15 default')
+    #output = my_router.do_cmd('accounting exec default')
+    #output = my_router.do_cmd('login authentication default')
     output = my_router.do_cmd('exit')
     my_unity.expect_text(output, my_router.name+'(config)#')
 
@@ -596,8 +610,8 @@ def tacacs_test_cisco_all(my_unity, my_router, platform, genre, name, indirect, 
     my_unity.start_group(my_router.genre)
     tacacs_test_cisco_basic(my_unity, my_router, platform, '4901', 'cisco')
     tacacs_test_cisco_simple(my_unity, my_router, platform, 4901+offset, 'original')
-    #tacacs_test_cisco_simple(my_unity, my_router, platform, 4902+offset, 'reference')
-    #tacacs_test_cisco_simple(my_unity, my_router, platform, 4903+offset, 'CLI')
+    tacacs_test_cisco_simple(my_unity, my_router, platform, 4902+offset, 'reference')
+    tacacs_test_cisco_simple(my_unity, my_router, platform, 4903+offset, 'CLI')
     my_unity.end_group()
 
 
@@ -635,7 +649,7 @@ def main(prog, argv):
     tacacs_test_cisco_all(my_unity, my_router, platform, 'classic', 'iosv-1',     '17013', '172.16.1.94')
     # XR testing has been removed pro temp
     #tacacs_test_cisco_all(my_unity, my_router, platform, 'IOS-XR',  'iosxrv-1',   '17010', '172.16.1.93', 20)
-    #tacacs_test_cisco_all(my_unity, my_router, platform, 'IOS-XE',  'csr1000v-1', '17015', '172.16.1.95')
+    tacacs_test_cisco_all(my_unity, my_router, platform, 'IOS-XE',  'csr1000v-1', '17017', '172.16.1.96')
 
     my_unity.end_group()
     my_unity.end()
