@@ -49,7 +49,7 @@ static struct test_set test_data_basic[] =
     { "one_unknown",    4, { "-P", "-h", "-Z", "-b", "-d" },
                         3, { 'h', '?', 'b' } },
     { "one_bad",        4, { "-P", "-h", "--ZOMBIE", "-b", "-d" },
-                        3, { 'h', '?', 'b' } },
+                        3, { 'h', '?', 'b' }, { 0, "ZOMBIE", 0 } },
     { 0 }
 };
 
