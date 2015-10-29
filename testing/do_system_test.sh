@@ -33,6 +33,7 @@ echo "*** Starting test servers on local machine..."
 echo "***"
 echo "***"
 unity_start_group "start_servers"
+log_list=""
 server_list=""
 task_list=""
 for config in configs/*.server
@@ -54,6 +55,11 @@ do
 	else
 	    task_list="$task_id $task_list"
 	    server_list="$server_list $server_base"
+	    if grep "\.log" $config > /dev/null; then
+		log_list="$log_list $server_base"
+	    else
+		echo "+++ ---- no logs expected for server $server_base"
+	    fi
 	fi
     unity_end_test
 done
@@ -102,7 +108,7 @@ echo "*** Check the logs..."
 echo "***"
 echo "***"
 unity_start_group "check_logs"
-for server in $server_list
+for server in $log_list
 do
     echo "+++ checking logs for server $server"
     unity_start_test "server_$server"
