@@ -84,9 +84,11 @@ def tacacs_test_cisco_configure_classic(my_unity, my_router, platform, port, key
     output49 = my_router.do_cmd('exit')
     my_unity.expect_text(output49, my_router.name+'(config)#')
 
+    output60 = my_router.do_cmd('exit')
+    my_unity.expect_text(output60, my_router.name+'#')
+
+    output65 = my_router.do_cmd('write terminal', 20)
     output70 = my_router.do_cmd('exit')
-    my_unity.expect_text(output70, my_router.name+'#')
-    output71 = my_router.do_cmd('exit')
     my_router.close()
 
 ##################################################################################################
@@ -278,7 +280,7 @@ def tacacs_test_cisco_std_open_user(my_unity, my_router, username, password):
         output = test_ssh.do_cmd('telnet '+my_router.test_addr, 10)
         my_unity.expect_text(output, 'Connected to')
         if 'Username:' in output:
-            output = test_ssh.do_cmd(username)
+            output = test_ssh.do_cmd(username, 3)
         if 'Password:' in output:
             output = test_ssh.do_cmd(password, 3)
         if 'Connection closed by foreign host' in output:
@@ -460,7 +462,7 @@ def tacacs_test_cisco_simple_authorisation_start(my_unity, my_router, username, 
     return (open, session)
 
 def tacacs_test_cisco_cmd(my_unity, my_router, open, session, cmd, expect_pass):
-    my_unity.start_test(cmd.replace(' ','_').replace('/','_'))
+    my_unity.start_test(cmd.replace(' ','_').replace('/','_').replace(':',''))
     if open:
         output = session.do_cmd('', 2)
         if my_router.name+'>' in output:
@@ -468,8 +470,12 @@ def tacacs_test_cisco_cmd(my_unity, my_router, open, session, cmd, expect_pass):
             if 'Password:' in output:
                 output = session.do_cmd('cisco', 3)
         #if  my_router.name+'#' in output:
-        output = session.do_cmd(cmd, 9)
-        if 'command is not authorized' in output:
+        output = session.do_cmd(cmd, 15)
+        if 'Delete filename' in output:
+            output = session.do_cmd('')
+        if '[confirm]' in output:
+            output = session.do_cmd('')
+        if 'ommand is not authorized' in output or 'ommand authorization failed' in output or 'Invalid input detected' in output:
             if expect_pass:
                 my_unity.fail(cmd + ' failed!')
         else:
@@ -481,7 +487,7 @@ def tacacs_test_cisco_cmd(my_unity, my_router, open, session, cmd, expect_pass):
     my_unity.end_test()
 
 def tacacs_test_cisco_xr_cmd(my_unity, my_router, open, session, cmd, expect_pass):
-    my_unity.start_test(cmd.replace(' ','_').replace('/','_'))
+    my_unity.start_test(cmd.replace(' ','_').replace('/','_').replace(':',''))
     if open:
         output = session.do_cmd('', 2)
         if my_router.name+'>' in output:
@@ -581,7 +587,7 @@ def tacacs_test_cisco_simple(my_unity, my_router, platform, port, name):
 
 ##################################################################################################
 
-def tacacs_test_cisco_all(my_unity, my_router, platform, genre, name, indirect, address):
+def tacacs_test_cisco_all(my_unity, my_router, platform, genre, name, indirect, address, offset=0):
     my_router.genre = genre
     my_router.name = name
     my_router.indirect = indirect
@@ -589,9 +595,9 @@ def tacacs_test_cisco_all(my_unity, my_router, platform, genre, name, indirect, 
     my_router.new_line = '\r'
     my_unity.start_group(my_router.genre)
     tacacs_test_cisco_basic(my_unity, my_router, platform, '4901', 'cisco')
-    tacacs_test_cisco_simple(my_unity, my_router, platform, 4901, 'original')
-    tacacs_test_cisco_simple(my_unity, my_router, platform, 4902, 'reference')
-    tacacs_test_cisco_simple(my_unity, my_router, platform, 4903, 'CLI')
+    tacacs_test_cisco_simple(my_unity, my_router, platform, 4901+offset, 'original')
+    #tacacs_test_cisco_simple(my_unity, my_router, platform, 4902+offset, 'reference')
+    #tacacs_test_cisco_simple(my_unity, my_router, platform, 4903+offset, 'CLI')
     my_unity.end_group()
 
 
@@ -628,8 +634,8 @@ def main(prog, argv):
     my_unity.start_group("Cisco")
     tacacs_test_cisco_all(my_unity, my_router, platform, 'classic', 'iosv-1',     '17013', '172.16.1.94')
     # XR testing has been removed pro temp
-    #tacacs_test_cisco_all(my_unity, my_router, platform, 'IOS-XR',  'iosxrv-1',   '17010', '172.16.1.93')
-    tacacs_test_cisco_all(my_unity, my_router, platform, 'IOS-XE',  'csr1000v-1', '17015', '172.16.1.95')
+    #tacacs_test_cisco_all(my_unity, my_router, platform, 'IOS-XR',  'iosxrv-1',   '17010', '172.16.1.93', 20)
+    #tacacs_test_cisco_all(my_unity, my_router, platform, 'IOS-XE',  'csr1000v-1', '17015', '172.16.1.95')
 
     my_unity.end_group()
     my_unity.end()
