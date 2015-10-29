@@ -41,8 +41,8 @@ tacacs_integration_test_old_short_version()
         got_usage=$?
         x=`grep $expected_version <<<$answer >/dev/null`
         got_version=$?
-        x=`grep -i $expected_version/Hydrix <<<$answer >/dev/null`
-        got_hydrix=$?
+        x=`grep -i $expected_version/CLI <<<$answer >/dev/null`
+        got_extra=$?
 	if [ $result != 0 ]; then
 	    unity_fail
 	    echo " -- $program -v failed!"
@@ -55,9 +55,9 @@ tacacs_integration_test_old_short_version()
 	    unity_fail
 	    echo " -- $program -v had unexpected version!"
 	fi
-	if [ $got_hydrix == 0 ]; then
+	if [ $got_extra == 0 ]; then
 	    unity_fail
-	    echo " -- $program -v reported Hydrix!"
+	    echo " -- $program -v reported CLI!"
 	fi
     unity_end_test
 }
@@ -71,8 +71,8 @@ tacacs_integration_test_old_long_version()
 	result=$?
         x=`grep Usage: <<<$answer >/dev/null`
         got_usage=$?
-        x=`grep -i $expected_version/Hydrix <<<$answer >/dev/null`
-        got_hydrix=$?
+        x=`grep -i $expected_version/CLI <<<$answer >/dev/null`
+        got_extra=$?
 	if [ $result == 0 ]; then
 	    unity_fail
 	    echo " -- $program --version didn't fail!"
@@ -81,9 +81,9 @@ tacacs_integration_test_old_long_version()
 	    unity_fail
 	    echo " -- $program --version didn't report usage!"
 	fi
-	if [ $got_hydrix == 0 ]; then
+	if [ $got_extra == 0 ]; then
 	    unity_fail
-	    echo " -- $program --version reported Hydrix!"
+	    echo " -- $program --version reported CLI!"
 	fi
     unity_end_test
 }
@@ -99,8 +99,8 @@ tacacs_integration_test_new_short_version()
         got_usage=$?
         x=`grep $expected_version <<<$answer >/dev/null`
         got_version=$?
-        x=`grep -i $expected_version/Hydrix <<<$answer >/dev/null`
-        got_hydrix=$?
+        x=`grep -i $expected_version/CLI <<<$answer >/dev/null`
+        got_extra=$?
 	if [ $result != 0 ]; then
 	    unity_fail
 	    echo " -- $program -v failed!"
@@ -113,9 +113,9 @@ tacacs_integration_test_new_short_version()
 	    unity_fail
 	    echo " -- $program -v had unexpected version!"
 	fi
-	if [ $got_hydrix != 0 ]; then
+	if [ $got_extra != 0 ]; then
 	    unity_fail
-	    echo " -- $program -v didn't report Hydrix!"
+	    echo " -- $program -v didn't report CLI!"
 	fi
     unity_end_test
 }
@@ -131,8 +131,8 @@ tacacs_integration_test_new_long_version()
         got_usage=$?
         x=`grep $expected_version <<<$answer >/dev/null`
         got_version=$?
-        x=`grep -i $expected_version/Hydrix <<<$answer >/dev/null`
-        got_hydrix=$?
+        x=`grep -i $expected_version/CLI <<<$answer >/dev/null`
+        got_extra=$?
 	if [ $result != 0 ]; then
 	    unity_fail
 	    echo " -- $program --version failed!"
@@ -145,9 +145,9 @@ tacacs_integration_test_new_long_version()
 	    unity_fail
 	    echo " -- $program --version had unexpected version!"
 	fi
-	if [ $got_hydrix != 0 ]; then
+	if [ $got_extra != 0 ]; then
 	    unity_fail
-	    echo " -- $program --version didn't report Hydrix!"
+	    echo " -- $program --version didn't report CLI!"
 	fi
     unity_end_test
 }

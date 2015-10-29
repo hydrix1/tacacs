@@ -1,7 +1,7 @@
 #!/bin/bash
 
 exec /usr/local/sbin/tac_plus --print \
-    --listen --port=4950 \
+    --listen --listen_port=4950 \
 	`# spawn = {` \
 		`# instances min = 1` \
 		`# instances max = 10` \
@@ -12,31 +12,29 @@ exec /usr/local/sbin/tac_plus --print \
     --access_log=../output/access_4950.log \
     --accounting_log=../output/acct_4950.log \
     --host=world \
-	--address ::/0 \
+	--host_address=::/0 \
 		`# prompt = \"Welcome\"` \
-	--enable=15 --password=secret \
-	--key=cisco \
+	--host_enable=15 --host_enable_password=secret \
+	--host_key=cisco \
     --group=admin \
-	--cmd --permit` \
+	`# --group_cmd --permit` \
 		`# service = shell {` \
 			`# default command = permit` \
 			`# default attribute = permit` \
 			`# set priv-lvl = 15` \
     --group=guest \
-	--cmd --permit \
-	--enable --deny \
+	`# --group_cmd --permit` \
+	--group_enable --group_enable_deny \
 		`# service = shell {` \
 			`# default command = permit` \
 			`# default attribute = permit` \
 			`# set priv-lvl = 1` \
     --user=cisco \
-	--password=cisco \
-	--group=admin \
-		`# service = shell {` \
-		--cmd --permit \
-			`# default attribute = permit` \
-			`# set priv-lvl = 15` \
+	--user_password=cisco \
+	--user_group=admin \
+	--user_default_cmd=permit \
+	--user_priv-lvl=15 \
     --user=readonly \
-	--password=readonly \
-	--group=guest \
+	--user_password=readonly \
+	--user_group=guest \
 

@@ -1,7 +1,7 @@
 #!/usr/local/sbin/tac_plus
 
 id = spawnd {
-	listen = { port = 4902 }
+	listen = { port = 4922 }
 	spawn = {
 		instances min = 1
 		instances max = 100
@@ -12,8 +12,8 @@ id = spawnd {
 id = tac_plus {
 	debug = PACKET AUTHEN AUTHOR ALL
 
-	access log = ../output/access_4902.log
-	accounting log = ../output/acct_4902.log
+	access log = ../output/access_4922.log
+	accounting log = ../output/acct_4922.log
 
         key = cisco
 
@@ -24,8 +24,8 @@ id = tac_plus {
 		}
 	}
 
-	user = test_4902_a {
-		password = clear A4902
+	user = test_4922_a {
+		password = clear A4922
 		service = shell {
 			cmd = exit { permit .* }
 			cmd = enable { permit .* }
@@ -33,13 +33,14 @@ id = tac_plus {
 			cmd = write { permit .* }
 			cmd = copy { permit running-config }
 			cmd = dir { permit .* }
+			set priv-lvl=14
 		}
 		service = junos-exec {
 			set local-user-name = let_me_in
 		}
 	}
 
-	user = test_4902_b {
+	user = test_4922_b {
 		password = permit
 		service = shell {
 			cmd = exit { permit .* }
@@ -48,13 +49,14 @@ id = tac_plus {
 			cmd = write { permit .* }
 			cmd = delete { permit usr/test2 }
 			cmd = dir { permit .* }
+			set priv-lvl=14
 		}
 		service = junos-exec {
 			set local-user-name = let_me_in
 		}
 	}
 
-	user = test_4902_c {
+	user = test_4922_c {
 		password = deny
 		service = shell {
 			cmd = exit { permit .* }

@@ -33,7 +33,6 @@ id = tac_plus {
 			cmd = write { permit .* }
 			cmd = copy { permit running-config }
 			cmd = dir { permit .* }
-			set priv-lvl=14
 		}
 		service = junos-exec {
 			set local-user-name = let_me_in
@@ -49,7 +48,6 @@ id = tac_plus {
 			cmd = write { permit .* }
 			cmd = delete { permit usr/test2 }
 			cmd = dir { permit .* }
-			set priv-lvl=14
 		}
 		service = junos-exec {
 			set local-user-name = let_me_in
