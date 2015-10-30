@@ -1,0 +1,20 @@
+generated configuration is:
+id = spawnd {
+	listen = {
+		port = 32205
+	}
+	spawn = {
+	        instances min = 1
+	        instances max = 10
+	}
+	background = no
+}
+
+id = tac_plus {
+	host = apple {
+		address = 0.0.0.0/0
+		key = "public"
+	}
+}
+
+======

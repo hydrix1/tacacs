@@ -326,41 +326,41 @@ static struct option long_opts[] =
     { "version",               no_argument,       0, 'v' },
     { "check",                 no_argument,       0, 'P' },
     { "degraded",              no_argument,       0, '1' },
-    { "child-id",              required_argument, 0, 'i' },
-    { "debug-level",           required_argument, 0, 'd' },
-    { "pid-file",              required_argument, 0, 'p' },
+    { "child-id",              optional_argument, 0, 'i' },
+    { "debug-level",           optional_argument, 0, 'd' },
+    { "pid-file",              optional_argument, 0, 'p' },
     { "foreground",            no_argument,       0, 'f' },
     { "background",            no_argument,       0, 'b' },
     /* CLI configuration options */
     { "print",                 no_argument,       0, lopt_print },
-    { "debug",                 required_argument, 0, lopt_debug },
+    { "debug",                 optional_argument, 0, lopt_debug },
     { "listen",                no_argument,       0, lopt_listen },
     { "listen_port",           optional_argument, 0, lopt_listen_port },
-    { "access_log",            required_argument, 0, lopt_access_log },
-    { "accounting_log",        required_argument, 0, lopt_account_log },
-    { "key",                   required_argument, 0, lopt_key },
+    { "access_log",            optional_argument, 0, lopt_access_log },
+    { "accounting_log",        optional_argument, 0, lopt_account_log },
+    { "key",                   optional_argument, 0, lopt_key },
     { "host",                  optional_argument, 0, lopt_host },
-    { "host_address",          required_argument, 0, lopt_host_address },
-    { "host_key",              required_argument, 0, lopt_host_key },
+    { "host_address",          optional_argument, 0, lopt_host_address },
+    { "host_key",              optional_argument, 0, lopt_host_key },
     { "host_enable",           optional_argument, 0, lopt_host_enable },
-    { "host_enable_password",  required_argument, 0, lopt_host_enable_password },
+    { "host_enable_password",  optional_argument, 0, lopt_host_enable_password },
     { "host_enable_deny",      optional_argument, 0, lopt_host_enable_deny },
     { "host_enable_permit",    optional_argument, 0, lopt_host_enable_permit },
-    { "group",                 required_argument, 0, lopt_group },
+    { "group",                 optional_argument, 0, lopt_group },
     { "group_enable",          optional_argument, 0, lopt_group_enable },
-    { "group_enable_password", required_argument, 0, lopt_group_enable_password },
+    { "group_enable_password", optional_argument, 0, lopt_group_enable_password },
     { "group_enable_deny",     optional_argument, 0, lopt_group_enable_deny },
     { "group_enable_permit",   optional_argument, 0, lopt_group_enable_permit },
-    { "user",                  required_argument, 0, lopt_user },
-    { "user_password",         required_argument, 0, lopt_user_password },
+    { "user",                  optional_argument, 0, lopt_user },
+    { "user_password",         optional_argument, 0, lopt_user_password },
     { "user_deny",             optional_argument, 0, lopt_user_deny },
     { "user_permit",           optional_argument, 0, lopt_user_permit },
-    { "user_default_cmd",      required_argument, 0, lopt_user_default_cmd },
-    { "user_cmd",              required_argument, 0, lopt_user_cmd },
+    { "user_default_cmd",      optional_argument, 0, lopt_user_default_cmd },
+    { "user_cmd",              optional_argument, 0, lopt_user_cmd },
     { "user_cmd_deny",         optional_argument, 0, lopt_user_cmd_deny },
     { "user_cmd_permit",       optional_argument, 0, lopt_user_cmd_permit },
-    { "user_group",            required_argument, 0, lopt_user_group },
-    { "user_priv-lvl",         required_argument, 0, lopt_user_priv },
+    { "user_group",            optional_argument, 0, lopt_user_group },
+    { "user_priv-lvl",         optional_argument, 0, lopt_user_priv },
     { "user_junos",            no_argument,       0, lopt_user_junos },
     /* end marker */
     { 0, 0, 0, 0}
@@ -668,6 +668,10 @@ static int get_next_option()
 	fprintf(stderr, "\n");
     }
 
+//fprintf (stderr, "get_next_option() found ");
+//fprint_opt (stderr, next_opt);
+//fprintf(stderr, " (opts_index=%d, optarg=%s, optopt=%d)", opts_index, optarg, optopt);
+//fprintf (stderr, "\n");
     last_opt = next_opt;
     return next_opt;
 }
@@ -749,7 +753,7 @@ static void set_password(char** pass_ptr,
     }
     else
     {
-	char* password = get_required_argument("password for %s %s!\n", pass_name, pass_context);
+	char* password = get_required_argument("password for %s %s", pass_name, pass_context);
 	*pass_ptr = Xstrdup(pass_type);
 	string_append (pass_ptr, " ");
 	string_append (pass_ptr, password);
@@ -759,6 +763,8 @@ static void set_password(char** pass_ptr,
 static int parse_level_subopts(int base_opt, struct level_config* level, char* name)
 {
     int c = EOF;
+    int original_opt;
+    int all_done = 0;
 
     if (level->name != 0)
     {
@@ -772,8 +778,12 @@ static int parse_level_subopts(int base_opt, struct level_config* level, char* n
     {
 	while (c != EOF)
 	{
-	    int original_opt = c;
 	    int opt = c + lopt_host_enable - base_opt;
+//fprintf (stderr, "processing ");
+//fprint_opt (stderr, c);
+//fprintf (stderr, " as ");
+//fprint_opt (stderr, opt);
+//fprintf (stderr, "\n");
 	    c = EOF;
 	    switch (opt)
 	    {
@@ -787,13 +797,27 @@ static int parse_level_subopts(int base_opt, struct level_config* level, char* n
 		    set_password (&level->password, "clear", 1, "privilege level", name);
 		    break;
 		default:
-		    return original_opt;
+		    all_done = 1;
+		    break;
 	    }
 	}
-	c = get_next_option();
+	if (! all_done)
+	{
+	    c = get_next_option();
+	    original_opt = c;
+//fprintf (stderr, "got ");
+//fprint_opt (stderr, c);
+//fprintf (stderr, "\n");
+	}
     } while (c != EOF);
 
-    return c;
+    if (level->password == 0)
+    {
+	char* password = get_omitted_argument("password for privilege level %s", name);
+	level->password = Xstrdup("clear ");
+	string_append (&level->password, password);
+    }
+    return original_opt;
 }
 
 static int parse_host_subopts(struct host_config* host)
@@ -839,7 +863,11 @@ static int parse_host_subopts(struct host_config* host)
 			    fprintf (stderr, "invalid level number ``%s''!\n", level_text);
 			    exit(1);
 			}
+//fprintf (stderr, "defining level %d(%s)\n", level_number, level_text);
 			c = parse_level_subopts (opt, &host->level_table.level_entry[level_number], level_text);
+//fprintf (stderr, "... returned ");
+//fprint_opt (stderr, c);
+//fprintf (stderr, "\n");
 		    }
 		    break;
 		default:

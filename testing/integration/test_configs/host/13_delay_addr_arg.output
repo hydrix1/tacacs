@@ -1,0 +1,25 @@
+Missing address for host mango
+>> Missing address for host mango
+>> Missing address for host mango
+>> Missing address for host mango
+>> Missing address for host mango
+>> generated configuration is:
+id = spawnd {
+	listen = {
+		port = 32203
+	}
+	spawn = {
+	        instances min = 1
+	        instances max = 10
+	}
+	background = no
+}
+
+id = tac_plus {
+	host = mango {
+		address = to tango
+		key = "public"
+	}
+}
+
+======

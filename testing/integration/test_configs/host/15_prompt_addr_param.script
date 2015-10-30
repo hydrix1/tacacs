@@ -1,0 +1,3 @@
+--listen --listen_port=32205
+--host=apple
+--host_key=public

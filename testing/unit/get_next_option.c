@@ -257,57 +257,57 @@ static struct test_set test_data_long_supplied_now[] =
 
 static struct test_set test_data_long_supplied_later[] =
 {
-    { "child-id",              4, { "-P", "--child-id", "supplied", "-f", "-d" },      /*required_argument */
+    { "child-id",              3, { "-P", "--child-id", "-f", "-d" },      /*required_argument */
                                2, { 'i', 'f' },
-                                  { "supplied", 0 } },
-    { "debug-level",           4, { "-P", "--debug-level", "supplied", "-f", "-d" },      /*required_argument */
+                                  { 0, 0 } },
+    { "debug-level",           3, { "-P", "--debug-level", "-f", "-d" },      /*required_argument */
                                2, { 'd', 'f' },
-                                  { "supplied", 0 } },
-    { "pid-file",              4, { "-P", "--pid-file", "supplied", "-f", "-d" },      /*required_argument */
+                                  { 0, 0 } },
+    { "pid-file",              3, { "-P", "--pid-file", "-f", "-d" },      /*required_argument */
                                2, { 'p', 'f' },
-                                  { "supplied", 0 } },
-    { "debug",                 4, { "-P", "--debug", "supplied", "-f", "-d" },      /*required_argument */
+                                  { 0, 0 } },
+    { "debug",                 3, { "-P", "--debug", "-f", "-d" },      /*required_argument */
                                2, { lopt_debug, 'f' },
-                                  { "supplied", 0 } },
-    { "access_log",            4, { "-P", "--access_log", "supplied", "-f", "-d" },      /*required_argument */
+                                  { 0, 0 } },
+    { "access_log",            3, { "-P", "--access_log", "-f", "-d" },      /*required_argument */
                                2, { lopt_access_log, 'f' },
-                                  { "supplied", 0 } },
-    { "accounting_log",        4, { "-P", "--accounting_log", "supplied", "-f", "-d" },      /*required_argument */
+                                  { 0, 0 } },
+    { "accounting_log",        3, { "-P", "--accounting_log", "-f", "-d" },      /*required_argument */
                                2, { lopt_account_log, 'f' },
-                                  { "supplied", 0 } },
-    { "key",                   4, { "-P", "--key", "supplied", "-f", "-d" },      /*required_argument */
+                                  { 0, 0 } },
+    { "key",                   3, { "-P", "--key", "-f", "-d" },      /*required_argument */
                                2, { lopt_key, 'f' },
-                                  { "supplied", 0 } },
-    { "host_address",          4, { "-P", "--host_address", "supplied", "-f", "-d" },      /*required_argument */
+                                  { 0, 0 } },
+    { "host_address",          3, { "-P", "--host_address", "-f", "-d" },      /*required_argument */
                                2, { lopt_host_address, 'f' },
-                                  { "supplied", 0 } },
-    { "host_key",              4, { "-P", "--host_key", "supplied", "-f", "-d" },      /*required_argument */
+                                  { 0, 0 } },
+    { "host_key",              3, { "-P", "--host_key", "-f", "-d" },      /*required_argument */
                                2, { lopt_host_key, 'f' },
-                                  { "supplied", 0 } },
-    { "host_enable_password",  4, { "-P", "--host_enable_password", "supplied", "-f", "-d" },      /*required_argument */
+                                  { 0, 0 } },
+    { "host_enable_password",  3, { "-P", "--host_enable_password", "-f", "-d" },      /*required_argument */
                                2, { lopt_host_enable_password, 'f' },
-                                  { "supplied", 0 } },
-    { "group",                 4, { "-P", "--group", "supplied", "-f", "-d" },      /*required_argument */
+                                  { 0, 0 } },
+    { "group",                 3, { "-P", "--group", "-f", "-d" },      /*required_argument */
                                2, { lopt_group, 'f' },
-                                  { "supplied", 0 } },
-    { "group_enable_password", 4, { "-P", "--group_enable_password", "supplied", "-f", "-d" },      /*required_argument */
+                                  { 0, 0 } },
+    { "group_enable_password", 3, { "-P", "--group_enable_password", "-f", "-d" },      /*required_argument */
                                2, { lopt_group_enable_password, 'f' },
-                                  { "supplied", 0 } },
-    { "user",                  4, { "-P", "--user", "supplied", "-f", "-d" },      /*required_argument */
+                                  { 0, 0 } },
+    { "user",                  3, { "-P", "--user", "-f", "-d" },      /*required_argument */
                                2, { lopt_user, 'f' },
-                                  { "supplied", 0 } },
-    { "user_password",         4, { "-P", "--user_password", "supplied", "-f", "-d" },      /*required_argument */
+                                  { 0, 0 } },
+    { "user_password",         3, { "-P", "--user_password", "-f", "-d" },      /*required_argument */
                                2, { lopt_user_password, 'f' },
-                                  { "supplied", 0 } },
-    { "user_default_cmd",      4, { "-P", "--user_default_cmd", "supplied", "-f", "-d" },      /*required_argument */
+                                  { 0, 0 } },
+    { "user_default_cmd",      3, { "-P", "--user_default_cmd", "-f", "-d" },      /*required_argument */
                                2, { lopt_user_default_cmd, 'f' },
-                                  { "supplied", 0 } },
-    { "user_cmd",              4, { "-P", "--user_cmd", "supplied", "-f", "-d" },      /*required_argument */
+                                  { 0, 0 } },
+    { "user_cmd",              3, { "-P", "--user_cmd", "-f", "-d" },      /*required_argument */
                                2, { lopt_user_cmd, 'f' },
-                                  { "supplied", 0 } },
-    { "user_group",            4, { "-P", "--user_group", "supplied", "-f", "-d" },      /*required_argument */
+                                  { 0, 0 } },
+    { "user_group",            3, { "-P", "--user_group", "-f", "-d" },      /*required_argument */
                                2, { lopt_user_group, 'f' },
-                                  { "supplied", 0 } },
+                                  { 0, 0 } },
     { 0 }
 };
 
