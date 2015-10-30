@@ -1,0 +1,22 @@
+generated configuration is:
+id = spawnd {
+	listen = {
+		port = 32401
+	}
+	spawn = {
+	        instances min = 1
+	        instances max = 10
+	}
+	background = no
+}
+
+id = tac_plus {
+	host = banana {
+		address = republic
+		enable 5 = clear super
+		enable 8 = clear secret
+		key = "public"
+	}
+}
+
+======

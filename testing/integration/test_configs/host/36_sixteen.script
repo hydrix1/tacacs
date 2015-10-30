@@ -1,0 +1,5 @@
+--listen --listen_port=32316
+--host=banana
+--host_key=public
+--host_address=republic
+--host_enable=16 --host_enable_password=secret

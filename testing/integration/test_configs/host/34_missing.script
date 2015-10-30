@@ -1,0 +1,5 @@
+--listen --listen_port=32314
+--host=banana
+--host_key=public
+--host_address=republic
+--host_enable=7
