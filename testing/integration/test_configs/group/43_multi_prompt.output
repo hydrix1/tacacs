@@ -1,0 +1,26 @@
+Missing password for privilege level 5
+>> Missing password for privilege level 5
+>> Missing password for privilege level 5
+>> Missing password for privilege level 8
+>> Missing password for privilege level 8
+>> generated configuration is:
+id = spawnd {
+	listen = {
+		port = 32403
+	}
+	spawn = {
+	        instances min = 1
+	        instances max = 10
+	}
+	background = no
+}
+
+id = tac_plus {
+	group = banana {
+		enable 5 = clear both
+		enable 8 = clear delayed
+		default service = permit
+	}
+}
+
+======

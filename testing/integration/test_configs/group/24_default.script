@@ -1,0 +1,3 @@
+--listen --listen_port=32304
+--group=banana
+--group_enable --group_enable_password=secret
