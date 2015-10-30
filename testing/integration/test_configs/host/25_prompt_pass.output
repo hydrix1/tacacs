@@ -1,0 +1,22 @@
+Missing password for privilege level 7
+>> generated configuration is:
+id = spawnd {
+	listen = {
+		port = 32305
+	}
+	spawn = {
+	        instances min = 1
+	        instances max = 10
+	}
+	background = no
+}
+
+id = tac_plus {
+	host = banana {
+		address = republic
+		enable 7 = clear prompted
+		key = "public"
+	}
+}
+
+======
