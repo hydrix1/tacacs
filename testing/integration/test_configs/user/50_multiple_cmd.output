@@ -1,0 +1,40 @@
+generated configuration is:
+id = spawnd {
+	listen = {
+		port = 34150
+	}
+	spawn = {
+	        instances min = 1
+	        instances max = 10
+	}
+	background = no
+}
+
+id = tac_plus {
+	user = fruit {
+		password = clear salad
+		service = shell {
+			cmd = sweepstake {
+				permit .*
+				permit allow this
+				deny not this
+				permit good too
+				deny except this
+			}
+			cmd = raffle {
+				permit .*
+				permit allow that
+				deny not that
+				deny except that
+			}
+			cmd = pool {
+				permit .*
+				permit allow the other
+				deny not here
+				deny except there
+			}
+		}
+	}
+}
+
+======

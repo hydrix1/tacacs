@@ -1,0 +1,25 @@
+generated configuration is:
+id = spawnd {
+	listen = {
+		port = 34192
+	}
+	spawn = {
+	        instances min = 1
+	        instances max = 10
+	}
+	background = no
+}
+
+id = tac_plus {
+	user = banana {
+		password = clear republic
+		service = junos-exec {
+			set local-user-name = "let_me_in"
+		}
+		service = junos-exec {
+			set local-user-name = "let_me_in"
+		}
+	}
+}
+
+======

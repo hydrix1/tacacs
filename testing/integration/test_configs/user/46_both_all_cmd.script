@@ -1,0 +1,6 @@
+--listen --listen_port=34146
+--user=banana
+--user_password=republic
+--user_cmd=worms
+--user_cmd_permit
+--user_cmd_deny

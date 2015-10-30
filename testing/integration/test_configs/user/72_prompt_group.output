@@ -1,0 +1,21 @@
+Missing group name for --user_group
+>> generated configuration is:
+id = spawnd {
+	listen = {
+		port = 34172
+	}
+	spawn = {
+	        instances min = 1
+	        instances max = 10
+	}
+	background = no
+}
+
+id = tac_plus {
+	user = banana {
+		password = clear republic
+		member = hug
+	}
+}
+
+======

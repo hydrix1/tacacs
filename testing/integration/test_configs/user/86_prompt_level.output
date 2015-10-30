@@ -1,0 +1,23 @@
+Missing privilege level for --user_priv-lvl
+>> generated configuration is:
+id = spawnd {
+	listen = {
+		port = 34186
+	}
+	spawn = {
+	        instances min = 1
+	        instances max = 10
+	}
+	background = no
+}
+
+id = tac_plus {
+	user = banana {
+		password = clear republic
+		service = shell {
+			set priv-lvl = "12"
+		}
+	}
+}
+
+======

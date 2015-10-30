@@ -1,0 +1,3 @@
+--listen --listen_port=34126
+--user=banana
+--user_permit

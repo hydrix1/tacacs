@@ -1,0 +1,5 @@
+--listen --listen_port=34107
+--user=banana
+--user_password=republic
+--user_default_cmd=deny
+--user_default_cmd=permit

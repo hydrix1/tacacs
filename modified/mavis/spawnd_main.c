@@ -966,6 +966,7 @@ static int parse_cmd_subopts(struct cmd_config* cmd)
 		    {
 			cmd->access_tail->next_access = access;
 		    }
+		    cmd->access_tail = access;
 		    access->access_type = Xstrdup(mode);
 		    access->access_regex = get_optional_argument(".*");
 		    break;

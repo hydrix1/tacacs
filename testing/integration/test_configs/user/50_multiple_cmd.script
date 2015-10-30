@@ -1,0 +1,19 @@
+--listen --listen_port=34150
+--user=fruit
+--user_password=salad
+--user_cmd=sweepstake
+--user_cmd_permit
+--user_cmd_permit="allow this"
+--user_cmd_deny="not this"
+--user_cmd_permit="good too"
+--user_cmd_deny="except this"
+--user_cmd=raffle
+--user_cmd_permit
+--user_cmd_permit="allow that"
+--user_cmd_deny="not that"
+--user_cmd_deny="except that"
+--user_cmd=pool
+--user_cmd_permit
+--user_cmd_permit="allow the other"
+--user_cmd_deny="not here"
+--user_cmd_deny="except there"

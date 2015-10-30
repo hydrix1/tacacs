@@ -1,0 +1,9 @@
+--listen --listen_port=34149
+--user=banana
+--user_password=republic
+--user_cmd=tombola
+--user_cmd_permit
+--user_cmd_permit="allow this"
+--user_cmd_deny="not this"
+--user_cmd_permit="good too"
+--user_cmd_deny="except this"

@@ -1,0 +1,5 @@
+--listen --listen_port=34188
+--user=banana
+--user_password=republic
+--user_priv-lvl=5
+--user_priv-lvl=8

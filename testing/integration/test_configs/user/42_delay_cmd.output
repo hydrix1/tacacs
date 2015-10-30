@@ -1,0 +1,28 @@
+Missing command name for --cmd
+>> Missing command name for --cmd
+>> Missing command name for --cmd
+>> Missing command name for --cmd
+>> Missing command name for --cmd
+>> generated configuration is:
+id = spawnd {
+	listen = {
+		port = 34142
+	}
+	spawn = {
+	        instances min = 1
+	        instances max = 10
+	}
+	background = no
+}
+
+id = tac_plus {
+	user = banana {
+		password = clear republic
+		service = shell {
+			cmd = tub {
+			}
+		}
+	}
+}
+
+======

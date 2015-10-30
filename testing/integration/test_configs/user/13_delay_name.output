@@ -1,0 +1,25 @@
+Missing name for the user
+>> Missing name for the user
+>> Missing name for the user
+>> Missing name for the user
+>> Missing name for the user
+>> Missing name for the user
+>> generated configuration is:
+id = spawnd {
+	listen = {
+		port = 34113
+	}
+	spawn = {
+	        instances min = 1
+	        instances max = 10
+	}
+	background = no
+}
+
+id = tac_plus {
+	user = mango {
+		password = clear public
+	}
+}
+
+======

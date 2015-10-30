@@ -1,0 +1,5 @@
+--listen --listen_port=34147
+--user=banana
+--user_password=republic
+--user_cmd=carton
+--user_cmd_deny="not this"

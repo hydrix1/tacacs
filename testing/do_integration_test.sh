@@ -13,6 +13,7 @@ echo "***"
 . scripts/unity.sh
 
 cd integration
+rm -fr outputs/*
 . ./basic.sh
 . ./configs.sh
 
