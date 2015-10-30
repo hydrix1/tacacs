@@ -1677,6 +1677,7 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
 
     if (common_data.alt_config)
     {
+	int pid_search = 9999;
 	if (cli_conf.print)
 	{
 	    printf("generated configuration is:\n%s\n======\n", common_data.alt_config);
@@ -1688,7 +1689,7 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
 	}
 	if (common_data.ipc_key == 0)
 	{
-	    common_data.ipc_key = getpid() * 1000 + 456;
+	    common_data.ipc_key = getpid() * 10000;
 	}
 	if (id == 0)
 	{
@@ -1696,8 +1697,13 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
 	}
 	if (ipc_create (common_data.alt_config, strlen(common_data.alt_config) + 1) != 0)
 	{
-	    fprintf (stderr, "ipc_create() failed!\n");
-	    exit(1);
+	    if (pid_search <= 0)
+	    {
+		fprintf (stderr, "ipc_create() failed!\n");
+		exit(1);
+	    }
+            --pid_search;
+	    common_data.ipc_key++;
 	}
 	else
 	{
