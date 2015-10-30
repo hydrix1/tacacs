@@ -1,5 +1,5 @@
 /*
- * Unit test program for get_optional_argument()
+ * Unit test program for get_user_shell()
  */
 
 #include <stdlib.h>
@@ -7,32 +7,45 @@
 #include "wrap_spawnd_main.h"
 
 
-void test_get_optional_argument()
+void test_get_user_shell()
 {
-    static const char* supplied_1 = "Supplied value 1";
-    static const char* default_1 = "Default value 1";
-    static const char* default_2 = "Default value 2";
-    const char* result;
+    struct user_config test_user;
+    struct service_config test_shell;
+    struct service_config* result;
 
-    unity_start_group("get_optional_argument");
+    unity_start_group("get_user_shell");
 
-    unity_start_test("presnt");
-    optarg = (char*) supplied_1;
-    result = get_optional_argument (default_1);
-    unity_assert_ptr_equal (optarg, 0);
-    unity_assert_ptr_not_equal (result, 0);
-    unity_assert_ptr_not_equal (result, supplied_1);
-    unity_assert_ptr_not_equal (result, default_1);
-    unity_assert_str_equal (result, supplied_1);
+    unity_start_test("present");
+    test_user.shell_service = &test_shell;
+    result = get_user_shell (&test_user);
+    unity_assert_str_equal (result, &test_shell);
     unity_end_test();
 
-    unity_start_test("absent");
-    optarg = (char*) 0;
-    result = get_optional_argument (default_2);
-    unity_assert_ptr_equal (optarg, 0);
+    unity_start_test("empty");
+    test_user.shell_service = 0;
+    test_user.service_head = 0;
+    test_user.service_tail = 0;
+    result = get_user_shell (&test_user);
     unity_assert_ptr_not_equal (result, 0);
-    unity_assert_ptr_not_equal (result, default_2);
-    unity_assert_str_equal (result, default_2);
+    unity_assert_ptr_equal (result, test_user.shell_service);
+    unity_assert_ptr_equal (result, test_user.service_head);
+    unity_assert_ptr_equal (result, test_user.service_tail);
+    unity_assert_ptr_equal (result->next_service, 0);
+    unity_assert_str_equal (result->svc_name, "shell");
+    unity_end_test();
+
+    unity_start_test("another");
+    test_user.shell_service = 0;
+    test_user.service_head = &test_shell;
+    test_user.service_tail = &test_shell;
+    result = get_user_shell (&test_user);
+    unity_assert_ptr_not_equal (result, 0);
+    unity_assert_ptr_equal (result, test_user.shell_service);
+    unity_assert_ptr_equal (&test_shell, test_user.service_head);
+    unity_assert_ptr_equal (result, test_shell.next_service);
+    unity_assert_ptr_equal (result, test_user.service_tail);
+    unity_assert_ptr_equal (0, result->next_service);
+    unity_assert_str_equal (result->svc_name, "shell");
     unity_end_test();
 
     unity_end_group();
@@ -42,6 +55,6 @@ void test_get_optional_argument()
 
 void test_entry()
 {
-    test_get_optional_argument();
+    test_get_user_shell();
 }
 
