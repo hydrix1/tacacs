@@ -1,10 +1,33 @@
 #!/bin/bash
 
-# Section 8.2 of the TACACS+ manual gives a sample configuration file:
-
 exec /usr/local/sbin/tac_plus --print \
 	--listen --listen_port=4913 \
-	--host --host_key="some key" --host_address=0.0.0.0/0 \
-	--user=fred --user_password=abcdef \
-	--user_cmd=write --user_cmd_permit=terminal \
-	--user_cmd=configure --user_cmd_permit
+	--key=cisco \
+	--user=cisco \
+		--user_password=cisco \
+		--user_default_cmd=permit \
+	--user=test_4913_a \
+		--user_password=A4913 \
+		--user_cmd=exit --user_cmd_permit \
+		--user_cmd=enable --user_cmd_permit \
+		--user_cmd=terminal --user_cmd_permit=length \
+		--user_cmd=write --user_cmd_permit \
+		--user_cmd=copy --user_cmd_permit=running-config \
+		--user_cmd=dir --user_cmd_permit \
+		--user_junos \
+	--user=test_4913_b \
+		--user_permit \
+		--user_cmd=exit --user_cmd_permit \
+		--user_cmd=enable --user_cmd_permit \
+		--user_cmd=terminal --user_cmd_permit=length \
+		--user_cmd=write --user_cmd_permit \
+		--user_cmd=delete --user_cmd_permit=usr/test2 \
+		--user_cmd=dir --user_cmd_permit \
+		--user_junos \
+	--user=test_4913_c \
+		--user_deny \
+		--user_cmd=exit --user_cmd_permit \
+		--user_cmd=enable --user_cmd_permit \
+		--user_cmd=terminal --user_cmd_permit=length \
+		--user_cmd=write --user_cmd_permit \
+
