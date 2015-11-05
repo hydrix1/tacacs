@@ -1698,6 +1698,7 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
 	}
 	if (ipc_create (common_data.alt_config, strlen(common_data.alt_config) + 1) != 0)
 	{
+	    fprintf (stderr, "ipc_create() failed with key %d!\n", common_data.ipc_key);
 	    if (pid_search <= 0)
 	    {
 		fprintf (stderr, "ipc_create() failed!\n");
