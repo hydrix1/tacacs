@@ -1,9 +1,9 @@
-#!/usr/local/sbin/tac_plus
+#!/tmp/tacacs/sbin/tac_plus
 
 # Section 8.2 of the TACACS+ manual gives a sample configuration file:
 
 id = spawnd {
-    listen = { port = 4912 }
+    listen = { port = 4931 }
 }
 id = tac_plus {
     host = any { key = "some key" address = 0.0.0.0/0 }

@@ -3,7 +3,7 @@
 # Section 8.2 of the TACACS+ manual gives a sample configuration file:
 
 exec /usr/local/sbin/tac_plus --print \
-	--listen --listen_port=4913 \
+	--listen --listen_port=4933 \
 	--host --host_key="some key" --host_address=0.0.0.0/0 \
 	--user=fred --user_password=abcdef \
 	--user_cmd=write --user_cmd_permit=terminal \
