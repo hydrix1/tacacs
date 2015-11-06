@@ -6,6 +6,8 @@
 # on a different machine.
 #
 
+declare -a win_pid_for_cyg_pid
+
 
 tacacs_test_with_timeout()
 {
@@ -18,16 +20,14 @@ tacacs_test_with_timeout()
     local test_extras="$7"
     local test_filter=$8
 
-    if [ "$test_filter" == "" ]; then
-        "$tactest" $testhard -s $test_machine -port $test_port -u $test_user -p $test_pass -k $test_key $test_extras 2>&1 | tee $test_log&
-    else
-        "$tactest" $testhard -s $test_machine -port $test_port -u $test_user -p $test_pass -k $test_key $test_extras 2>&1 | grep '\.\.\.' | tee $test_log >$test_filter&
-    fi
+    "$tactest" $testhard -s $test_machine -port $test_port -u $test_user -p $test_pass -k $test_key $test_extras 2>&1 > $test_log&
     local test_id=$!
-    echo "started $test_id: $tactest" $testhard -s $test_machine -port $test_port -u $test_user -p $test_pass -k $test_key $test_extras
+    local win_id=`ps -p $test_id | awk 'NR==2{print $4}'`
+    ps -W
+    echo "started $test_id($win_id): $tactest" $testhard -s $test_machine -port $test_port -u $test_user -p $test_pass -k $test_key $test_extras
 
     #wait for thread to finish
-    echo Waiting for $test_id
+    echo "Waiting for $test_id($win_id)"
     local loop_time=0
     local wait_time=0
     while [ $loop_time -lt $timeout ]; do
@@ -47,9 +47,16 @@ tacacs_test_with_timeout()
     done
 
     if [ $test_id -ne 0 ]; then
-        echo "Given up waiting for $test_id"
-        /bin/kill -f $test_id
+        echo "Given up waiting for $test_id($win_id)"
+        taskkill /pid $win_id /t /f
         wait $test_id
+    fi
+
+    if [ "$test_filter" == "" ]; then
+        cat $test_log
+    else
+        grep '\.\.\.' $test_log >$test_filter
+        cat $test_filter
     fi
 }
 
@@ -298,13 +305,16 @@ tacacs_test_perf_thread()
     local guard=$3
     local attempts=$4
     local filename=${serial}_${basename}
+    local tempfile=${filename}.tmp
 
     #pre-test: runs a few cycles to ensure all threads are going
     echo $serial starting
     "$tactest" $testhard -s $machine -port $tacacs_port -u test_${tacacs_port}_a -p A${tacacs_port} -k cisco -c $guard -authen >/dev/null
     echo $serial warming up
     #The test proper
-    "$tactest" $testhard -s $machine -port $tacacs_port -u test_${tacacs_port}_a -p A${tacacs_port} -k cisco -c $attempts -authen | grep '\.\.\.' | tee $test_log >$filename
+    "$tactest" $testhard -s $machine -port $tacacs_port -u test_${tacacs_port}_a -p A${tacacs_port} -k cisco -c $attempts -authen >$tempfile
+    grep '\.\.\.' $tempfile >$filename
+    rm -f $tempfile
     local sent=$(tacacs_test_perf_result $filename "Total Commands")
     local good=$(tacacs_test_perf_result $filename "Successes")
     unity_assert_equal $attempts $sent
@@ -329,14 +339,20 @@ tacacs_test_perf_parallel()
 
     unity_start_test "${service}_parallel"
         local id_list=""
+        local wid_list=""
         #start all threads
         for ((idx=1; idx<=$threads; idx++)); do
             tacacs_test_perf_thread $idx $filename $guard $attempts &
-            id_list="$id_list $!"
+            tid=$!
+            wid=`ps -p $tid | awk 'NR==2{print $4}'`
+            win_pid_for_cyg_pid[$tid]=$wid
+            id_list="$id_list $tid"
+            wid_list="$wid_list $tid($wid)"
         done
+        ps -W
         #wait for all threads to finish
         sleep $threads
-        echo Waiting for $id_list
+        echo "Waiting for $wid_list"
         local loop_time=0
         local wait_time=0
         while [ $loop_time -lt $timeout ]; do
@@ -364,8 +380,9 @@ tacacs_test_perf_parallel()
             done
         done
         for tid in $id_list; do
-            echo Given up waiting for $tid
-            /bin/kill -f $tid
+            wid=${win_pid_for_cyg_pid[$tid]}
+            echo "Given up waiting for $tid($wid)"
+            taskkill /pid $wid /t /f
             wait $tid
         done
         echo "All parallel tasks are now complete"
