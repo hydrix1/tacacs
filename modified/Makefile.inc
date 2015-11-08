@@ -311,7 +311,7 @@ ifeq ($(WITH_SSL),1)
 		ifeq ($(REDHATVERSION),7)
 			LIB_SSL	+= -lssl -lgssapi_krb5 -lkrb5 -lkrb5support -lk5crypto -lresolv -lcrypto -lselinux -lsepol -lpcre -lz -Wl,-Bdynamic -lldap -llber -lfreebl3 -lpthread -lssh2 -lcom_err -lkeyutils -llzma
 		else
-			LIB_SSL	+= -lssl -lgssapi_krb5 -lkrb5 -lk5crypto -lresolv -lcrypto
+			LIB_SSL	+= -lssl -lgssapi_krb5 -lkrb5 -lcom_err -lk5crypto -lresolv -lcrypto
 		endif
 	endif
 	LIB_SSL_CRYPTO	+= -lcrypto 
