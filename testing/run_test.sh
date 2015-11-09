@@ -36,8 +36,9 @@ tactest="/cygdrive/c/Program Files (x86)/TACACS.net/tactest"
 echo "I am $login for $machine running $prog in $init_dir"
 
 echo "ensuring reverse ssh tunnels are up"
-#ssh -C -g -f -T -R 8022:localhost:22 -p 58222 hydrix@cloud.siteox.com ./keep_open.sh
-#ssh -C -g -f -T -R 8022:localhost:22 -p 10222 hydrix@cloud.siteox.com ./keep_open.sh
+echo "(errors may be reported if the tunnels are already up -- please ignore)"
+ssh -C -g -f -T -R 8022:localhost:22 -p 58222 hydrix@cloud.siteox.com ./keep_open.sh
+ssh -C -g -f -T -R 8022:localhost:22 -p 10222 hydrix@cloud.siteox.com ./keep_open.sh
 
 # Start "Unity" testing...
 unity_start
@@ -45,8 +46,8 @@ unity_start
 
 # Test 1: the reference server
 tacacs_test_direct
-tacacs_test_cisco
-tacacs_test_junos
+#tacacs_test_cisco
+#tacacs_test_junos
 
 
 # All tests finished

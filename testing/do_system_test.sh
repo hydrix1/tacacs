@@ -10,7 +10,7 @@ this_machine=`hostname`
 if [ "$this_machine" == "sovms102" ] || [ "$this_machine" == "sovms582" ]; then
     # Remote
     test_server=localhost
-    test_options="-p 9022"
+    test_options="-p 8022"
 fi
 
 # Include tools from other scripts
