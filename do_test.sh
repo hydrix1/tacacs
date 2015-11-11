@@ -2,7 +2,10 @@
 
 # Find out where we are
 script_name=$0
-username=`whoami`
+username=`whoami 2>/dev/null`
+if [ $? -ne 0 ]; then
+    username=`who am i | awk '{print $1}'`
+fi
 offset=`dirname $script_name`
 called_from=`pwd`
 base=$called_from/$offset
@@ -15,6 +18,11 @@ local_test_output=local_test_output.txt
 remote_test_output=remote_test_output.txt
 all_test_output=all_test_output.txt
 xml_test_output=junit_test_output.xml
+
+tac_start_script=~/tacacs_ssh_profile.sh
+if [ -x $tac_start_script ]; then
+    . $tac_start_script
+fi
 
 sudo /sbin/route add -net 172.16.1.0 netmask 255.255.255.0 gw 192.168.1.24
 

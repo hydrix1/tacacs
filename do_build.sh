@@ -2,7 +2,10 @@
 
 # Find out where we are
 script_name=$0
-username=`whoami`
+username=`whoami 2>/dev/null`
+if [ $? -ne 0 ]; then
+    username=`who am i | awk '{print $1}'`
+fi
 offset=`dirname $script_name`
 called_from=`pwd`
 base=$called_from/$offset
@@ -15,6 +18,11 @@ echo "***   -- called from $called_from"
 echo "***   -- working in  $base"
 echo "***"
 echo "***"
+
+tac_start_script=~/tacacs_ssh_profile.sh
+if [ -x $tac_start_script ]; then
+    . $tac_start_script
+fi
 
 echo "***"
 echo "***"
