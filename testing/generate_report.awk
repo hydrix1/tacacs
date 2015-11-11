@@ -220,6 +220,10 @@ BEGIN {
 # the current test's output log.   If we're not in a test, this will be
 # thrown away later.
 {
+    # Remove any XML/HTML special characters
+    gsub (/&/, " and ")
+    gsub (/</, "((")
+    gsub (/>/, "))")
     line = $0
     output = output "        " line "\n"
 }
