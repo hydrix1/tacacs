@@ -24,7 +24,10 @@ cd $wd
 
 # Find out provenance and other details
 prog=$0
-login=`whoami`
+login=`whoami 2>/dev/null`
+if [ $? -ne 0 ]; then
+    login=`who am i | awk '{print $1}'`
+fi
 machine=`who am i | sed 's/[()]//g' | awk '{print $NF}'`
 if [ "$1" != "" ]; then
     echo "(using supplied $1 instead of $machine)"
