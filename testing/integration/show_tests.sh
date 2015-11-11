@@ -1,4 +1,14 @@
 #!/bin/bash
+#
+# Script to generate a report on the integration tests, showing
+# the test groups and, for each test, the supplied script and input
+# text alongside the expect good output/bad result.
+#
+# One useful function of this script is to highlight tests that have
+# no defined results: no got output and no expected error.   Such
+# tests would always appear to work
+#
+# This script must be run from the directory it exists in
 
 for d in test_configs/*; do
     cd $d

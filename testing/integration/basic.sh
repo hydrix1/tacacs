@@ -1,8 +1,21 @@
 #!/bin/bash
-
+#
+# Script to run a series of basic integration tests.   Note that the test
+# function is only defined here, not called.   This script is designed to
+# be called from ../do_integration_test.sh only and will not work otherwise.
+#
+# The basic tests check two things:
+#  - The expected binary files have been created by the make process
+#  - The correct version numbers are printed.
+#
 ###################################################################################
 
 
+###################################################################################
+#
+# Check that the specified program ($2) exists and is executable.   The first
+# parameter is an English descriptive name used for reporting.
+#
 tacacs_integration_test_prog_exists()
 {
     name=$1
@@ -18,6 +31,13 @@ tacacs_integration_test_prog_exists()
     unity_end_test
 }
 
+
+
+###################################################################################
+#
+# Check that all the "tac_plus" programs are present and correct.   Specifically,
+# check that both the original code and the modified code have both built.
+#
 tacacs_integration_test_progs_exist()
 {
     unity_start_group "programs_exist"
@@ -30,6 +50,12 @@ tacacs_integration_test_progs_exist()
 ###################################################################################
 
 
+
+###################################################################################
+#
+# Confirm that running the original code with option "-v"
+# prints the original (bare) version number.
+#
 tacacs_integration_test_old_short_version()
 {
     program=$1
@@ -62,6 +88,12 @@ tacacs_integration_test_old_short_version()
     unity_end_test
 }
 
+
+###################################################################################
+#
+# Confirm that running the original code with option "--version"
+# reports an error, as original program doesn't support long options
+#
 tacacs_integration_test_old_long_version()
 {
     program=$1
@@ -88,6 +120,14 @@ tacacs_integration_test_old_long_version()
     unity_end_test
 }
 
+
+
+###################################################################################
+#
+# Confirm that running the modified code with option "-v"
+# prints the new, extended version number, comprising the original
+# version string and an indication that this is modified code,
+#
 tacacs_integration_test_new_short_version()
 {
     program=$1
@@ -120,6 +160,14 @@ tacacs_integration_test_new_short_version()
     unity_end_test
 }
 
+
+
+###################################################################################
+#
+# Confirm that running the modified code with option "--version"
+# prints the new, extended version number, comprising the original
+# version string and an indication that this is modified code,
+#
 tacacs_integration_test_new_long_version()
 {
     program=$1
@@ -152,6 +200,21 @@ tacacs_integration_test_new_long_version()
     unity_end_test
 }
 
+
+
+####################################################################################
+#
+# Check that the "tac_plus" program reports the correct version.   This breaks
+# down into four specific tests, running the old and new programs with the
+# the old "-v" and new "--version" options.   The expect results are:
+#   original -v:         print original (bare) version number
+#   original --version:  should error, as original program doesn't support
+#                        long options
+#   modified -v:         print extended version number, comprise the original
+#                        version string and an indication that this is modified
+#                        code,
+#   modified --version:  same as "modified -v"
+#
 tacacs_integration_test_versions()
 {
     expected="201503290942"
@@ -166,6 +229,12 @@ tacacs_integration_test_versions()
 
 ####################################################################################
 
+
+
+####################################################################################
+#
+# Run the all basic integration tests by invoking each in turn
+#
 tacacs_basic_integration_tests()
 {
     unity_start_group "basic"
