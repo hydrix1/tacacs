@@ -47,8 +47,10 @@ tacacs_test_with_timeout()
     done
 
     if [ $test_id -ne 0 ]; then
-        echo "Given up waiting for $test_id($win_id)"
-        taskkill /pid $win_id /t /f
+        echo "@$wait_time: Given up waiting for $test_id($win_id)"
+        #taskkill /pid $win_id /t /f
+        /bin/kill -f $win_id
+        /bin/kill -9 $test_id
         wait $test_id
     fi
 
@@ -382,7 +384,8 @@ tacacs_test_perf_parallel()
         for tid in $id_list; do
             wid=${win_pid_for_cyg_pid[$tid]}
             echo "Given up waiting for $tid($wid)"
-            taskkill /pid $wid /t /f
+            #taskkill /pid $wid /t /f
+            /bin/kill -f $wid
             wait $tid
         done
         echo "All parallel tasks are now complete"
@@ -551,5 +554,8 @@ tacacs_test_direct()
     tacacs_test_direct_simple
     tacacs_test_direct_server
     tacacs_test_direct_perf
+
+    #get rid of temporary files
+    rm -fr *_par.$$ *_tmp.$$ *.$$.tmp
 }
 

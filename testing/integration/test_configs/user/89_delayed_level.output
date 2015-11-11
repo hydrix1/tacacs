@@ -6,7 +6,7 @@ Missing privilege level for --user_priv-lvl
 >> generated configuration is:
 id = spawnd {
 	listen = {
-		port = 34187
+		port = 34189
 	}
 	spawn = {
 	        instances min = 1
