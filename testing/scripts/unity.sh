@@ -9,6 +9,9 @@
 mark_time()
 {
     time_now=`date +%s.%N`
+    if [ "$time_now" = "%s.%N" ]; then
+        time_now=`gdate +%s.%N`
+    fi
     echo "@@@ $time_now"
 }
 
@@ -49,7 +52,7 @@ unity_end()
         while [ ${#padded} -lt $test_max_length ]; do
             padded="$padded "
         done
-        echo "   |  ${test_results[$idx]}  | $padded |"
+        echo "   | ${test_results[$idx]} | $padded |"
     done
     echo "   |--------|-$filler-|"
     echo "End of summary"
@@ -102,17 +105,20 @@ unity_end_test()
     fi
 
     if [ "$skip_test" == "1" ]; then
+        test_report="*SKIP*"
         test_result="IGNORED"
         test_skips=$(($test_skips + 1))
     elif [ "$fail_test" == "1" ]; then
+        test_report="*FAIL*"
         test_result="FAIL"
         test_fails=$(($test_fails + 1))
     else
+        test_report=" PASS "
         test_result="PASS"
     fi
 
     test_names[$test_total]="$test_title"
-    test_results[$test_total]="$test_result"
+    test_results[$test_total]="$test_report"
     test_total=$(($test_total + 1))
     mark_time
     echo ":::$test_title::: $test_result"
