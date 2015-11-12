@@ -194,7 +194,7 @@ endif
 DEF	+= -DOSTYPE=$(OSTYPE) -DOSLEVEL=$(OSLEVEL) -DOS="\"$(OS)\""
 
 ifeq ($(DEBUG),1)
-	DEF	+= -DDEBUG
+	# this doesn't work(link problems)!:DEF	+= -DDEBUG
 	CFLAGS	+= -g
 	ifeq ($(CC_GCC), 1)
 		CFLAGS	+= -ggdb

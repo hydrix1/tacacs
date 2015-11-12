@@ -64,21 +64,52 @@ cd ../modified
 
 echo "***"
 echo "***"
-echo "*** Running 'configure' for modified..."
+echo "*** Running debug 'configure' for modified..."
 echo "***"
 echo "***"
-./configure
+export DEBUG=1
+export RELEASE=0
+./configure --prefix=/tmp/tacacs-debug --debug
 
 echo "***"
 echo "***"
-echo "*** Running 'make' for modified..."
+echo "*** Running debug 'make' for modified..."
 echo "***"
 echo "***"
+make clean
 make
 
 echo "***"
 echo "***"
-echo "*** Running 'make install' for modified..."
+echo "*** Running debug 'make install' for modified..."
+echo "***"
+echo "***"
+echo "*** If this fails, add $username to /etc/sudoers:"
+echo "***          Defaults:$username   !requiretty"
+echo "***          $username            ALL=(ALL) NOPASSWD:ALL"
+echo "***"
+sudo make install
+
+echo "***"
+echo "***"
+echo "*** Running release 'configure' for modified..."
+echo "***"
+echo "***"
+export DEBUG=0
+export RELEASE=1
+./configure
+
+echo "***"
+echo "***"
+echo "*** Running release 'make' for modified..."
+echo "***"
+echo "***"
+make clean
+make
+
+echo "***"
+echo "***"
+echo "*** Running release 'make install' for modified..."
 echo "***"
 echo "***"
 echo "*** If this fails, add $username to /etc/sudoers:"
