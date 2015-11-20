@@ -134,6 +134,7 @@ BEGIN {
         gsub (/\n/, "")
         gsub (/\r/, "")
         gsub (/ \b/, "")
+        gsub (/\035/, "^]")
 }
 
 # Timing marks.
