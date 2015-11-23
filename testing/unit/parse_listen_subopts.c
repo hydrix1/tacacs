@@ -22,7 +22,7 @@ static void dump_listen_config (const struct listen_config* lc)
     {
         printf ("Listen config:\n");
         printf ("    next_listen %s null\n", lc->next_listen ? "!=" : "==");
-        printf ("    port = ``%s''\n", lc->port);
+        printf ("    port = ``%s''\n", lc->port ? lc->port : "(null)");
         printf ("----\n");
     }
 }
@@ -129,7 +129,7 @@ static void catch_test_parse_listen_subopts(const struct test_case* this_test)
         /* confirm status is from our child */
         //fprintf(stderr, "waitpid(%d) response from %d\n", child, from);
         unity_assert_int_equal(child, from);
-        //fprintf(stderr, "wait() exited with code %d\n", status);
+        //fprintf(stderr, "wait() exited with code %d (EXITED=%d,STATUS=%d)\n", status, WIFEXITED(status), WEXITSTATUS(status));
         /* Check exit status is "exited" ...*/
         unity_assert_int_equal(1, WIFEXITED(status));
         /* ... and that the return value is as expected */

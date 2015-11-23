@@ -11,8 +11,8 @@ Listen config:
     port = ``5678''
 ----
 tacplus config:
-    debug = ``(null)''
-    access = ``(null)''
-    account = ``(null)''
-    key = ``(null)''
+    debug = (none)
+    access = (none)
+    account = (none)
+    key = (none)
 ----
