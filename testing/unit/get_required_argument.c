@@ -71,12 +71,12 @@ static void catch_test_get_required_argument(const char* test_name,
         freopen (actual_output, "w", stdout);
         freopen (actual_error, "w", stderr);
 
-        optarg = value;
+        optarg = (char*)value;
         result = get_required_argument(prompt, test_name, 42);
 
         /* We were not suppoed to reach here! */
         freopen (actual_result, "w", stdout);
-        printf ("%d:%d:%s\n", (int)optarg, result == value, result);
+        printf ("%p:%d:%s\n", optarg, result == value, result);
         exit(0);
     }
     else

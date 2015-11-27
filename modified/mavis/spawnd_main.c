@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 #ifdef __APPLE__
 #  include <mach-o/dyld.h>
@@ -1698,7 +1699,7 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
 	}
 	if (ipc_create (common_data.alt_config, strlen(common_data.alt_config) + 1) != 0)
 	{
-	    fprintf (stderr, "ipc_create() failed with key %d!\n", common_data.ipc_key);
+	    fprintf (stderr, "ipc_create() failed with key %ld!\n", (long)common_data.ipc_key);
 	    if (pid_search <= 0)
 	    {
 		fprintf (stderr, "ipc_create() failed!\n");

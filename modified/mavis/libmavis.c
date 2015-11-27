@@ -64,9 +64,9 @@ static struct module_defn * all_modules[]  =
 
 int mavis_method_add(mavis_ctx ** mcx, struct io_context *ioctx, char *path, char *id)
 {
-    int i;
+    size_t i;
     void *handle = NULL;
-    void *(*mn) (void *, struct io_context *, char *) = NULL;
+    mavis_ctx *(*mn) (void *, struct io_context *, char *) = NULL;
 
 #if 0
     Debug((DEBUG_MAVIS, "+ %s(%s)\n", __func__, path));
