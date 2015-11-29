@@ -1697,7 +1697,7 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
 	{
 	     id = common_data.progname;
 	}
-	if (ipc_create (common_data.alt_config, strlen(common_data.alt_config) + 1) != 0)
+	while (ipc_create (common_data.alt_config, strlen(common_data.alt_config) + 1) != 0)
 	{
 	    fprintf (stderr, "ipc_create() failed with key %ld!\n", (long)common_data.ipc_key);
 	    if (pid_search <= 0)
@@ -1708,11 +1708,9 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
             --pid_search;
 	    common_data.ipc_key++;
 	}
-	else
-	{
-	    common_data.conffile = common_data.ipc_url;
-	    cfg_read_config(common_data.ipc_url, spawnd_parse_decls, id);
-	}    
+	atexit(ipc_delete_onexit);
+	common_data.conffile = common_data.ipc_url;
+	cfg_read_config(common_data.ipc_url, spawnd_parse_decls, id);
     }
     else
     {

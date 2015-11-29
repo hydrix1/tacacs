@@ -442,6 +442,7 @@ int cfg_open_and_read(char *, char **, int *);
 int cfg_close(char *, char *, int);
 int ipc_create(char *, int);
 void ipc_delete(void);
+void ipc_delete_onexit(void);
 
 int mavis_check_version(char *);
 

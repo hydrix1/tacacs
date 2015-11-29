@@ -692,6 +692,13 @@ void ipc_delete(void)
     }
 }
 
+void ipc_delete_onexit(void)
+{
+    /* fprintf(stderr, "%ld: ipc_delete_onexit() called, key=%ld\n",
+	(long int) common_data.pid, (long int) common_data.ipc_key); */
+    ipc_delete();
+}
+
 int ipc_create(char *buf, int buflen)
 {
     int id;
