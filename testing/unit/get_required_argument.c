@@ -76,7 +76,7 @@ static void catch_test_get_required_argument(const char* test_name,
 
         /* We were not suppoed to reach here! */
         freopen (actual_result, "w", stdout);
-        printf ("%p:%d:%s\n", optarg, result == value, result);
+        printf ("%lu:%d:%s\n", (unsigned long)optarg, result == value, result);
         exit(0);
     }
     else

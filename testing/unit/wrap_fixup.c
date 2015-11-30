@@ -52,3 +52,7 @@ int set_proctitle;
 int io_main;
 int init_common_data;
 int logopen;
+
+void ipc_delete_onexit()
+{
+}
