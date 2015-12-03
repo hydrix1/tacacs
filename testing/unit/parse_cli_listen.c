@@ -51,7 +51,14 @@ static void dump_spawnd_config (const struct spawnd_config* spawnd)
         {
             printf ("    next_listen is not null\n");
         }
-        printf ("    port = ``%s''\n", lc->port);
+        if (lc->port)
+        {
+            printf ("    port = ``%s''\n", lc->port);
+        }
+        else
+        {
+            printf ("    port = (null)\n");
+        }
         printf ("----\n");
     }
 }
@@ -60,10 +67,38 @@ static void dump_spawnd_config (const struct spawnd_config* spawnd)
 static void dump_tacplus_config (const struct tacplus_config* tacplus)
 {
     printf ("tacplus config:\n");
-    printf ("    debug = ``%s''\n", tacplus->debug_opts);
-    printf ("    access = ``%s''\n", tacplus->access_log);
-    printf ("    account = ``%s''\n", tacplus->account_log);
-    printf ("    key = ``%s''\n", tacplus->secret_key);
+    if (tacplus->debug_opts)
+    {
+        printf ("    debug = ``%s''\n", tacplus->debug_opts);
+    }
+    else
+    {
+        printf ("    debug = (none)\n");
+    }
+    if (tacplus->access_log)
+    {
+        printf ("    access = ``%s''\n", tacplus->access_log);
+    }
+    else
+    {
+        printf ("    access = (none)\n");
+    }
+    if (tacplus->account_log)
+    {
+        printf ("    account = ``%s''\n", tacplus->account_log);
+    }
+    else
+    {
+        printf ("    account = (none)\n");
+    }
+    if (tacplus->secret_key)
+    {
+        printf ("    key = ``%s''\n", tacplus->secret_key);
+    }
+    else
+    {
+        printf ("    key = (none)\n");
+    }
     printf ("----\n");
 
     //dump_host_list (tacplus->host_head, tacplus->host_tail);

@@ -49,8 +49,8 @@ unity_start
 
 # Test 1: the reference server
 tacacs_test_direct
-#tacacs_test_cisco
-#tacacs_test_junos
+tacacs_test_cisco
+tacacs_test_junos
 
 
 # All tests finished
