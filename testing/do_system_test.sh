@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # define the test server and access
-test_server=192.168.0.161
+test_server=192.168.0.130
 test_options=
 test_username=robot.build
 
