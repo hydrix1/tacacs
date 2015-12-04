@@ -24,7 +24,7 @@ if [ -x $tac_start_script ]; then
     . $tac_start_script
 fi
 
-sudo /sbin/route add -net 172.16.1.0 netmask 255.255.255.0 gw 192.168.1.24
+sudo /sbin/route add -net 172.16.1.0 netmask 255.255.255.0 gw 192.168.1.11
 
 echo "***"
 echo "***"
