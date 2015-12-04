@@ -14,7 +14,6 @@ id = tac_plus {
 	group = banana {
 		enable 5 = clear super
 		enable 8 = clear secret
-		default service = permit
 	}
 }
 

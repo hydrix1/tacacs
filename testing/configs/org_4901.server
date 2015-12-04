@@ -17,6 +17,17 @@ id = tac_plus {
 
         key = cisco
 
+	group = group_4901 {
+		service = shell {
+			cmd = write { permit .* }
+			cmd = copy { permit running-config }
+			cmd = dir { permit .* }
+		}
+		service = junos-exec {
+			set local-user-name = let_me_in
+		}
+	}
+
 	user = cisco {
 		password = clear cisco
 		service = shell {
@@ -61,6 +72,16 @@ id = tac_plus {
 			cmd = enable { permit .* }
 			cmd = terminal { permit length }
 			cmd = write { permit .* }
+		}
+	}
+
+	user = test_4901_g {
+		password = clear G4901
+		member = group_4901
+		service = shell {
+			cmd = exit { permit .* }
+			cmd = enable { permit .* }
+			cmd = terminal { permit length }
 		}
 	}
 }

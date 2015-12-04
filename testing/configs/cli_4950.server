@@ -17,13 +17,13 @@ exec /usr/local/sbin/tac_plus --print \
 	--host_enable=15 --host_enable_password=secret \
 	--host_key=cisco \
     --group=admin \
-	`# --group_cmd --permit` \
+	--group_default_cmd=permit \
 		`# service = shell {` \
 			`# default command = permit` \
 			`# default attribute = permit` \
 			`# set priv-lvl = 15` \
     --group=guest \
-	`# --group_cmd --permit` \
+	--group_default_cmd=permit \
 	--group_enable --group_enable_deny \
 		`# service = shell {` \
 			`# default command = permit` \

@@ -19,7 +19,6 @@ id = tac_plus {
 	group = banana {
 		enable 5 = clear both
 		enable 8 = clear delayed
-		default service = permit
 	}
 }
 

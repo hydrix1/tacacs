@@ -6,6 +6,11 @@ exec /usr/local/sbin/tac_plus --print \
 	--access_log=../output/access_4903.log \
 	--accounting_log=../output/acct_4903.log \
 	--key=cisco \
+	--group=group_4903 \
+		--group_cmd=write --group_cmd_permit \
+		--group_cmd=copy --group_cmd_permit=running-config \
+		--group_cmd=dir --group_cmd_permit \
+		--group_junos \
 	--user=cisco \
 		--user_password=cisco \
 		--user_default_cmd=permit \
@@ -33,4 +38,10 @@ exec /usr/local/sbin/tac_plus --print \
 		--user_cmd=enable --user_cmd_permit \
 		--user_cmd=terminal --user_cmd_permit=length \
 		--user_cmd=write --user_cmd_permit \
+	--user=test_4903_g \
+		--user_password=G4903 \
+		--user_group=group_4903 \
+		--user_cmd=exit --user_cmd_permit \
+		--user_cmd=enable --user_cmd_permit \
+		--user_cmd=terminal --user_cmd_permit=length \
 
