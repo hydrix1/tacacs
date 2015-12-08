@@ -359,7 +359,20 @@ ifeq ($(WITH_PCRE),1)
 		LIB_PCRE	= -L$(LIBDIR_PCRE) $(LDOPT_R)$(LIBDIR_PCRE)
 	endif
 	DEF += -DWITH_PCRE
-	LIB_PCRE	+= -lpcre
+	ifeq ($(OSTYPE), sunos)
+		ifeq ($(OSr),5.11)
+			LIB_PCRE	+= -lpcre
+		else
+			LIB_PCRE	+= -Wl,-Bdynamic -lpcre -Wl,-Bstatic
+		endif
+	else
+		ifeq ($(REDHATVERSION),7)
+			LIB_PCRE	+= -Wl,-Bdynamic -lpcre -Wl,-Bstatic
+		else
+			LIB_PCRE	+= -lpcre
+		endif
+	endif
+	LIB_SSL	+= $(LIB_PCRE)
 endif
 
 # Check for FreeRADIUS client library:
