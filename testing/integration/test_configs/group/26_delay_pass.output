@@ -18,7 +18,6 @@ id = spawnd {
 id = tac_plus {
 	group = banana {
 		enable 7 = clear delayed
-		default service = permit
 	}
 }
 

@@ -18,7 +18,7 @@ void test_get_user_shell()
     unity_start_test("present");
     test_user.shell_service = &test_shell;
     result = get_user_shell (&test_user);
-    unity_assert_str_equal (result, &test_shell);
+    unity_assert_ptr_equal (result, &test_shell);
     unity_end_test();
 
     unity_start_test("empty");

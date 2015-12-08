@@ -435,12 +435,18 @@ void spawnd_parse_decls(struct sym *sym)
 		    int buflen;
 		    if (!cfg_open_and_read(spawnd_data.conffile, &buf, &buflen)) {
 			if (!ipc_create(buf, buflen))
+			{
 			    strset(&spawnd_data.child_config, common_data.ipc_url);
+			    atexit(ipc_delete_onexit);
+			}
 			cfg_close(spawnd_data.conffile, buf, buflen);
 		    }
 		} else {
 		    if (!ipc_create(sym->in, sym->len))
+		    {
 			strset(&spawnd_data.child_config, common_data.ipc_url);
+			atexit(ipc_delete_onexit);
+		    }
 		}
 		if (spawnd_data.gid)
 		    setegid(getgid());

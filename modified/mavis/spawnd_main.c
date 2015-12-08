@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 #ifdef __APPLE__
 #  include <mach-o/dyld.h>
@@ -305,6 +306,10 @@ typedef enum {
     lopt_group_enable_password,
     lopt_group_enable_deny,
     lopt_group_enable_permit,
+    lopt_group_cmd,
+    lopt_group_cmd_deny,
+    lopt_group_cmd_permit,
+    lopt_group_junos,
     lopt_user,
     lopt_user_password,
     lopt_user_deny,
@@ -316,6 +321,7 @@ typedef enum {
     lopt_user_group,
     lopt_user_priv,
     lopt_user_junos,
+    lopt_group_default_cmd,
 } lopts_e;
 
 static struct option long_opts[] =
@@ -351,6 +357,11 @@ static struct option long_opts[] =
     { "group_enable_password", optional_argument, 0, lopt_group_enable_password },
     { "group_enable_deny",     optional_argument, 0, lopt_group_enable_deny },
     { "group_enable_permit",   optional_argument, 0, lopt_group_enable_permit },
+    { "group_default_cmd",     optional_argument, 0, lopt_group_default_cmd },
+    { "group_cmd",             optional_argument, 0, lopt_group_cmd },
+    { "group_cmd_deny",        optional_argument, 0, lopt_group_cmd_deny },
+    { "group_cmd_permit",      optional_argument, 0, lopt_group_cmd_permit },
+    { "group_junos",           no_argument,       0, lopt_group_junos },
     { "user",                  optional_argument, 0, lopt_user },
     { "user_password",         optional_argument, 0, lopt_user_password },
     { "user_deny",             optional_argument, 0, lopt_user_deny },
@@ -425,13 +436,6 @@ struct service_config
     struct set_config*      set_tail;
 };
 
-struct group_config
-{
-    struct group_config*    next_group;
-    char*                   group_name;
-    struct level_set_config level_table;
-};
-
 struct member_config
 {
     struct member_config*   next_member;
@@ -448,6 +452,14 @@ struct user_config
     struct service_config*  service_head;
     struct service_config*  service_tail;
     struct service_config*  shell_service;
+};
+
+struct group_config
+{
+    struct group_config*    next_group;
+    char*                   group_name;
+    struct level_set_config level_table;
+    struct user_config      user;
 };
 
 struct spawnd_config
@@ -939,7 +951,7 @@ static int parse_cli_host(struct cli_config* cli_cfg)
     return next_symbol;
 }
 
-static int parse_cmd_subopts(struct cmd_config* cmd)
+static int parse_cmd_subopts(int base_opt, struct cmd_config* cmd, const char* name)
 {
     int c = EOF;
 
@@ -949,7 +961,8 @@ static int parse_cmd_subopts(struct cmd_config* cmd)
 	{
 	    const char* mode = "permit";
 	    struct access_config* access;
-	    int opt = c;
+	    int original = c;
+	    int opt = c + lopt_user_cmd - base_opt;
 	    c = EOF;
 	    switch (opt)
 	    {
@@ -971,13 +984,36 @@ static int parse_cmd_subopts(struct cmd_config* cmd)
 		    access->access_regex = get_optional_argument(".*");
 		    break;
 		default:
-		    return opt;
+		    return original;
 	    }
 	}
 	c = get_next_option();
     } while (c != EOF);
 
     return c;
+}
+
+static struct service_config* get_user_shell(struct user_config* user)
+{
+    struct service_config* shell = user->shell_service;
+
+    if (shell == 0)
+    {
+	shell = Xcalloc(1, sizeof(struct service_config));
+    	shell->svc_name = "shell";
+	if (user->service_tail == 0)
+	{
+	    user->service_head = shell;
+	}
+	else
+	{
+	    user->service_tail->next_service = shell;
+	}
+	user->shell_service = shell;
+	user->service_tail = shell;
+    }
+
+    return shell;
 }
 
 static int parse_group_subopts(struct group_config* group)
@@ -1002,6 +1038,57 @@ static int parse_group_subopts(struct group_config* group)
 			    exit(1);
 			}
 			c = parse_level_subopts (opt, &group->level_table.level_entry[level_number], level_text);
+		    }
+		    break;
+		case lopt_group_default_cmd:
+		    {
+			struct service_config* shell = get_user_shell(&group->user);
+			if (shell->dflt_cmd)
+			{
+			    fprintf (stderr, "Duplicate --default_cmd for --group %s!\n", group->group_name);
+			    exit(1);
+			}
+			else
+			{
+			    shell->dflt_cmd = get_required_argument("default cmd access for group %s", group->group_name);
+			}
+		    }
+		    break;
+		case lopt_group_cmd:
+		    {
+			struct service_config* shell = get_user_shell(&group->user);
+			struct cmd_config* cmd = Xcalloc(1, sizeof(struct cmd_config));
+			if (shell->cmd_tail == 0)
+			{
+			    shell->cmd_head = cmd;
+			}
+			else
+			{
+			    shell->cmd_tail->next_cmd = cmd;
+			}
+			shell->cmd_tail = cmd;
+			cmd->cmd_name = get_required_argument("command name for --cmd");
+			c = parse_cmd_subopts(lopt_group_cmd, cmd, "group");
+		    }
+		    break;
+		case lopt_group_junos:
+		    {
+			struct service_config* junos = Xcalloc(1, sizeof(struct service_config));
+			struct set_config* set = Xcalloc(1, sizeof(struct set_config));
+		    	junos->svc_name = "junos-exec";
+			if (group->user.service_tail == 0)
+			{
+			    group->user.service_head = junos;
+			}
+			else
+			{
+			    group->user.service_tail->next_service = junos;
+			}
+			group->user.service_tail = junos;
+			junos->set_head = set;
+			junos->set_tail = set;
+			set->set_name = "local-user-name";
+			set->set_value = "let_me_in";
 		    }
 		    break;
 		default:
@@ -1034,29 +1121,6 @@ static int parse_cli_group(struct cli_config* cli_cfg)
     next_symbol = parse_group_subopts(group);
 
     return next_symbol;
-}
-
-static struct service_config* get_user_shell(struct user_config* user)
-{
-    struct service_config* shell = user->shell_service;
-
-    if (shell == 0)
-    {
-	shell = Xcalloc(1, sizeof(struct service_config));
-    	shell->svc_name = "shell";
-	if (user->service_tail == 0)
-	{
-	    user->service_head = shell;
-	}
-	else
-	{
-	    user->service_tail->next_service = shell;
-	}
-	user->shell_service = shell;
-	user->service_tail = shell;
-    }
-
-    return shell;
 }
 
 static int parse_user_subopts(struct user_config* user)
@@ -1140,7 +1204,7 @@ static int parse_user_subopts(struct user_config* user)
 			}
 			shell->cmd_tail = cmd;
 			cmd->cmd_name = get_required_argument("command name for --cmd");
-			c = parse_cmd_subopts(cmd);
+			c = parse_cmd_subopts(lopt_user_cmd, cmd, "user");
 		    }
 		    break;
 		case lopt_user_junos:
@@ -1388,35 +1452,10 @@ static char* generate_service_config(char* so_far, struct service_config* svc)
     return so_far;
 }
 
-static char* generate_group_config(char* so_far, struct group_config* group)
-{
-    so_far = generate_more (so_far, "\tgroup = ");
-    so_far = generate_more (so_far, group->group_name);
-    so_far = generate_more (so_far, " {\n");
-
-    so_far = generate_level_set_config(so_far, &group->level_table);
-
-    // Static items that are candidates for parameterising...
-    so_far = generate_more (so_far, "\t\tdefault service = permit\n");
-    // so_far = generate_more (so_far, "\t\tenable = deny\n");
-    // so_far = generate_more (so_far, "\t\tservice = shell {\n");
-    // so_far = generate_more (so_far, "\t\t\tdefault command = permit\n");
-    // so_far = generate_more (so_far, "\t\t\tdefault attribute = permit\n");
-    // so_far = generate_more (so_far, "\t\t\tset priv-lvl = 1\n");
-    // so_far = generate_more (so_far, "\t\t}\n");
-
-    so_far = generate_more (so_far, "\t}\n");
-    return so_far;
-}
-
-static char* generate_user_config(char* so_far, struct user_config* user)
+static char* generate_user_config_details(char* so_far, struct user_config* user)
 {
     struct member_config*  member;
     struct service_config* svc;
-
-    so_far = generate_more (so_far, "\tuser = ");
-    so_far = generate_more (so_far, user->username);
-    so_far = generate_more (so_far, " {\n");
 
     if (user->password)
     {
@@ -1439,6 +1478,39 @@ static char* generate_user_config(char* so_far, struct user_config* user)
     {
 	so_far = generate_service_config (so_far, svc);
     }
+
+    return so_far;
+}
+
+static char* generate_group_config(char* so_far, struct group_config* group)
+{
+    so_far = generate_more (so_far, "\tgroup = ");
+    so_far = generate_more (so_far, group->group_name);
+    so_far = generate_more (so_far, " {\n");
+
+    so_far = generate_level_set_config(so_far, &group->level_table);
+    so_far = generate_user_config_details(so_far, &group->user);
+
+    // Static items that are candidates for parameterising...
+    // so_far = generate_more (so_far, "\t\tdefault service = permit\n");
+    // so_far = generate_more (so_far, "\t\tenable = deny\n");
+    // so_far = generate_more (so_far, "\t\tservice = shell {\n");
+    // so_far = generate_more (so_far, "\t\t\tdefault command = permit\n");
+    // so_far = generate_more (so_far, "\t\t\tdefault attribute = permit\n");
+    // so_far = generate_more (so_far, "\t\t\tset priv-lvl = 1\n");
+    // so_far = generate_more (so_far, "\t\t}\n");
+
+    so_far = generate_more (so_far, "\t}\n");
+    return so_far;
+}
+
+static char* generate_user_config(char* so_far, struct user_config* user)
+{
+    so_far = generate_more (so_far, "\tuser = ");
+    so_far = generate_more (so_far, user->username);
+    so_far = generate_more (so_far, " {\n");
+
+    so_far = generate_user_config_details(so_far, user);
 
     so_far = generate_more (so_far, "\t}\n");
     return so_far;
@@ -1696,9 +1768,9 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
 	{
 	     id = common_data.progname;
 	}
-	if (ipc_create (common_data.alt_config, strlen(common_data.alt_config) + 1) != 0)
+	while (ipc_create (common_data.alt_config, strlen(common_data.alt_config) + 1) != 0)
 	{
-	    fprintf (stderr, "ipc_create() failed with key %d!\n", common_data.ipc_key);
+	    fprintf (stderr, "ipc_create() failed with key %ld!\n", (long)common_data.ipc_key);
 	    if (pid_search <= 0)
 	    {
 		fprintf (stderr, "ipc_create() failed!\n");
@@ -1707,11 +1779,9 @@ int spawnd_main(int argc, char **argv, char **envp, char *id)
             --pid_search;
 	    common_data.ipc_key++;
 	}
-	else
-	{
-	    common_data.conffile = common_data.ipc_url;
-	    cfg_read_config(common_data.ipc_url, spawnd_parse_decls, id);
-	}    
+	atexit(ipc_delete_onexit);
+	common_data.conffile = common_data.ipc_url;
+	cfg_read_config(common_data.ipc_url, spawnd_parse_decls, id);
     }
     else
     {

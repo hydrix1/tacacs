@@ -1,5 +1,5 @@
 #!/bin/bash
-v#
+#
 # These integration tests are organised into a number of groups; each group
 # is in its own directory underneath the "test_configs" directory in this
 # directory.   For example, the "host" tests are all located in

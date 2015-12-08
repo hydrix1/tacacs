@@ -692,6 +692,13 @@ void ipc_delete(void)
     }
 }
 
+void ipc_delete_onexit(void)
+{
+    /* fprintf(stderr, "%ld: ipc_delete_onexit() called, key=%ld\n",
+	(long int) common_data.pid, (long int) common_data.ipc_key); */
+    ipc_delete();
+}
+
 int ipc_create(char *buf, int buflen)
 {
     int id;
@@ -1716,6 +1723,14 @@ void common_usage(void)
 	    "        --group_enable_password=<pass>   clear-text password\n"
 	    "        --group_enable_permit            no password needed\n"
 	    "        --group_enable_deny              escalation not allowed\n"
+	    "     --group_default_cmd=deny            prohibit commands by default\n"
+	    "     --group_default_cmd=permit          allow commands by default\n"
+	    "     --group_cmd=<name>                  allow or prohibit use of specifed command\n"
+	    "        --group_cmd_deny                 block all forms of this command\n"
+	    "        --group_cmd_deny=<regex>         block matching forms of this command\n"
+	    "        --group_cmd_permit               permit all forms of this command\n"
+	    "        --group_cmd_permit=<regex>       permit matching forms of this command\n"
+	    "     --group_junos                       add junos-exec service stub"
 	    "  --user=<name>                          recognise a username\n"
 	    "     --user_password=<pass>              clear-text password\n"
 	    "     --user_permit                       user can log in with any password\n"
