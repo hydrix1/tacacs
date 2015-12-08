@@ -951,7 +951,7 @@ static int parse_cli_host(struct cli_config* cli_cfg)
     return next_symbol;
 }
 
-static int parse_cmd_subopts(int base_opt, struct cmd_config* cmd, const char* name)
+static int parse_cmd_subopts(int base_opt, struct cmd_config* cmd)
 {
     int c = EOF;
 
@@ -1068,7 +1068,7 @@ static int parse_group_subopts(struct group_config* group)
 			}
 			shell->cmd_tail = cmd;
 			cmd->cmd_name = get_required_argument("command name for --cmd");
-			c = parse_cmd_subopts(lopt_group_cmd, cmd, "group");
+			c = parse_cmd_subopts(lopt_group_cmd, cmd);
 		    }
 		    break;
 		case lopt_group_junos:
@@ -1204,7 +1204,7 @@ static int parse_user_subopts(struct user_config* user)
 			}
 			shell->cmd_tail = cmd;
 			cmd->cmd_name = get_required_argument("command name for --cmd");
-			c = parse_cmd_subopts(lopt_user_cmd, cmd, "user");
+			c = parse_cmd_subopts(lopt_user_cmd, cmd);
 		    }
 		    break;
 		case lopt_user_junos:

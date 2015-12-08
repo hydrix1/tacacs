@@ -3331,56 +3331,41 @@ static void parse_tac_acl(struct sym *sym)
     struct tac_acl *a;
     int is_script = 0;
     tac_sym_get(sym);
-fprintf(stderr, "parse_tac_acl(): line %d\n", __LINE__);
 
     if (sym->code == S_script) {
-fprintf(stderr, "parse_tac_acl(): line %d\n", __LINE__);
 	is_script++;
 	tac_sym_get(sym);
     }
-fprintf(stderr, "parse_tac_acl(): line %d\n", __LINE__);
 
     parse(sym, S_equal);
-fprintf(stderr, "parse_tac_acl(): line %d\n", __LINE__);
 
     a = tac_acl_lookup(sym->buf);
-fprintf(stderr, "parse_tac_acl(): line %d\n", __LINE__);
     if (!a) {
-fprintf(stderr, "parse_tac_acl(): line %d\n", __LINE__);
 	size_t l = strlen(sym->buf);
 	a = calloc(1, sizeof(struct tac_acl) + l);
 	strcpy(a->name, sym->buf);
 	RB_insert(acltable, a);
     }
-fprintf(stderr, "parse_tac_acl(): line %d\n", __LINE__);
     tac_sym_get(sym);
-fprintf(stderr, "parse_tac_acl(): line %d\n", __LINE__);
 
     parse(sym, S_openbra);
-fprintf(stderr, "parse_tac_acl(): line %d\n", __LINE__);
 
     if (is_script) {
 	struct tac_script_action **p = &a->action;
-fprintf(stderr, "parse_tac_acl(): line %d\n", __LINE__);
 
 	while (*p)
 	    p = &(*p)->n;
 
-fprintf(stderr, "parse_tac_acl(): line %d\n", __LINE__);
 	*p = tac_script_parse_r(NULL, sym, 1);
     } else {
 	struct tac_acl_expr **e = &a->expr;
-fprintf(stderr, "parse_tac_acl(): line %d\n", __LINE__);
 	while (*e)
 	    e = &((*e)->next);
 
-fprintf(stderr, "parse_tac_acl(): line %d\n", __LINE__);
 	parse_tac_acl_expr(sym, e);
     }
-fprintf(stderr, "parse_tac_acl(): line %d\n", __LINE__);
 
     parse(sym, S_closebra);
-fprintf(stderr, "parse_tac_acl(): line %d\n", __LINE__);
 }
 
 static void parse_svcs(struct sym *sym, tac_user * user)
@@ -3696,11 +3681,8 @@ void cfg_init(void)
 	sym.in = sym.tin = acl;
 	sym.len = sym.tlen = strlen(acl);
 	sym_init(&sym);
-fprintf(stderr, "cfg_init(): mark 1\n");
 	parse_tac_acl(&sym);
-fprintf(stderr, "cfg_init(): mark 2\n");
 	config.top_realm->enable_user_acl = tac_acl_lookup("__internal__enable_user__");
-fprintf(stderr, "cfg_init(): mark 3\n");
     }
 
     {
@@ -4466,115 +4448,71 @@ static struct tac_script_cond *tac_script_cond_parse_r(tac_user * u, struct sym 
 {
     struct tac_script_cond *m, *p = NULL;
     rb_tree_t *pool = u ? u->pool : NULL;
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 
     switch (sym->code) {
     case S_leftbra:
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	tac_sym_get(sym);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	m = tac_script_cond_add(u, tac_script_cond_new(u, S_or), tac_script_cond_parse_r(u, sym));
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	if (sym->code == S_and)
 	    m->type = S_and;
 	while (sym->code == S_and || sym->code == S_or) {
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	    tac_sym_get(sym);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	    m = tac_script_cond_add(u, m, tac_script_cond_parse_r(u, sym));
 	}
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	parse(sym, S_rightbra);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	return m;
     case S_exclmark:
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	tac_sym_get(sym);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	m = tac_script_cond_add(u, tac_script_cond_new(u, S_exclmark), tac_script_cond_parse_r(u, sym));
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	return m;
     case S_eof:
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	parse_error(sym, "EOF unexpected");
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
     case S_acl:
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	m = tac_script_cond_new(u, S_acl);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 
 	tac_sym_get(sym);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	switch (sym->code) {
 	case S_exclmark:
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	    p = tac_script_cond_add(u, tac_script_cond_new(u, S_exclmark), m);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	case S_equal:
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	    break;
 	case S_eof:
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	    parse_error(sym, "EOF unexpected");
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	default:
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	    parse_error_expect(sym, S_exclmark, S_equal, S_unknown);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	}
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	tac_sym_get(sym);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 
 	m->u.s.v = tac_acl_lookup(sym->buf);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 
 	if (!m->u.s.v)
         {
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	    parse_error(sym, "ACL '%s' not found", sym->buf);
         }
 	tac_sym_get(sym);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	return m;
     case S_time:
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	m = tac_script_cond_new(u, S_time);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 
 	tac_sym_get(sym);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	switch (sym->code) {
 	case S_exclmark:
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	    p = tac_script_cond_add(u, tac_script_cond_new(u, S_exclmark), m);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	case S_equal:
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	    break;
 	case S_eof:
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	    parse_error(sym, "EOF unexpected");
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	default:
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	    parse_error_expect(sym, S_exclmark, S_equal, S_unknown);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	}
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	tac_sym_get(sym);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 
 	m->u.s.v = find_timespec(sym->buf);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	if (!m->u.s.v)
         {
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	    parse_error(sym, "timespec '%s' not found", sym->buf);
         }
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	tac_sym_get(sym);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	return m;
     case S_cmd:
     case S_command:
@@ -4588,142 +4526,98 @@ fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
     case S_aaarealm:
     case S_port:
     case S_user:
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	m = tac_script_cond_new(u, S_equal);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	m->u.s.a = sym->code;
 
 	tac_sym_get(sym);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	switch (sym->code) {
 	case S_exclmark:
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	    p = tac_script_cond_add(u, tac_script_cond_new(u, S_exclmark), m);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	case S_equal:
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	    break;
 	case S_eof:
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	    parse_error(sym, "EOF unexpected");
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	default:
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	    parse_error_expect(sym, S_exclmark, S_equal, S_unknown);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	}
 	tac_sym_get(sym);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	switch (sym->code) {
 	case S_equal:
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	    m->type = S_equal;
 	    if (m->u.s.a == S_nac || m->u.s.a == S_nas) {
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 		tac_sym_get(sym);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 		tac_host h, *hp;
 		h.name = sym->buf;
 		hp = RB_lookup(hosttable, (void *) &h);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 		if (hp) {
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 		    m->type = S_host;
 		    m->u.s.v = hp;
 		} else {
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 		    struct in6_cidr *c = mempool_malloc(pool, sizeof(struct in6_cidr));
 		    m->u.s.v = c;
 		    if (v6_ptoh(&c->addr, &c->mask, sym->buf))
                     {
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 			parse_error(sym, "Expected a hostname or an IP " "address/network in CIDR notation, " "but got '%s'.", sym->buf);
                     }
 		    m->type = S_address;
 		}
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 		tac_sym_get(sym);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 		return p ? p : m;
 	    }
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	    break;
 	case S_tilde:
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	    m->type = S_regex;
 	    sym->flag_parse_pcre = 1;
 	    break;
 	case S_eof:
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	    parse_error(sym, "EOF unexpected");
 	default:
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	    parse_error_expect(sym, S_equal, S_tilde, S_unknown);
 	}
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 
 	tac_sym_get(sym);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	if (m->type == S_equal) {
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	    m->u.s.v = mempool_strdup(pool, sym->buf);
 
 	    tac_sym_get(sym);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	    return p ? p : m;
 	} else {
 	    int errcode = 0;
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 #ifdef WITH_PCRE
 	    if (sym->code == S_slash) {
 		int erroffset;
 		const char *errptr;
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 		m->type = S_slash;
 		m->u.s.v = pcre_compile2(sym->buf, PCRE_MULTILINE | common_data.regex_pcre_flags, &errcode, &errptr, &erroffset, NULL);
 		if (u && u->pool_pcre)
                 {
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 		    RB_insert(u->pool_pcre, m->u.s.v);
                 }
 
 		if (!m->u.s.v)
                 {
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 		    parse_error(sym, "In PCRE expression /%s/ at offset %d: %s", sym->buf, erroffset, errptr);
                 }
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 		sym->flag_parse_pcre = 0;
 		tac_sym_get(sym);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 		return p ? p : m;
 	    }
 #endif
 	    m->u.s.v = mempool_malloc(pool, sizeof(regex_t));
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
-	    errcode = regcomp((regex_t *) m->u.s.v, sym->buf, REG_DEBUG| REG_EXTENDED | REG_NOSUB | REG_NEWLINE | common_data.regex_posix_flags);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
+	    errcode = regcomp((regex_t *) m->u.s.v, sym->buf, REG_EXTENDED | REG_NOSUB | REG_NEWLINE | common_data.regex_posix_flags);
 	    if (errcode) {
 		char e[160];
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 		regerror(errcode, (regex_t *) m->u.s.v, e, sizeof(e));
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 		parse_error(sym, "In regular expression '%s': %s", sym->buf, e);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	    } else if (u && u->pool_regex)
 		RB_insert(u->pool_regex, m->u.s.v);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	    tac_sym_get(sym);
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	    return p ? p : m;
 	}
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
     default:
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
 	parse_error_expect(sym, S_leftbra, S_acl, S_exclmark, S_command,
 			   S_context, S_time, S_cmd, S_nac, S_nas, S_nacname, S_nasname, S_nasrealm, S_nacrealm, S_port, S_user, S_unknown);
     }
-fprintf(stderr, "tac_script_cond_parse_r(): line %d\n", __LINE__);
     return NULL;
 }
 
@@ -4746,91 +4640,69 @@ static void tac_script_cond_optimize(tac_user * u, struct tac_script_cond **m)
 
 static struct tac_script_cond *tac_script_cond_parse(tac_user * u, struct sym *sym)
 {
-fprintf(stderr, "tac_script_cond_parse(): line %d\n", __LINE__);
     if (sym->code == S_leftbra) {
 	struct sym mysym;
 	char buf[4096];
 	char *b = buf, *p;
 	int bc = 1;
 	struct tac_script_cond *m;
-fprintf(stderr, "tac_script_cond_parse(): line %d\n", __LINE__);
 
 	tac_sym_get(sym);
-fprintf(stderr, "tac_script_cond_parse(): line %d\n", __LINE__);
 
 	strcpy(b, "((( ");
 	while (*b)
 	    b++;
-fprintf(stderr, "tac_script_cond_parse(): line %d\n", __LINE__);
 
 	while (bc && (b < buf + sizeof(buf) - 100)) {
 	    switch (sym->code) {
 	    case S_and:
-fprintf(stderr, "tac_script_cond_parse(): line %d\n", __LINE__);
 		strcpy(b, " ) && (");
 		while (*b)
 		    b++;
 		tac_sym_get(sym);
-fprintf(stderr, "tac_script_cond_parse(): line %d\n", __LINE__);
 		continue;
 	    case S_or:
-fprintf(stderr, "tac_script_cond_parse(): line %d\n", __LINE__);
 		strcpy(b, " )) || ((");
 		while (*b)
 		    b++;
 		tac_sym_get(sym);
-fprintf(stderr, "tac_script_cond_parse(): line %d\n", __LINE__);
 		continue;
 	    case S_leftbra:
-fprintf(stderr, "tac_script_cond_parse(): line %d\n", __LINE__);
 		*b++ = '(';
 		bc++;
 		break;
 	    case S_rightbra:
-fprintf(stderr, "tac_script_cond_parse(): line %d\n", __LINE__);
 		*b++ = ')';
 		bc--;
 		break;
 	    case S_tilde:
-fprintf(stderr, "tac_script_cond_parse(): line %d\n", __LINE__);
 		sym->flag_parse_pcre = 1;
 		break;
 	    case S_eof:
-fprintf(stderr, "tac_script_cond_parse(): line %d\n", __LINE__);
 		parse_error(sym, "EOF unexpected");
 	    default:;
-fprintf(stderr, "tac_script_cond_parse(): line %d\n", __LINE__);
 	    }
-fprintf(stderr, "tac_script_cond_parse(): line %d\n", __LINE__);
 	    *b++ = ' ';
 	    *b = 0;
 
 	    for (p = sym->raw; p < sym->tin - 1; p++)
 		*b++ = *p;
-fprintf(stderr, "tac_script_cond_parse(): line %d\n", __LINE__);
 	    *b = 0;
 	    tac_sym_get(sym);
-fprintf(stderr, "tac_script_cond_parse(): line %d\n", __LINE__);
 	    sym->flag_parse_pcre = 0;
 	}
-fprintf(stderr, "tac_script_cond_parse(): line %d\n", __LINE__);
 	strcpy(b, " )))");
 	while (*b)
 	    b++;
-fprintf(stderr, "tac_script_cond_parse(): line %d\n", __LINE__);
 
 	memcpy(&mysym, sym, sizeof(mysym));
 	mysym.tlen = mysym.len = (int) (b - buf);
 	mysym.tin = mysym.in = buf;
 	sym_init(&mysym);
-fprintf(stderr, "tac_script_cond_parse(): line %d\n", __LINE__);
 	m = tac_script_cond_parse_r(u, &mysym);
-fprintf(stderr, "tac_script_cond_parse(): line %d\n", __LINE__);
 	tac_script_cond_optimize(u, &m);
-fprintf(stderr, "tac_script_cond_parse(): line %d\n", __LINE__);
 	return m;
     }
-fprintf(stderr, "tac_script_cond_parse(): line %d\n", __LINE__);
     return tac_script_cond_parse_r(u, sym);
 }
 
@@ -4993,16 +4865,12 @@ static struct tac_script_action *tac_script_parse_r(tac_user * u, struct sym *sy
     struct tac_script_action *m = NULL;
     rb_tree_t *pool = u ? u->pool : NULL;
 
-fprintf(stderr, "tac_script_parse_r(): line %d\n", __LINE__);
     switch (sym->code) {
     case S_eof:
-fprintf(stderr, "tac_script_parse_r(): line %d\n", __LINE__);
 	parse_error(sym, "EOF unexpected");
     case S_closebra:
-fprintf(stderr, "tac_script_parse_r(): line %d\n", __LINE__);
 	return NULL;
     case S_openbra:
-fprintf(stderr, "tac_script_parse_r(): line %d\n", __LINE__);
 	tac_sym_get(sym);
 	m = tac_script_parse_r(u, sym, 1);
 	parse(sym, S_closebra);
@@ -5010,51 +4878,37 @@ fprintf(stderr, "tac_script_parse_r(): line %d\n", __LINE__);
     case S_return:
     case S_permit:
     case S_deny:
-fprintf(stderr, "tac_script_parse_r(): line %d\n", __LINE__);
 	m = mempool_malloc(pool, sizeof(struct tac_script_action));
 	m->code = sym->code;
 	tac_sym_get(sym);
 	break;
     case S_context:
     case S_message:
-fprintf(stderr, "tac_script_parse_r(): line %d\n", __LINE__);
 	m = mempool_malloc(pool, sizeof(struct tac_script_action));
 	m->code = sym->code;
 	tac_sym_get(sym);
-fprintf(stderr, "tac_script_parse_r(): line %d\n", __LINE__);
 	parse(sym, S_equal);
 	m->b.v = mempool_strdup(pool, sym->buf);
-fprintf(stderr, "tac_script_parse_r(): line %d\n", __LINE__);
 	tac_sym_get(sym);
 	break;
     case S_if:
-fprintf(stderr, "tac_script_parse_r(): line %d\n", __LINE__);
 	m = mempool_malloc(pool, sizeof(struct tac_script_action));
 	m->code = sym->code;
 	tac_sym_get(sym);
-fprintf(stderr, "tac_script_parse_r(): line %d\n", __LINE__);
 	m->a.c = tac_script_cond_parse(u, sym);
-fprintf(stderr, "tac_script_parse_r(): line %d\n", __LINE__);
 	m->b.a = tac_script_parse_r(u, sym, 0);
-fprintf(stderr, "tac_script_parse_r(): line %d\n", __LINE__);
 	if (sym->code == S_else) {
-fprintf(stderr, "tac_script_parse_r(): line %d\n", __LINE__);
 	    tac_sym_get(sym);
-fprintf(stderr, "tac_script_parse_r(): line %d\n", __LINE__);
 	    m->c.a = tac_script_parse_r(u, sym, 0);
 	}
 	break;
     default:
-fprintf(stderr, "tac_script_parse_r(): line %d\n", __LINE__);
 	parse_error_expect(sym, S_openbra, S_closebra, S_return, S_permit, S_deny, S_context, S_message, S_if, S_unknown);
     }
-fprintf(stderr, "tac_script_parse_r(): line %d\n", __LINE__);
     if (section && sym->code != S_closebra && sym->code != S_eof)
     {
-fprintf(stderr, "tac_script_parse_r(): line %d\n", __LINE__);
 	m->n = tac_script_parse_r(u, sym, section);
     }
-fprintf(stderr, "tac_script_parse_r(): line %d\n", __LINE__);
     return m;
 }
 
